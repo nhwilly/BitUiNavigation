@@ -1,0 +1,60 @@
+﻿@inherits LayoutComponentBase
+
+@code {
+    private bool ShowLeftIconsOnly = false;
+    private bool ShowRightIconsOnly = false;
+    private bool IsMobile { get; set; }
+    private List<BitNavItem> LeftNavItems = new()
+    {
+        new BitNavItem { Text = "Home", Url = "/", Key = "home", IconName = "Home" },
+        new BitNavItem { Text = "About", Url = "/about", Key = "about", IconName = "Info" }
+    };
+
+    private List<BitNavItem> RightNavItems = new()
+    {
+        new BitNavItem { Text = "Settings", Url = "/settings", Key = "settings", IconName = "Settings" },
+        new BitNavItem { Text = "Profile", Url = "/profile", Key = "profile", IconName = "Contact" }
+    };
+
+    private void ToggleLeftIconsOnly() => ShowLeftIconsOnly = !ShowLeftIconsOnly;
+    private void ToggleRightIconsOnly() => ShowRightIconsOnly = !ShowRightIconsOnly;
+    private void DoSomething(BitNavItem args)
+    {
+        Console.WriteLine("clicked!");
+    }
+    private BitNav<BitNavItem>? AccountNav { get; set; }
+}
+<BitSticky Position="BitStickyPosition.Top">
+    <BitHeader>
+        <BitButton OnClick="ToggleLeftIconsOnly" IconName="View" />
+        <BitSpacer />
+        <BitText Typography="@BitTypography.H5">My Application Header</BitText>
+        <BitSpacer />
+        <BitButton OnClick="ToggleRightIconsOnly" IconName="ViewList" />
+    </BitHeader>
+</BitSticky>
+
+<BitMediaQuery ScreenQuery="BitScreenQuery.Xs" OnChange="v => { IsMobile = v; }" />
+
+<!-- This is for the entire page, not including the header. -->
+<div style="display: flex; height: calc(100vh - 64px);">
+    <!-- Left Navigation -->
+    <div style="position: sticky; top: 64px; height: calc(100vh - 128px); z-index: 1;">
+        <BitNav @ref="AccountNav" OnItemClick="DoSomething" TItem="BitNavItem" Items="LeftNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@ShowLeftIconsOnly" />
+    </div>
+
+    <!-- Main Content -->
+    <div style="flex: 1; padding: 1rem; overflow-y: auto; height: calc(100vh - 128px);">
+        @Body
+    </div>
+
+    <!-- Right Navigation -->
+    <div style="position: sticky; top: 64px; height: calc(100vh - 64px); z-index: 1;">
+        <BitNav TItem="BitNavItem" Items="RightNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@ShowRightIconsOnly" />
+    </div>
+</div>
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
