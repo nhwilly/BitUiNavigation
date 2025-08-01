@@ -36,43 +36,75 @@
     }
     private BitNav<BitNavItem>? AccountNav { get; set; }
     private void CloseLeftPanel() => ShowLeftPanel = false;
-}
-<BitSticky Position="BitStickyPosition.Top">
-    <BitHeader>
-        <BitButton OnClick="ToggleLeftIconsOnly" IconName="View" />
-        <BitSpacer />
-        <BitText Typography="@BitTypography.H5">My Application Header</BitText>
-        <BitSpacer />
-        <BitButton OnClick="ToggleRightIconsOnly" IconName="ViewList" />
-    </BitHeader>
-</BitSticky>
-
-<BitMediaQuery ScreenQuery="BitScreenQuery.Xs" OnChange="v => { IsMobile = v; }" />
-
-<BitPanel @bind-IsOpen="@ShowLeftPanel" Position="BitPanelPosition.Start">
-    <BitNav @ref="AccountNav" Items="LeftNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="false" />
-</BitPanel>
-
-<div style="display: flex; height: calc(100vh - 64px);">
-    @if (!IsMobile)
+    bool ready { get; set; }
+    protected override void OnInitialized()
     {
-        <!-- Left Navigation -->
-        <div style="position: sticky; top: 64px; height: calc(100vh - 128px); z-index: 1;">
-            <BitNav @ref="AccountNav" OnItemClick="DoSomething" TItem="BitNavItem" Items="LeftNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@ShowLeftIconsOnly" />
-        </div>
+        ready = false;
+        base.OnInitialized();
+        // Initialize any additional logic if needed
     }
-    <!-- Main Content -->
-    <div style="flex: 1; padding: 1rem; overflow-y: auto; height: calc(100vh - 128px);">
-        @Body
-    </div>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
 
-    <!-- Right Navigation -->
-    <div style="position: sticky; top: 64px; height: calc(100vh - 64px); z-index: 1;">
-        <BitNav TItem="BitNavItem" Items="RightNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@ShowRightIconsOnly" />
+        base.OnAfterRender(firstRender);
+        if (!ready)
+        {
+            // Simulate some async operation, e.g., fetching data
+            ready = true; // Set ready to true after the operation
+            StateHasChanged(); // Request a re-render
+        }
+    }
+}
+<BitMediaQuery ScreenQuery="BitScreenQuery.Xs" OnChange="v => { IsMobile = v; }" />
+@if (!ready)
+{
+    <div style="position: absolute; left: 50%; top: 15%; transform: translate(-50%, 0);">
+        <!-- Your centered content here -->
+        <BitSpinnerLoading />
     </div>
-</div>
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
+}
+else
+{
+    <BitSticky Position="BitStickyPosition.Top">
+        <BitHeader>
+            <BitButton OnClick="ToggleLeftIconsOnly" IconName="View" />
+            <BitSpacer />
+            <BitText Typography="@BitTypography.H5">My Application Header</BitText>
+            <BitSpacer />
+            <BitButton OnClick="ToggleRightIconsOnly" IconName="ViewList" />
+        </BitHeader>
+    </BitSticky>
+
+
+    <BitPanel @bind-IsOpen="@ShowLeftPanel" Position="BitPanelPosition.Start">
+
+        <BitNav @ref="AccountNav" Items="LeftNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="false" />
+    </BitPanel>
+
+    <div style="display: flex; height: calc(100vh - 64px);">
+        @if (!IsMobile)
+        {
+            <!-- Left Navigation -->
+            <div style="position: sticky; top: 64px; height: calc(100vh - 128px); z-index: 1;">
+                <BitNav @ref="AccountNav" OnItemClick="DoSomething" TItem="BitNavItem" Items="LeftNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@ShowLeftIconsOnly" />
+            </div>
+        }
+        <!-- Main Content -->
+        <div style="flex: 1; padding: 1rem; overflow-y: auto; height: calc(100vh - 128px);">
+            @Body
+        </div>
+
+        <!-- Right Navigation -->
+        @if (!IsMobile)
+        {
+            <div style="position: sticky; top: 64px; height: calc(100vh - 64px); z-index: 1;">
+                <BitNav TItem="BitNavItem" Items="RightNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@ShowRightIconsOnly" />
+            </div>
+        }
+    </div>
+    <div id="blazor-error-ui" data-nosnippet>
+        An unhandled error has occurred.
+        <a href="." class="reload">Reload</a>
+        <span class="dismiss">🗙</span>
+    </div>
+}
