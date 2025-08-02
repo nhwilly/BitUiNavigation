@@ -1,4 +1,7 @@
-@page "/settings"
+@page "/settings/{id:guid}"
 
 <h2>Settings</h2>
 <p>Manage your application settings here.</p>
+@code {
+    [Parameter] public Guid Id { get; set; }
+}

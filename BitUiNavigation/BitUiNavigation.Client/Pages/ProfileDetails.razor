@@ -1,0 +1,14 @@
+﻿@page "/profile/{id:guid}/details"
+@inject NavigationManager NavigationManager
+<h3>ProfileDetails</h3>
+
+@Id.ToString()
+
+<BitButton OnClick="NavigateToProfile" IconName="@BitIconName.Back">Back to profile</BitButton>
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private void NavigateToProfile(bool args)
+    {
+        NavigationManager.NavigateTo("/profile");
+    }
+}

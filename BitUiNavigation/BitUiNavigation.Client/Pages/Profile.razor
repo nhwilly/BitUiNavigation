@@ -1,4 +1,14 @@
 @page "/profile"
-
+@inject NavigationManager NavigationManager
 <h2>Profile</h2>
 <p>View and edit your profile information here.</p>
+<BitButton OnClick="NavigateToProfileDetails" IconName="Edit" Text="Edit Profile" />
+@code {
+    private void NavigateToProfileDetails()
+    {
+        // Navigate to the profile details page with a new GUID
+        var newId = Guid.NewGuid();
+        NavigationManager.NavigateTo($"/profile/{newId}/details");
+    }
+
+}

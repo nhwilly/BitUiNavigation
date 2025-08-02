@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
-<BitMediaQuery ScreenQuery="BitScreenQuery.Xs" OnChange="v => { IsMobile = v; }" />
+<BitMediaQuery ScreenQuery="BitScreenQuery.Xs" OnChange="v => { IsSmall = v; }" />
 @if (!ready)
 {
     <div style="position: absolute; left: 50%; top: 15%; transform: translate(-50%, 0);">
@@ -11,47 +11,46 @@ else
 {
     <BitSticky Position="BitStickyPosition.Top">
         <BitHeader>
-            @if (IsMobile)
+            @if (IsSmall)
             {
-                @* Show the left panel *@
-@*                 <BitButton OnClick="ToggleLeftMobilePanel" Variant="@BitVariant.Text" IconName="@BitIconName.Accept" /> *@
-                <BitPersona ImageInitials="ma" @onclick="ToggleLeftMobilePanel"></BitPersona>
-
+                <BitPersona Size="@BitPersonaSize.Size24" ImageInitials="ma" @onclick="ToggleAccountMobilePanel"></BitPersona>
             }
             else
             {
-                @* Toggle the icon only display *@
-                <BitButton OnClick="(bool x) => ShowLeftIconsOnly = !ShowLeftIconsOnly" Variant="@BitVariant.Text" IconName="@LeftHeaderIcon" />
+                <BitButton OnClick="ToggleAccountIconsOnly" Variant="@BitVariant.Text" IconName="@AccountHeaderIcon" />
             }
             <BitSpacer />
             <BitText Typography="@BitTypography.H5">My Application Header</BitText>
             <BitSpacer />
-            @if (IsMobile)
+            @if (IsSmall)
             {
-                <BitPersona ImageInitials="BW" @onclick="ToggleRightMobilePanel"></BitPersona>
-@*                 <BitButton OnClick="ToggleRightMobilePanel" Variant="@BitVariant.Text" IconName="@BitIconName.Camera" /> *@
+                <BitPersona Size="@BitPersonaSize.Size24" ImageInitials="BW" @onclick="ToggleUserMobilePanel"></BitPersona>
             }
             else
             {
-                <BitButton OnClick="ToggleRightIconsOnly" Variant="@BitVariant.Text" IconName="@RightHeaderIcon" />
+                <BitButton OnClick="ToggleUserIconsOnly" Variant="@BitVariant.Text" IconName="@UserHeaderIcon" />
             }
         </BitHeader>
     </BitSticky>
 
+    @if (IsSmall)
+    {
+        <BitPanel @bind-IsOpen="@ShowAccountPanel" Position="BitPanelPosition.Start">
+            <BitNav Items="AccountNavItems" FitWidth Style="background: #f5f5f5;" OnItemClick="(BitNavItem item) => ShowAccountPanel = false" IconOnly="false" />
+        </BitPanel>
 
-    <BitPanel @bind-IsOpen="@ShowLeftPanel" Position="BitPanelPosition.Start">
-        <BitNav @ref="AccountNav" Items="LeftNavItems" FitWidth Style="background: #f5f5f5;" OnItemClick="(BitNavItem item) => ShowLeftPanel = false" IconOnly="false" />
-    </BitPanel>
-
-    <BitPanel @bind-IsOpen="@ShowRightPanel" Position="BitPanelPosition.End">
-        <BitNav @ref="UserNav" Items="RightNavItems" FitWidth Style="background: #f5f5f5;" OnItemClick="(BitNavItem item) => ShowRightPanel = false" IconOnly="false" />
-    </BitPanel>
-
+        <BitPanel @bind-IsOpen="@ShowUserPanel" Position="BitPanelPosition.End">
+            <BitNav Items="UserNavItems" FitWidth Style="background: #f5f5f5;" OnItemClick="(BitNavItem item) => ShowUserPanel = false" IconOnly="false" />
+        </BitPanel>
+    }
     <div style="display: flex; height: calc(100vh - 64px);">
-        @if (!IsMobile)
+        @if (!IsSmall)
         {
             <div style="position: sticky; top: 64px; height: calc(100vh - 128px); z-index: 1;">
-                <BitNav @ref="AccountNav" TItem="BitNavItem" Items="LeftNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@ShowLeftIconsOnly" />
+                <BitStack>
+                    <BitPersona Size="@BitPersonaSize.Size32" />
+                    <BitNav TItem="BitNavItem" Items="AccountNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@AccountIconsOnly" />
+                </BitStack>
             </div>
         }
 
@@ -60,74 +59,55 @@ else
             @Body
         </div>
 
-        @if (!IsMobile)
+        @if (!IsSmall)
         {
             <div style="position: sticky; top: 64px; height: calc(100vh - 64px); z-index: 1;">
-                <BitNav @ref="UserNav" TItem="BitNavItem" Items="RightNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@ShowRightIconsOnly" />
+                <BitNav TItem="BitNavItem" Items="UserNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@UserIconsOnly" />
             </div>
         }
     </div>
+
 }
 @code {
-    private bool ShowLeftIconsOnly = false;
-    private bool ShowRightIconsOnly = false;
-    private bool IsMobile { get; set; }
-    private bool ShowLeftPanel { get; set; }
-    private bool ShowRightPanel { get; set; }
-    private string LeftHeaderIcon => ShowLeftIconsOnly ? BitIconName.SidePanel : BitIconName.SidePanelMirrored;
-    private string RightHeaderIcon => ShowRightIconsOnly ? BitIconName.SidePanelMirrored : BitIconName.SidePanel;
 
 
-    private List<BitNavItem> LeftNavItems = new()
+    private bool AccountIconsOnly = false;
+    private bool UserIconsOnly = false;
+    private bool IsSmall { get; set; }
+    private bool ShowAccountPanel { get; set; }
+    private bool ShowUserPanel { get; set; }
+    private string AccountHeaderIcon => AccountIconsOnly ? BitIconName.SidePanel : BitIconName.SidePanelMirrored;
+    private string UserHeaderIcon => UserIconsOnly ? BitIconName.SidePanelMirrored : BitIconName.SidePanel;
+    static Guid SampleId = Guid.Parse("34a82bdb-6fdb-11f0-9b6b-74a6c421483f");
+
+
+    private List<BitNavItem> AccountNavItems = new()
     {
         new BitNavItem { Text = "Home", Url = "/", Key = "home", IconName = "Home" },
         new BitNavItem { Text = "About", Url = "/about", Key = "about", IconName = "Info" }
     };
 
-    private List<BitNavItem> RightNavItems = new()
+    private List<BitNavItem> UserNavItems = new()
     {
-        new BitNavItem { Text = "Settings", Url = "/settings", Key = "settings", IconName = "Settings" },
+        new BitNavItem { Text = "Settings", Url = $"/settings/{SampleId}", Key = "settings", IconName = "Settings" },
         new BitNavItem { Text = "Profile", Url = "/profile", Key = "profile", IconName = "Contact" }
     };
 
-    private void ToggleLeftIconsOnly()
-    {
-        if (IsMobile)
-        {
-            ShowLeftPanel = true;
-        }
-        else
-        {
-            ShowLeftIconsOnly = !ShowLeftIconsOnly;
-        }
-    }
-    private void ToggleRightIconsOnly()
-    {
-        if (IsMobile)
-        {
-            ShowRightPanel = true;
-        }
-        else
-        {
-            ShowRightIconsOnly = !ShowRightIconsOnly;
-        }
-    }
+    private void ToggleAccountIconsOnly() => AccountIconsOnly = !AccountIconsOnly;
+    private void ToggleUserIconsOnly() => UserIconsOnly = !UserIconsOnly;
 
-    private void ToggleLeftMobilePanel()
-    {
-        ShowLeftPanel = !ShowLeftPanel;
-    }
-    private void ToggleRightMobilePanel()
-    {
-        ShowRightPanel = !ShowRightPanel;
-    }
+
+    private void ToggleAccountMobilePanel() => ShowAccountPanel = !ShowAccountPanel;
+    private void ToggleUserMobilePanel() => ShowUserPanel = !ShowUserPanel;
 
     private void DoSomething(BitNavItem args)
     {
         Console.WriteLine("clicked!");
     }
-    private BitNav<BitNavItem>? AccountNav { get; set; }
-    private BitNav<BitNavItem>? UserNav { get; set; }
+    // private BitNav<BitNavItem>? AccountNav { get; set; }
+    // private BitNav<BitNavItem>? UserNav { get; set; }
+    // private BitPersona? AccountPersona { get; set; }
+    // private BitPersona? UserPersona { get; set; }
     bool ready { get; set; }
     protected override void OnInitialized()
     {
