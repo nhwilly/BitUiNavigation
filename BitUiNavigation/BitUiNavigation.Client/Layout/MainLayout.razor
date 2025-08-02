@@ -1,10 +1,82 @@
 ﻿@inherits LayoutComponentBase
 
+<BitMediaQuery ScreenQuery="BitScreenQuery.Xs" OnChange="v => { IsMobile = v; }" />
+@if (!ready)
+{
+    <div style="position: absolute; left: 50%; top: 15%; transform: translate(-50%, 0);">
+        <BitSpinnerLoading />
+    </div>
+}
+else
+{
+    <BitSticky Position="BitStickyPosition.Top">
+        <BitHeader>
+            @if (IsMobile)
+            {
+                @* Show the left panel *@
+@*                 <BitButton OnClick="ToggleLeftMobilePanel" Variant="@BitVariant.Text" IconName="@BitIconName.Accept" /> *@
+                <BitPersona ImageInitials="ma" @onclick="ToggleLeftMobilePanel"></BitPersona>
+
+            }
+            else
+            {
+                @* Toggle the icon only display *@
+                <BitButton OnClick="(bool x) => ShowLeftIconsOnly = !ShowLeftIconsOnly" Variant="@BitVariant.Text" IconName="@LeftHeaderIcon" />
+            }
+            <BitSpacer />
+            <BitText Typography="@BitTypography.H5">My Application Header</BitText>
+            <BitSpacer />
+            @if (IsMobile)
+            {
+                <BitPersona ImageInitials="BW" @onclick="ToggleRightMobilePanel"></BitPersona>
+@*                 <BitButton OnClick="ToggleRightMobilePanel" Variant="@BitVariant.Text" IconName="@BitIconName.Camera" /> *@
+            }
+            else
+            {
+                <BitButton OnClick="ToggleRightIconsOnly" Variant="@BitVariant.Text" IconName="@RightHeaderIcon" />
+            }
+        </BitHeader>
+    </BitSticky>
+
+
+    <BitPanel @bind-IsOpen="@ShowLeftPanel" Position="BitPanelPosition.Start">
+        <BitNav @ref="AccountNav" Items="LeftNavItems" FitWidth Style="background: #f5f5f5;" OnItemClick="(BitNavItem item) => ShowLeftPanel = false" IconOnly="false" />
+    </BitPanel>
+
+    <BitPanel @bind-IsOpen="@ShowRightPanel" Position="BitPanelPosition.End">
+        <BitNav @ref="UserNav" Items="RightNavItems" FitWidth Style="background: #f5f5f5;" OnItemClick="(BitNavItem item) => ShowRightPanel = false" IconOnly="false" />
+    </BitPanel>
+
+    <div style="display: flex; height: calc(100vh - 64px);">
+        @if (!IsMobile)
+        {
+            <div style="position: sticky; top: 64px; height: calc(100vh - 128px); z-index: 1;">
+                <BitNav @ref="AccountNav" TItem="BitNavItem" Items="LeftNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@ShowLeftIconsOnly" />
+            </div>
+        }
+
+        <!-- Main Content -->
+        <div style="flex: 1; padding: 1rem; overflow-y: auto; height: calc(100vh - 128px);">
+            @Body
+        </div>
+
+        @if (!IsMobile)
+        {
+            <div style="position: sticky; top: 64px; height: calc(100vh - 64px); z-index: 1;">
+                <BitNav @ref="UserNav" TItem="BitNavItem" Items="RightNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@ShowRightIconsOnly" />
+            </div>
+        }
+    </div>
+}
 @code {
     private bool ShowLeftIconsOnly = false;
     private bool ShowRightIconsOnly = false;
     private bool IsMobile { get; set; }
     private bool ShowLeftPanel { get; set; }
+    private bool ShowRightPanel { get; set; }
+    private string LeftHeaderIcon => ShowLeftIconsOnly ? BitIconName.SidePanel : BitIconName.SidePanelMirrored;
+    private string RightHeaderIcon => ShowRightIconsOnly ? BitIconName.SidePanelMirrored : BitIconName.SidePanel;
+
 
     private List<BitNavItem> LeftNavItems = new()
     {
@@ -29,13 +101,33 @@
             ShowLeftIconsOnly = !ShowLeftIconsOnly;
         }
     }
-    private void ToggleRightIconsOnly() => ShowRightIconsOnly = !ShowRightIconsOnly;
+    private void ToggleRightIconsOnly()
+    {
+        if (IsMobile)
+        {
+            ShowRightPanel = true;
+        }
+        else
+        {
+            ShowRightIconsOnly = !ShowRightIconsOnly;
+        }
+    }
+
+    private void ToggleLeftMobilePanel()
+    {
+        ShowLeftPanel = !ShowLeftPanel;
+    }
+    private void ToggleRightMobilePanel()
+    {
+        ShowRightPanel = !ShowRightPanel;
+    }
+
     private void DoSomething(BitNavItem args)
     {
         Console.WriteLine("clicked!");
     }
     private BitNav<BitNavItem>? AccountNav { get; set; }
-    private void CloseLeftPanel() => ShowLeftPanel = false;
+    private BitNav<BitNavItem>? UserNav { get; set; }
     bool ready { get; set; }
     protected override void OnInitialized()
     {
@@ -54,57 +146,4 @@
             StateHasChanged(); // Request a re-render
         }
     }
-}
-<BitMediaQuery ScreenQuery="BitScreenQuery.Xs" OnChange="v => { IsMobile = v; }" />
-@if (!ready)
-{
-    <div style="position: absolute; left: 50%; top: 15%; transform: translate(-50%, 0);">
-        <!-- Your centered content here -->
-        <BitSpinnerLoading />
-    </div>
-}
-else
-{
-    <BitSticky Position="BitStickyPosition.Top">
-        <BitHeader>
-            <BitButton OnClick="ToggleLeftIconsOnly" IconName="View" />
-            <BitSpacer />
-            <BitText Typography="@BitTypography.H5">My Application Header</BitText>
-            <BitSpacer />
-            <BitButton OnClick="ToggleRightIconsOnly" IconName="ViewList" />
-        </BitHeader>
-    </BitSticky>
-
-
-    <BitPanel @bind-IsOpen="@ShowLeftPanel" Position="BitPanelPosition.Start">
-
-        <BitNav @ref="AccountNav" Items="LeftNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="false" />
-    </BitPanel>
-
-    <div style="display: flex; height: calc(100vh - 64px);">
-        @if (!IsMobile)
-        {
-            <!-- Left Navigation -->
-            <div style="position: sticky; top: 64px; height: calc(100vh - 128px); z-index: 1;">
-                <BitNav @ref="AccountNav" OnItemClick="DoSomething" TItem="BitNavItem" Items="LeftNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@ShowLeftIconsOnly" />
-            </div>
-        }
-        <!-- Main Content -->
-        <div style="flex: 1; padding: 1rem; overflow-y: auto; height: calc(100vh - 128px);">
-            @Body
-        </div>
-
-        <!-- Right Navigation -->
-        @if (!IsMobile)
-        {
-            <div style="position: sticky; top: 64px; height: calc(100vh - 64px); z-index: 1;">
-                <BitNav TItem="BitNavItem" Items="RightNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@ShowRightIconsOnly" />
-            </div>
-        }
-    </div>
-    <div id="blazor-error-ui" data-nosnippet>
-        An unhandled error has occurred.
-        <a href="." class="reload">Reload</a>
-        <span class="dismiss">🗙</span>
-    </div>
 }
