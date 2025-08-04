@@ -1,60 +1,129 @@
 ﻿@inherits LayoutComponentBase
 
+<BitMediaQuery ScreenQuery="BitScreenQuery.Xs" OnChange="v => { IsSmall = v; }" />
+@if (!ready)
+{
+    <div style="position: absolute; left: 50%; top: 15%; transform: translate(-50%, 0);">
+        <BitSpinnerLoading />
+    </div>
+}
+else
+{
+    <BitSticky Position="BitStickyPosition.Top">
+        <BitHeader>
+            @if (IsSmall)
+            {
+                <BitPersona Size="@BitPersonaSize.Size24" ImageInitials="ma" @onclick="ToggleAccountMobilePanel"></BitPersona>
+            }
+            else
+            {
+                <BitButton OnClick="ToggleAccountIconsOnly" Variant="@BitVariant.Text" IconName="@AccountHeaderIcon" />
+            }
+            <BitSpacer />
+            <BitText Typography="@BitTypography.H5">My Application Header</BitText>
+            <BitSpacer />
+            @if (IsSmall)
+            {
+                <BitPersona Size="@BitPersonaSize.Size24" ImageInitials="BW" @onclick="ToggleUserMobilePanel"></BitPersona>
+            }
+            else
+            {
+                <BitButton OnClick="ToggleUserIconsOnly" Variant="@BitVariant.Text" IconName="@UserHeaderIcon" />
+            }
+        </BitHeader>
+    </BitSticky>
+
+    @if (IsSmall)
+    {
+        <BitPanel @bind-IsOpen="@ShowAccountPanel" Position="BitPanelPosition.Start">
+            <BitNav Items="AccountNavItems" FitWidth Style="background: #f5f5f5;" OnItemClick="(BitNavItem item) => ShowAccountPanel = false" IconOnly="false" />
+        </BitPanel>
+
+        <BitPanel @bind-IsOpen="@ShowUserPanel" Position="BitPanelPosition.End">
+            <BitNav Items="UserNavItems" FitWidth Style="background: #f5f5f5;" OnItemClick="(BitNavItem item) => ShowUserPanel = false" IconOnly="false" />
+        </BitPanel>
+    }
+    <div style="display: flex; height: calc(100vh - 64px);">
+        @if (!IsSmall)
+        {
+            <div style="position: sticky; top: 64px; height: calc(100vh - 128px); z-index: 1;">
+                <BitStack>
+                    <BitPersona Size="@BitPersonaSize.Size32" />
+                    <BitNav TItem="BitNavItem" Items="AccountNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@AccountIconsOnly" />
+                </BitStack>
+            </div>
+        }
+
+        <!-- Main Content -->
+        <div style="flex: 1; padding: 1rem; overflow-y: auto; height: calc(100vh - 128px);">
+            @Body
+        </div>
+
+        @if (!IsSmall)
+        {
+            <div style="position: sticky; top: 64px; height: calc(100vh - 64px); z-index: 1;">
+                <BitNav TItem="BitNavItem" Items="UserNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@UserIconsOnly" />
+            </div>
+        }
+    </div>
+
+}
 @code {
-    private bool ShowLeftIconsOnly = false;
-    private bool ShowRightIconsOnly = false;
-    private bool IsMobile { get; set; }
-    private List<BitNavItem> LeftNavItems = new()
+
+
+    private bool AccountIconsOnly = false;
+    private bool UserIconsOnly = false;
+    private bool IsSmall { get; set; }
+    private bool ShowAccountPanel { get; set; }
+    private bool ShowUserPanel { get; set; }
+    private string AccountHeaderIcon => AccountIconsOnly ? BitIconName.SidePanel : BitIconName.SidePanelMirrored;
+    private string UserHeaderIcon => UserIconsOnly ? BitIconName.SidePanelMirrored : BitIconName.SidePanel;
+    static Guid SampleId = Guid.Parse("34a82bdb-6fdb-11f0-9b6b-74a6c421483f");
+
+
+    private List<BitNavItem> AccountNavItems = new()
     {
         new BitNavItem { Text = "Home", Url = "/", Key = "home", IconName = "Home" },
         new BitNavItem { Text = "About", Url = "/about", Key = "about", IconName = "Info" }
     };
 
-    private List<BitNavItem> RightNavItems = new()
+    private List<BitNavItem> UserNavItems = new()
     {
-        new BitNavItem { Text = "Settings", Url = "/settings", Key = "settings", IconName = "Settings" },
+        new BitNavItem { Text = "Settings", Url = $"/settings/{SampleId}", Key = "settings", IconName = "Settings", Match=BitNavMatch.Prefix },
         new BitNavItem { Text = "Profile", Url = "/profile", Key = "profile", IconName = "Contact" }
     };
 
-    private void ToggleLeftIconsOnly() => ShowLeftIconsOnly = !ShowLeftIconsOnly;
-    private void ToggleRightIconsOnly() => ShowRightIconsOnly = !ShowRightIconsOnly;
+    private void ToggleAccountIconsOnly() => AccountIconsOnly = !AccountIconsOnly;
+    private void ToggleUserIconsOnly() => UserIconsOnly = !UserIconsOnly;
+
+
+    private void ToggleAccountMobilePanel() => ShowAccountPanel = !ShowAccountPanel;
+    private void ToggleUserMobilePanel() => ShowUserPanel = !ShowUserPanel;
+
     private void DoSomething(BitNavItem args)
     {
         Console.WriteLine("clicked!");
     }
-    private BitNav<BitNavItem>? AccountNav { get; set; }
+    // private BitNav<BitNavItem>? AccountNav { get; set; }
+    // private BitNav<BitNavItem>? UserNav { get; set; }
+    // private BitPersona? AccountPersona { get; set; }
+    // private BitPersona? UserPersona { get; set; }
+    bool ready { get; set; }
+    protected override void OnInitialized()
+    {
+        ready = false;
+        base.OnInitialized();
+        // Initialize any additional logic if needed
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+
+        base.OnAfterRender(firstRender);
+        if (!ready)
+        {
+            // Simulate some async operation, e.g., fetching data
+            ready = true; // Set ready to true after the operation
+            StateHasChanged(); // Request a re-render
+        }
+    }
 }
-<BitSticky Position="BitStickyPosition.Top">
-    <BitHeader>
-        <BitButton OnClick="ToggleLeftIconsOnly" IconName="View" />
-        <BitSpacer />
-        <BitText Typography="@BitTypography.H5">My Application Header</BitText>
-        <BitSpacer />
-        <BitButton OnClick="ToggleRightIconsOnly" IconName="ViewList" />
-    </BitHeader>
-</BitSticky>
-
-<BitMediaQuery ScreenQuery="BitScreenQuery.Xs" OnChange="v => { IsMobile = v; }" />
-
-<!-- This is for the entire page, not including the header. -->
-<div style="display: flex; height: calc(100vh - 64px);">
-    <!-- Left Navigation -->
-    <div style="position: sticky; top: 64px; height: calc(100vh - 128px); z-index: 1;">
-        <BitNav @ref="AccountNav" OnItemClick="DoSomething" TItem="BitNavItem" Items="LeftNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@ShowLeftIconsOnly" />
-    </div>
-
-    <!-- Main Content -->
-    <div style="flex: 1; padding: 1rem; overflow-y: auto; height: calc(100vh - 128px);">
-        @Body
-    </div>
-
-    <!-- Right Navigation -->
-    <div style="position: sticky; top: 64px; height: calc(100vh - 64px); z-index: 1;">
-        <BitNav TItem="BitNavItem" Items="RightNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@ShowRightIconsOnly" />
-    </div>
-</div>
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
