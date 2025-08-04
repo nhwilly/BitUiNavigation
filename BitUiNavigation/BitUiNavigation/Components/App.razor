@@ -11,10 +11,12 @@
     <link href="_content/Bit.BlazorUI.Extras/styles/bit.blazorui.extras.css" rel="stylesheet" />
     <link href="_content/Bit.BlazorUI.Assets/styles/bit.blazorui.assets.css" rel="stylesheet" />
     <ImportMap />
-    <HeadOutlet @rendermode="InteractiveAuto" />
+    <HeadOutlet @rendermode="@(new InteractiveServerRenderMode(prerender: false))" />
 </head>
 
 <body>
+    <Routes @rendermode="@(new InteractiveServerRenderMode(prerender: false))" />
+
     <Routes @rendermode="InteractiveAuto" />
     <script src="_framework/blazor.web.js"></script>
     <script src="_content/Bit.BlazorUI/scripts/bit.blazorui.js"></script>

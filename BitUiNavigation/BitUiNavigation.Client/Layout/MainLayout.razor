@@ -89,7 +89,7 @@ else
 
     private List<BitNavItem> UserNavItems = new()
     {
-        new BitNavItem { Text = "Settings", Url = $"/settings/{SampleId}", Key = "settings", IconName = "Settings" },
+        new BitNavItem { Text = "Settings", Url = $"/settings/{SampleId}", Key = "settings", IconName = "Settings", Match=BitNavMatch.Prefix },
         new BitNavItem { Text = "Profile", Url = "/profile", Key = "profile", IconName = "Contact" }
     };
 
