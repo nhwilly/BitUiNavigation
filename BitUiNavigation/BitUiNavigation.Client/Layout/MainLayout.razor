@@ -65,22 +65,28 @@ else
             <div style="position: sticky; top: 64px; height: calc(100vh - 64px); z-index: 1;">
                 <BitNav TItem="BitNavItem" Items="UserNavItems" FullWidth Style="background: #f5f5f5;" IconOnly="@UserIconsOnly" Match="BitNavMatch.Prefix" />
                 <BitButton OnClick="@(() => UserIsOpen = true)">Settings dialogue</BitButton>
-                    <UserPage @ref="@userPage" IsOpen="UserIsOpen" OnClosed="CloseUser"></UserPage>
+                <BitButton Onclick="OpenUser">Settings </BitButton>
+                <UserModal @ref="@userModal" IsOpen="UserIsOpen" OnClosed="CloseUser"></UserModal>
             </div>
         }
     </div>
 
 }
 @code {
-    UserPage? userPage;
+    UserModal? userModal;
     private void CloseUser()
     {
         Console.WriteLine($"MainLayout attempting to close user");
-        var pageIsValid = userPage?.IsValid ?? false;
+        var pageIsValid = userModal?.IsValid ?? false;
         UserIsOpen = false;
         Console.WriteLine($"MainLayout setting UserIsOpen to false");
     }
 
+    private void OpenUser()
+    {
+        Console.WriteLine($"Navigating to user");
+        NavManager.NavigateTo($"/user/profile");
+    }
     public bool UserIsOpen { get; set; } = false;
     private bool AccountIconsOnly = false;
     private bool UserIconsOnly = false;
