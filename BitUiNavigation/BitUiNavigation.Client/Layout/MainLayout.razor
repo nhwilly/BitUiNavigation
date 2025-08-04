@@ -1,5 +1,6 @@
-﻿@inherits LayoutComponentBase
-
+﻿@using BitUiNavigation.Client.Pages
+@inherits LayoutComponentBase
+@inject NavigationManager NavManager
 <BitMediaQuery ScreenQuery="BitScreenQuery.Xs" OnChange="v => { IsSmall = v; }" />
 @if (!ready)
 {
@@ -62,15 +63,25 @@ else
         @if (!IsSmall)
         {
             <div style="position: sticky; top: 64px; height: calc(100vh - 64px); z-index: 1;">
-                <BitNav TItem="BitNavItem" Items="UserNavItems" FitWidth Style="background: #f5f5f5;" IconOnly="@UserIconsOnly" />
+                <BitNav TItem="BitNavItem" Items="UserNavItems" FullWidth Style="background: #f5f5f5;" IconOnly="@UserIconsOnly" Match="BitNavMatch.Prefix" />
+                <BitButton OnClick="@(() => UserIsOpen = true)">Settings dialogue</BitButton>
+                    <UserPage @ref="@userPage" IsOpen="UserIsOpen" OnClosed="CloseUser"></UserPage>
             </div>
         }
     </div>
 
 }
 @code {
+    UserPage? userPage;
+    private void CloseUser()
+    {
+        Console.WriteLine($"MainLayout attempting to close user");
+        var pageIsValid = userPage?.IsValid ?? false;
+        UserIsOpen = false;
+        Console.WriteLine($"MainLayout setting UserIsOpen to false");
+    }
 
-
+    public bool UserIsOpen { get; set; } = false;
     private bool AccountIconsOnly = false;
     private bool UserIconsOnly = false;
     private bool IsSmall { get; set; }
@@ -81,6 +92,7 @@ else
     static Guid SampleId = Guid.Parse("34a82bdb-6fdb-11f0-9b6b-74a6c421483f");
 
 
+
     private List<BitNavItem> AccountNavItems = new()
     {
         new BitNavItem { Text = "Home", Url = "/", Key = "home", IconName = "Home" },
@@ -89,8 +101,8 @@ else
 
     private List<BitNavItem> UserNavItems = new()
     {
-        new BitNavItem { Text = "Settings", Url = $"/settings/{SampleId}", Key = "settings", IconName = "Settings", Match=BitNavMatch.Prefix },
-        new BitNavItem { Text = "Profile", Url = "/profile", Key = "profile", IconName = "Contact" }
+        new BitNavItem { Text = "Settings", Url = $"/settings/{SampleId}", Key = "settings", IconName = "Settings"},
+        new BitNavItem { Text = "Profile", Url = "/profile", Key = "profile", IconName = "Contact"  },
     };
 
     private void ToggleAccountIconsOnly() => AccountIconsOnly = !AccountIconsOnly;
@@ -104,16 +116,11 @@ else
     {
         Console.WriteLine("clicked!");
     }
-    // private BitNav<BitNavItem>? AccountNav { get; set; }
-    // private BitNav<BitNavItem>? UserNav { get; set; }
-    // private BitPersona? AccountPersona { get; set; }
-    // private BitPersona? UserPersona { get; set; }
     bool ready { get; set; }
     protected override void OnInitialized()
     {
         ready = false;
         base.OnInitialized();
-        // Initialize any additional logic if needed
     }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
