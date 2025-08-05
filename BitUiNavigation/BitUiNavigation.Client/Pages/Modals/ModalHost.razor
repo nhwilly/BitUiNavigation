@@ -13,6 +13,7 @@
               Style="@($"width: {_active.Width}; height: {_active.Height};")">
         <div style="display:flex; height:100%;">
             <BitNav Mode="BitNavMode.Automatic"
+            Match="BitNavMatch.Wildcard"
                     Items="@_active.BuildNavItems(Nav, _active.QueryKey)"
                     Style="width:250px; border-right:1px solid #e5e5e5;" />
 

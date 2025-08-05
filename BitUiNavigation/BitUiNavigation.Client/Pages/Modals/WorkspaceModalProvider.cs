@@ -4,10 +4,10 @@ using Microsoft.AspNetCore.Components;
 
 namespace BitUiNavigation.Client.Pages.Modals;
 
-public sealed class UserModalProvider : IModalProvider
+public sealed class WorkspaceModalProvider : IModalProvider
 {
-    public string QueryKey => nameof(UserModalProvider);
-    public string DefaultSection => nameof(UserMembershipsPanel);
+    public string QueryKey => nameof(WorkspaceModalProvider);
+    public string DefaultSection => nameof(WorkspaceDetailsPanel);
     public string Width => "900px";
     public string Height => "640px";
 
@@ -18,8 +18,8 @@ public sealed class UserModalProvider : IModalProvider
 
         return new()
         {
-            new() { Key = nameof(UserMembershipsPanel), Text = "Memberships", Url = url(nameof(UserMembershipsPanel)) },
-            new() { Key = nameof(UserProfilePanel),     Text = "Profile",     Url = url(nameof(UserProfilePanel)) }
+            new() { Key = nameof(WorkspaceDetailsPanel), Text = "Workspace", Url = url(nameof(WorkspaceDetailsPanel)) },
+            new() { Key = nameof(UserProfilePanel),     Text = "Details",     Url = url(nameof(UserProfilePanel)) }
         };
     }
 
@@ -27,7 +27,7 @@ public sealed class UserModalProvider : IModalProvider
     {
         var map = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
         {
-            [nameof(UserMembershipsPanel)] = typeof(UserMembershipsPanel),
+            [nameof(WorkspaceDetailsPanel)] = typeof(WorkspaceDetailsPanel),
             [nameof(UserProfilePanel)] = typeof(UserProfilePanel)
         };
         var type = map.TryGetValue(sectionKey, out var t) ? t : typeof(NotFoundPanel);
@@ -36,7 +36,7 @@ public sealed class UserModalProvider : IModalProvider
 
     private static string Normalize(string? value)
     {
-        if (string.IsNullOrWhiteSpace(value)) return nameof(UserMembershipsPanel);
+        if (string.IsNullOrWhiteSpace(value)) return nameof(WorkspaceDetailsPanel);
         var v = value.Trim();
         if (v.StartsWith("/")) v = v[1..];
         return v;

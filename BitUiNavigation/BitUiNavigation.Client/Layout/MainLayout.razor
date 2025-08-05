@@ -66,8 +66,11 @@ else
         {
             <div style="position: sticky; top: 64px; height: calc(100vh - 64px); z-index: 1;">
                 <BitNav TItem="BitNavItem" Items="UserNavItems" FullWidth Style="background: #f5f5f5;" IconOnly="@UserIconsOnly" Match="BitNavMatch.Prefix" />
-                <BitButton OnClick="@(() => OpenSettings(nameof(UserProfilePanel)))">
+                <BitButton OnClick="@(() => OpenSettings(nameof(UserModalProvider),nameof(UserProfilePanel)))">
                     Open Profile
+                </BitButton>
+                <BitButton OnClick="@(() => OpenSettings(nameof(WorkspaceModalProvider), nameof(WorkspaceDetailsPanel)))">
+                    Open Workspace
                 </BitButton>
             </div>
         }
@@ -77,8 +80,8 @@ else
 }
 @code {
     private bool _modalOpen;
-    private void OpenSettings(string section)
-        => Nav.NavigateTo(Nav.GetUriWithQueryParameter("modal", section));
+    private void OpenSettings(string key,string section)
+        => Nav.NavigateTo(Nav.GetUriWithQueryParameter(key, section));
 
     private void OpenModal(string section)
     {

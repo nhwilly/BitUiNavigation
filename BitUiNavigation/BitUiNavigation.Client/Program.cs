@@ -19,5 +19,6 @@ public class Program
         services.AddTimeWarpState();
         services.AddSingleton<IModalProviderSource, DefaultModalProviderSource>();
         services.AddSingleton<IModalProvider, UserModalProvider>();
+        services.AddSingleton<IModalProvider, WorkspaceModalProvider>();
     }
 }
