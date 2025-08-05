@@ -1,6 +1,8 @@
 ﻿@using BitUiNavigation.Client.Pages
+@using BitUiNavigation.Client.Pages.Modals
+@using BitUiNavigation.Client.Pages.UserProfile
 @inherits LayoutComponentBase
-@inject NavigationManager NavManager
+@inject NavigationManager Nav
 <BitMediaQuery ScreenQuery="BitScreenQuery.Xs" OnChange="v => { IsSmall = v; }" />
 @if (!ready)
 {
@@ -64,20 +66,30 @@ else
         {
             <div style="position: sticky; top: 64px; height: calc(100vh - 64px); z-index: 1;">
                 <BitNav TItem="BitNavItem" Items="UserNavItems" FullWidth Style="background: #f5f5f5;" IconOnly="@UserIconsOnly" Match="BitNavMatch.Prefix" />
-                <BitButton OnClick="@(() => UserIsOpen = true)">Settings dialogue</BitButton>
-                <BitButton Onclick="OpenUser">Settings </BitButton>
-                <UserModal @ref="@userModal" IsOpen="UserIsOpen" OnClosed="CloseUser"></UserModal>
+                <BitButton OnClick="@(() => OpenSettings(nameof(UserProfilePanel)))">
+                    Open Profile
+                </BitButton>
             </div>
         }
     </div>
-
+    <ModalHost />
+    @* <UserPage IsOpen="@_modalOpen" IsOpenChanged="@(v => _modalOpen = v)" /> *@
 }
 @code {
-    UserModal? userModal;
+    private bool _modalOpen;
+    private void OpenSettings(string section)
+        => Nav.NavigateTo(Nav.GetUriWithQueryParameter("modal", section));
+
+    private void OpenModal(string section)
+    {
+        // Add or update ?modal=section on the current URL (pushes a history entry)
+        var newUri = Nav.GetUriWithQueryParameter("modal", section);
+        Nav.NavigateTo(newUri, forceLoad: false);
+    }
     private void CloseUser()
     {
         Console.WriteLine($"MainLayout attempting to close user");
-        var pageIsValid = userModal?.IsValid ?? false;
+        // var pageIsValid = userModal?.IsValid ?? false;
         UserIsOpen = false;
         Console.WriteLine($"MainLayout setting UserIsOpen to false");
     }
@@ -85,7 +97,7 @@ else
     private void OpenUser()
     {
         Console.WriteLine($"Navigating to user");
-        NavManager.NavigateTo($"/user/profile");
+        Nav.NavigateTo($"/user/profile");
     }
     public bool UserIsOpen { get; set; } = false;
     private bool AccountIconsOnly = false;
@@ -138,5 +150,6 @@ else
             ready = true; // Set ready to true after the operation
             StateHasChanged(); // Request a re-render
         }
+        await Task.CompletedTask;
     }
 }

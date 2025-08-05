@@ -1,0 +1,125 @@
+﻿@inject NavigationManager Nav
+@inject IModalProviderSource ModalProviderSource
+
+@implements IDisposable
+@using System.Web
+@using Microsoft.AspNetCore.Components.Routing
+
+@if (_active is not null)
+{
+    <BitModal IsOpen="true"
+              OnOverlayClick="@Close"
+              OnDismiss="@Close"
+              Style="@($"width: {_active.Width}; height: {_active.Height};")">
+        <div style="display:flex; height:100%;">
+            <BitNav Mode="BitNavMode.Automatic"
+                    Items="@_active.BuildNavItems(Nav, _active.QueryKey)"
+                    Style="width:250px; border-right:1px solid #e5e5e5;" />
+
+            <div style="flex:1; padding:1rem; overflow:auto;">
+                <RouteView @key="_section"
+                           RouteData="@_active.BuildRouteData(_section)"
+                           DefaultLayout="@typeof(EmptyLayout)" />
+            </div>
+        </div>
+    </BitModal>
+}
+
+@code {
+    // ---------- Public API ----------
+    // Just drop <ModalHost /> in MainLayout. Configure modals below in _configs.
+    // Add more configs for other modals (e.g., QueryKey="help").
+
+    // ---------- Internal state ----------
+    private IModalProvider? _active;
+    private string _section = string.Empty;
+    private string? _preOpenUrl;
+
+    protected override void OnInitialized()
+    {
+        Nav.LocationChanged += OnLocationChanged;
+        ReadFromUri(Nav.Uri, requestStateHasChanged: false);
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender) ReadFromUri(Nav.Uri, requestStateHasChanged: true);
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+        => ReadFromUri(e.Location, requestStateHasChanged: true);
+
+    private void ReadFromUri(string fullUri, bool requestStateHasChanged)
+    {
+        var uri = new Uri(fullUri);
+        var qs = HttpUtility.ParseQueryString(uri.Query);
+
+        // Find first config whose QueryKey exists in the query string
+        // var match = _configs.FirstOrDefault(c => !string.IsNullOrWhiteSpace(qs[c.QueryKey]));
+        var match = ModalProviderSource.GetModalProviders().FirstOrDefault(f => !string.IsNullOrWhiteSpace(qs[f.QueryKey]));
+
+        var newSection = match is null ? null : NormalizeSection(qs[match.QueryKey], match.DefaultSection);
+
+        var wasActive = _active is not null;
+        var willBeActive = match is not null;
+
+        if (willBeActive && !wasActive)
+        {
+            // First open: capture the URL before the modal query was added (preserve other params)
+            _preOpenUrl = RemoveQueryParam(fullUri, match!.QueryKey);
+        }
+        else if (!willBeActive)
+        {
+            _preOpenUrl = null; // modal closed (or no modal present)
+        }
+
+        _active = match;
+        _section = newSection ?? string.Empty;
+
+        if (requestStateHasChanged) StateHasChanged();
+    }
+
+    private void Close()
+    {
+        if (!string.IsNullOrEmpty(_preOpenUrl))
+        {
+            Nav.NavigateTo(_preOpenUrl!, replace: true);
+            _preOpenUrl = null;
+        }
+        else if (_active is not null)
+        {
+            // Deep-linked: strip only the active modal's query key
+            var stripped = Nav.GetUriWithQueryParameter(_active.QueryKey, (string?)null);
+            Nav.NavigateTo(stripped, replace: true);
+        }
+    }
+
+    private static string RemoveQueryParam(string fullUri, string key)
+    {
+        var uri = new Uri(fullUri);
+        var qs = HttpUtility.ParseQueryString(uri.Query);
+        qs.Remove(key);
+        var b = new UriBuilder(uri) { Query = qs.ToString() ?? string.Empty };
+        return b.Uri.ToString();
+    }
+
+    private static string NormalizeSection(string? value, string defaultSection)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return defaultSection;
+        var v = value.Trim();
+        if (v.StartsWith("/")) v = v[1..];
+        return v;
+    }
+
+    public void Dispose() => Nav.LocationChanged -= OnLocationChanged;
+
+    // ---------- Types ----------
+    private sealed record ModalConfig(
+        string QueryKey,
+        string DefaultSection,
+        string Width,
+        string Height,
+        Func<NavigationManager, string, List<BitNavItem>> BuildNavItems,
+        Func<string, RouteData> BuildRouteData
+    );
+}

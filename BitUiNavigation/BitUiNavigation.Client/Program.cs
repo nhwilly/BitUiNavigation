@@ -1,16 +1,23 @@
 using Bit.BlazorUI;
+using BitUiNavigation.Client.Pages.Modals;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using TimeWarp.State;
 
-namespace BitUiNavigation.Client
+namespace BitUiNavigation.Client;
+
+public class Program
 {
-    internal class Program
+    static async Task Main(string[] args)
     {
-        static async Task Main(string[] args)
-        {
-            var builder = WebAssemblyHostBuilder.CreateDefault(args);
-            builder.Services.AddBitBlazorUIServices();
-
-            await builder.Build().RunAsync();
-        }
+        var builder = WebAssemblyHostBuilder.CreateDefault(args);
+        ConfigureCommonServices(builder.Services);
+        await builder.Build().RunAsync();
+    }
+    public static void ConfigureCommonServices(IServiceCollection services)
+    {
+        services.AddBitBlazorUIServices();
+        services.AddTimeWarpState();
+        services.AddSingleton<IModalProviderSource, DefaultModalProviderSource>();
+        services.AddSingleton<IModalProvider, UserModalProvider>();
     }
 }

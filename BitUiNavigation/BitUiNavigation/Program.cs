@@ -8,7 +8,7 @@ namespace BitUiNavigation
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            builder.Services.AddBitBlazorUIServices();
+            Client.Program.ConfigureCommonServices(builder.Services);
 
             // Add services to the container.
             builder.Services.AddRazorComponents()
