@@ -23,25 +23,29 @@
                         Style="width:150px; margin: 1rem;"
                         Classes="NavStyles" />
             </div>
-            <div style="flex:1; overflow-y: auto; display: flex; flex-direction: column;">
-                <BitStack>
-                    <!-- Sticky Header -->
-                    <BitStack Horizontal
-                              Style="position: sticky; top: 0; z-index: 1; background: white;
-                             border-bottom: 1px solid #f8f9fa; padding: 1rem;">
+            <!-- Main right-side area -->
+            <!-- RIGHT SIDE: Full height, column layout -->
+            <div style="flex: 1; display: flex; flex-direction: column; height: 100%;">
+
+                <!-- Sticky Header -->
+                <div style="flex-shrink: 0; background: white; border-top-right-radius: 20px; border-bottom: 1px solid #f8f9fa; padding: 1rem;">
+                    <BitStack Horizontal>
                         <BitHeader>
                             <BitText Typography="BitTypography.H6">Modal Title</BitText>
                         </BitHeader>
                         <BitSpacer />
                     </BitStack>
+                </div>
 
-                    <!-- Scrollable Content -->
+                <!-- Scrollable Content Area with bottom radius -->
+                <div style="flex: 1; overflow-y: auto; border-bottom-right-radius: 20px;">
                     <div style="padding: 1rem;">
                         <RouteView @key="_section"
                                    RouteData="@_active.BuildRouteData(_section)"
                                    DefaultLayout="@typeof(EmptyLayout)" />
                     </div>
-                </BitStack>
+                </div>
+
             </div>
         </div>
     </BitModal>
