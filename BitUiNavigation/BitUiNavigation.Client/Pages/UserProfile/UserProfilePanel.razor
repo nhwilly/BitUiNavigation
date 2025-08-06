@@ -1,5 +1,24 @@
-﻿<h3>UserProfilePage mofo</h3>
-
+﻿@using BitUiNavigation.Client.Pages.Modals
+@implements IModalSectionGuard
+Hello from User profile page.
 @code {
+    [CascadingParameter] public ModalGuardRegistration? RegisterGuard { get; set; }
 
+    protected override void OnInitialized()
+    {
+        RegisterGuard?.Invoke(this);
+    }
+
+    public Task<bool> CanNavigateAwayAsync()
+    {
+        // Validate with FluentValidation, e.g.:
+        var isValid = ValidateModel();
+        return Task.FromResult(isValid);
+    }
+
+    private bool ValidateModel()
+    {
+        // run FluentValidation or EditContext.Validate()
+        return true;
+    }
 }

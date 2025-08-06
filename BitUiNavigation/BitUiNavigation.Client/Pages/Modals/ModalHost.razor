@@ -41,9 +41,11 @@
                 <div style="flex: 1; overflow: hidden; border-bottom-right-radius: 20px; position: relative;">
                     <div style="height: 100%; overflow-y: auto;">
                         <div style="padding: 0rem 1rem 1rem 1rem;">
-                            <RouteView @key="_section"
-                                       RouteData="@_active.BuildRouteData(_section)"
-                                       DefaultLayout="@typeof(EmptyLayout)" />
+                            <CascadingValue Value="(ModalGuardRegistration)RegisterGuardedComponent">
+                                <RouteView @key="_section"
+                                           RouteData="@_active.BuildRouteData(_section)"
+                                           DefaultLayout="@typeof(EmptyLayout)" />
+                            </CascadingValue>
                         </div>
                     </div>
                 </div>
@@ -77,6 +79,11 @@
     private IModalProvider? _active;
     private string _section = string.Empty;
     private string? _preOpenUrl;
+    private IModalSectionGuard? _currentGuardedComponent;
+    private void RegisterGuardedComponent(IModalSectionGuard component)
+    {
+        _currentGuardedComponent = component;
+    }
 
     private static string ModalContainerClass = "modal-container";
     private string CreateContainerCss()
@@ -118,7 +125,7 @@
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
         => ReadFromUri(e.Location, requestStateHasChanged: true);
 
-    private void ReadFromUri(string fullUri, bool requestStateHasChanged)
+    private async void ReadFromUri(string fullUri, bool requestStateHasChanged)
     {
         var uri = new Uri(fullUri);
         var qs = HttpUtility.ParseQueryString(uri.Query);
@@ -142,9 +149,24 @@
             _preOpenUrl = null; // modal closed (or no modal present)
         }
 
+        var oldSection = _section;
+
+        if (newSection != oldSection)
+        {
+            if (_currentGuardedComponent is not null)
+            {
+                var canNavigate = await _currentGuardedComponent.CanNavigateAwayAsync();
+                if (!canNavigate)
+                {
+                    // Cancel navigation by navigating back to old section
+                    Nav.NavigateTo(Nav.GetUriWithQueryParameter(_active!.QueryKey, oldSection));
+                    return;
+                }
+            }
+        }
+
         _active = match;
         _section = newSection ?? string.Empty;
-
         if (requestStateHasChanged) StateHasChanged();
     }
 
