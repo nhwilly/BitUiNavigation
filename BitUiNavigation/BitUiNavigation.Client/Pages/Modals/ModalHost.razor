@@ -162,6 +162,10 @@
                     Nav.NavigateTo(Nav.GetUriWithQueryParameter(_active!.QueryKey, oldSection));
                     return;
                 }
+                if (_currentGuardedComponent is ISupportsSaveOnNavigate saver)
+                {
+                    await saver.SaveOnNavigateAsync();
+                }
             }
         }
 
