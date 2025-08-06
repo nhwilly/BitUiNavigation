@@ -23,11 +23,10 @@ public sealed class UserModalProvider : IModalProvider
 
         return
     [
-        new() { Key = nameof(UserMembershipsPanel), Text = "Memberships", Url = url(nameof(UserMembershipsPanel)) },
-        new() { Key = nameof(UserProfilePanel),     Text = "Profile",     Url = url(nameof(UserProfilePanel)) }
+        new() { Key = nameof(UserMembershipsPanel), Text = "Memberships", IconName=BitIconName.UserEvent, Url = url(nameof(UserMembershipsPanel)) },
+        new() { Key = nameof(UserProfilePanel),     Text = "Profile",     IconName=BitIconName.Contact, Url = url(nameof(UserProfilePanel)) }
     ];
     }
-
 
     public RouteData BuildRouteData(string sectionKey)
     {
