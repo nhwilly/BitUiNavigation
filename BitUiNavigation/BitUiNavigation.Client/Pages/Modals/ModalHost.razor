@@ -11,7 +11,7 @@
     <BitModal IsOpen="true"
               OnOverlayClick="@Close"
               OnDismiss="@Close"
-              Classes="ClassStyles">
+              Classes="@ClassStyles">
         <div style="display:flex; height:100%;">
             <BitNav Mode="BitNavMode.Automatic"
                     Match="BitNavMatch.Wildcard"
@@ -27,12 +27,9 @@
     </BitModal>
 }
 <style>
-    .background-style {
-        width: @_active?.Width;
-        height: @_active?.Height;
-        border-radius: 20px;
-    }
+    @((MarkupString)CreateContainerCss())
 </style>
+
 @code {
     // ---------- Public API ----------
     // Just drop <ModalHost /> in MainLayout. Configure modals below in _configs.
@@ -43,10 +40,22 @@
     private string _section = string.Empty;
     private string? _preOpenUrl;
 
+    private static string ModalContainerClass = "modal-container";
+    private string CreateContainerCss()
+    {
+        if (_active == null) return string.Empty;
+        return $@"
+        .{ModalContainerClass} {{
+            width: {_active.Width};
+            height: {_active.Height};
+            border-radius: 20px;
+        }}
+    ";
+    }
     BitModalClassStyles ClassStyles = new()
     {
-        Content = "background-style",
-        
+        Content = ModalContainerClass,
+
     };
 
     protected override void OnInitialized()
