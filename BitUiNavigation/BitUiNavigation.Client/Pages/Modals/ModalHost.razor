@@ -28,49 +28,44 @@
             <div style="flex: 1; display: flex; flex-direction: column; height: 100%;">
 
                 <!-- Sticky Header -->
-                <div style="flex-shrink: 0; background: white; border-top-right-radius: 20px; border-bottom: 1px solid #f8f9fa; padding: 1rem;">
+                <div style="flex-shrink: 0; background: white; border-top-right-radius: 20px; border-bottom: 1px solid #f8f9fa; padding-top: 1rem;">
                     <BitStack Horizontal>
-                        <BitHeader>
-                            <BitText Typography="BitTypography.H6">Modal Title</BitText>
+                        <BitHeader Style="line-height: 24px;">
+                            <BitText Style="font-weight:600; font-size:16px; ">Modal Title</BitText>
                         </BitHeader>
                         <BitSpacer />
                     </BitStack>
                 </div>
 
                 <!-- Scrollable Content Area with bottom radius -->
-                <div style="flex: 1; overflow-y: auto; border-bottom-right-radius: 20px;">
-                    <div style="padding: 1rem;">
-                        <RouteView @key="_section"
-                                   RouteData="@_active.BuildRouteData(_section)"
-                                   DefaultLayout="@typeof(EmptyLayout)" />
+                <div style="flex: 1; overflow: hidden; border-bottom-right-radius: 20px; position: relative;">
+                    <div style="height: 100%; overflow-y: auto;">
+                        <div style="padding: 1rem;">
+                            <RouteView @key="_section"
+                                       RouteData="@_active.BuildRouteData(_section)"
+                                       DefaultLayout="@typeof(EmptyLayout)" />
+                        </div>
                     </div>
                 </div>
-
             </div>
         </div>
     </BitModal>
 }
 <style>
     @((MarkupString)CreateContainerCss())
-    /*     .selected-nav-item {
-            color: red;
-            background-color: green
-        }
-     */
-    .selected-nav-item-container {
-    }
 
     .bit-nav-ict-custom {
         padding-inline-start: 12px !important;
         border-radius: 12px !important;
         margin-bottom: 4px !important;
-        height: 36px !important;
+        height: 18px !important;
         padding: 0px 4px 0px 4px !important;
     }
 
     .bit-nav-sel-item-custom {
         border-color: transparent !important;
     }
+
 </style>
 
 @code {
@@ -103,6 +98,9 @@
     {
         SelectedItemContainer = "bit-nav-sel-item-custom",
         ItemContainer = "bit-nav-ict-custom",
+        Item = "bit-nav-itm-custom",
+
+
     };
 
 
