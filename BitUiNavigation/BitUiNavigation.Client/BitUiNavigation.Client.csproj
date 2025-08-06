@@ -15,6 +15,12 @@
     <Content Remove="C:\Users\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\ReduxDevToolsTypes.d.ts" />
     <Content Remove="C:\Users\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\TimeWarp.State.lib.module.d.ts" />
     <Content Remove="C:\Users\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\TimeWarpState.d.ts" />
+    <Content Remove="e:\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\Constants.d.ts" />
+    <Content Remove="e:\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\Logger.d.ts" />
+    <Content Remove="e:\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\ReduxDevTools.d.ts" />
+    <Content Remove="e:\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\ReduxDevToolsTypes.d.ts" />
+    <Content Remove="e:\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\TimeWarp.State.lib.module.d.ts" />
+    <Content Remove="e:\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\TimeWarpState.d.ts" />
   </ItemGroup>
 
   <ItemGroup>

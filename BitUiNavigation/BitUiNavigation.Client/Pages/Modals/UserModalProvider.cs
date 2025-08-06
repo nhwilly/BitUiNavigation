@@ -13,15 +13,21 @@ public sealed class UserModalProvider : IModalProvider
 
     public List<BitNavItem> BuildNavItems(NavigationManager nav, string queryKey)
     {
-        string url(string section) =>
-            nav.GetUriWithQueryParameter(queryKey, Normalize(section));
+        string url(string section)
+        {
+            var currentPath = "/" + nav.ToBaseRelativePath(nav.Uri).Split('?')[0];
+            var qs = System.Web.HttpUtility.ParseQueryString(new Uri(nav.Uri).Query);
+            qs.Set(queryKey, Normalize(section));
+            return $"{currentPath}?{qs}";
+        }
 
         return new()
-        {
-            new() { Key = nameof(UserMembershipsPanel), Text = "Memberships", Url = url(nameof(UserMembershipsPanel)) },
-            new() { Key = nameof(UserProfilePanel),     Text = "Profile",     Url = url(nameof(UserProfilePanel)) }
-        };
+    {
+        new() { Key = nameof(UserMembershipsPanel), Text = "Memberships", Url = url(nameof(UserMembershipsPanel)) },
+        new() { Key = nameof(UserProfilePanel),     Text = "Profile",     Url = url(nameof(UserProfilePanel)) }
+    };
     }
+
 
     public RouteData BuildRouteData(string sectionKey)
     {

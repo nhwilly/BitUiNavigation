@@ -3,6 +3,7 @@
 
 @implements IDisposable
 @using System.Web
+@using BitUiNavigation.Client.Layout
 @using Microsoft.AspNetCore.Components.Routing
 
 @if (_active is not null)
@@ -35,6 +36,7 @@
     private IModalProvider? _active;
     private string _section = string.Empty;
     private string? _preOpenUrl;
+
 
     protected override void OnInitialized()
     {
