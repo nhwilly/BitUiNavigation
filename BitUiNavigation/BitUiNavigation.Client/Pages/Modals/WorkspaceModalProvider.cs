@@ -6,21 +6,26 @@ namespace BitUiNavigation.Client.Pages.Modals;
 
 public sealed class WorkspaceModalProvider : IModalProvider
 {
-    public string QueryKey => nameof(WorkspaceModalProvider);
+    public string QueryKey => "Workspace";
     public string DefaultSection => nameof(WorkspaceDetailsPanel);
     public string Width => "900px";
     public string Height => "640px";
 
     public List<BitNavItem> BuildNavItems(NavigationManager nav, string queryKey)
     {
-        string url(string section) =>
-            nav.GetUriWithQueryParameter(queryKey, Normalize(section));
-
-        return new()
+        string url(string section)
         {
+            var currentPath = "/" + nav.ToBaseRelativePath(nav.Uri).Split('?')[0];
+            var qs = System.Web.HttpUtility.ParseQueryString(new Uri(nav.Uri).Query);
+            qs.Set(queryKey, Normalize(section, DefaultSection));
+            return $"{currentPath}?{qs}";
+        }
+
+        return
+        [
             new() { Key = nameof(WorkspaceDetailsPanel), Text = "Workspace", Url = url(nameof(WorkspaceDetailsPanel)) },
             new() { Key = nameof(UserProfilePanel),     Text = "Details",     Url = url(nameof(UserProfilePanel)) }
-        };
+        ];
     }
 
     public RouteData BuildRouteData(string sectionKey)
@@ -34,11 +39,11 @@ public sealed class WorkspaceModalProvider : IModalProvider
         return new RouteData(type, new Dictionary<string, object?>());
     }
 
-    private static string Normalize(string? value)
+    private static string Normalize(string? value, string defaultSection)
     {
-        if (string.IsNullOrWhiteSpace(value)) return nameof(WorkspaceDetailsPanel);
+        if (string.IsNullOrWhiteSpace(value)) return defaultSection;
         var v = value.Trim();
-        if (v.StartsWith("/")) v = v[1..];
+        if (v.StartsWith('/')) v = v[1..];
         return v;
     }
 }

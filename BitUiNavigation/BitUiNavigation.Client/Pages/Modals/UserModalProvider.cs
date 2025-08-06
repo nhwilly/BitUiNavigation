@@ -6,7 +6,7 @@ namespace BitUiNavigation.Client.Pages.Modals;
 
 public sealed class UserModalProvider : IModalProvider
 {
-    public string QueryKey => nameof(UserModalProvider);
+    public string QueryKey => "User";
     public string DefaultSection => nameof(UserMembershipsPanel);
     public string Width => "900px";
     public string Height => "640px";
@@ -17,15 +17,15 @@ public sealed class UserModalProvider : IModalProvider
         {
             var currentPath = "/" + nav.ToBaseRelativePath(nav.Uri).Split('?')[0];
             var qs = System.Web.HttpUtility.ParseQueryString(new Uri(nav.Uri).Query);
-            qs.Set(queryKey, Normalize(section));
+            qs.Set(queryKey, Normalize(section, DefaultSection));
             return $"{currentPath}?{qs}";
         }
 
-        return new()
-    {
+        return
+    [
         new() { Key = nameof(UserMembershipsPanel), Text = "Memberships", Url = url(nameof(UserMembershipsPanel)) },
         new() { Key = nameof(UserProfilePanel),     Text = "Profile",     Url = url(nameof(UserProfilePanel)) }
-    };
+    ];
     }
 
 
@@ -40,11 +40,12 @@ public sealed class UserModalProvider : IModalProvider
         return new RouteData(type, new Dictionary<string, object?>());
     }
 
-    private static string Normalize(string? value)
+    private static string Normalize(string? value, string defaultSection)
     {
-        if (string.IsNullOrWhiteSpace(value)) return nameof(UserMembershipsPanel);
+        if (string.IsNullOrWhiteSpace(value)) return defaultSection;
         var v = value.Trim();
-        if (v.StartsWith("/")) v = v[1..];
+        if (v.StartsWith('/')) v = v[1..];
         return v;
     }
 }
+

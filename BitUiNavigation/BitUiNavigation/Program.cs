@@ -1,4 +1,3 @@
-using Bit.BlazorUI;
 using BitUiNavigation.Components;
 
 namespace BitUiNavigation
