@@ -15,6 +15,7 @@ Hello from User profile page.
     [CascadingParameter] public ModalGuardRegistration? RegisterGuard { get; set; }
     private EditContext _editContext = default!;
     private UserProfileModel _model = new();
+    private UserService _userService = new();
     protected override void OnInitialized()
     {
         RegisterGuard?.Invoke(this);
@@ -44,7 +45,7 @@ Hello from User profile page.
     {
         if (_editContext.Validate())
         {
-            await UserService.SaveUserAsync(_model);
+            await _userService.SaveUserAsync(_model);
         }
     }
     public class UserProfileModel
@@ -61,5 +62,15 @@ Hello from User profile page.
         }
     }
 
+    public class UserService
+    {
+        public async Task SaveUserAsync(UserProfileModel model)
+        {
+            Console.WriteLine("Saving user inside userService...");
+            // Simulate saving user data
+            await Task.CompletedTask;
+        }
+
+    }
 
 }
