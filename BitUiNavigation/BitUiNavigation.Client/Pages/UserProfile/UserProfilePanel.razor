@@ -1,5 +1,76 @@
-﻿<h3>UserProfilePage mofo</h3>
+﻿@using BitUiNavigation.Client.Pages.Modals
+@using FluentValidation
+@implements IModalSectionGuard
+<EditForm EditContext="_editContext">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
 
+    <InputText @bind-Value="_model.FirstName" />
+    <InputText @bind-Value="_model.LastName" />
+
+    <BitButton OnClick="Save" Text="Save" />
+</EditForm>
+Hello from User profile page.
 @code {
+    [CascadingParameter] public ModalGuardRegistration? RegisterGuard { get; set; }
+    private EditContext _editContext = default!;
+    private UserProfileModel _model = new();
+    private UserService _userService = new();
+    protected override void OnInitialized()
+    {
+        RegisterGuard?.Invoke(this);
+    }
+
+    public Task<bool> CanNavigateAwayAsync()
+    {
+        // Validate with FluentValidation, e.g.:
+        var isValid = ValidateModel();
+        return Task.FromResult(isValid);
+    }
+
+    private bool ValidateModel()
+    {
+        // run FluentValidation or EditContext.Validate()
+        return true;
+    }
+
+    public async Task SaveOnNavigateAsync()
+    {
+        if (_editContext is not null && _editContext.Validate())
+        {
+            await _userService.SaveUserAsync(_model); // for example
+        }
+    }
+    private async Task Save()
+    {
+        if (_editContext.Validate())
+        {
+            await _userService.SaveUserAsync(_model);
+        }
+    }
+    public class UserProfileModel
+    {
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+    }
+    public class UserProfileModelValidator : AbstractValidator<UserProfileModel>
+    {
+        public UserProfileModelValidator()
+        {
+            RuleFor(x => x.FirstName).NotEmpty().WithMessage("First name is required");
+            RuleFor(x => x.LastName).NotEmpty().WithMessage("Last name is required");
+        }
+    }
+
+    public class UserService
+    {
+        public async Task SaveUserAsync(UserProfileModel model)
+        {
+            Console.WriteLine("Saving user inside userService...");
+            // Simulate saving user data
+            await Task.CompletedTask;
+        }
+
+    }
 
 }
