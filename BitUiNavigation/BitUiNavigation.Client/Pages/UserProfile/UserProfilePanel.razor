@@ -15,32 +15,24 @@
 Hello from User profile page.
 @code {
     [CascadingParameter] public ModalGuardRegistration? RegisterGuard { get; set; }
-    private bool _hasBeenRegistered = false;
+    [Parameter, SupplyParameterFromQuery] public Guid? AccountId { get; set; }
+    [Parameter, SupplyParameterFromQuery] public Guid? LocationId { get; set; }
 
-    private UserProfileModel _model = new();
+    private UserProfileViewModel _model = new();
+    private UserProfileViewModel _originalModel = new();
     private UserService _userService = new();
     private UserProfileModelValidator _validator = new();
     protected override void OnInitialized()
     {
-        if (!_hasBeenRegistered)
-        {
-            Console.WriteLine($"OnInitialized.. activated: {_hasBeenRegistered}");
+        _model = new() { FirstName = "bill", LastName = "noel" };
+        _originalModel = _model with { };
 
-            _hasBeenRegistered = true;
-            RegisterGuard?.Invoke(this);
-        }
+        RegisterGuard?.Invoke(this);
     }
 
 
     public Task<bool> CanNavigateAwayAsync()
     {
-        if (!_hasBeenRegistered)
-        {
-            Console.WriteLine($"Can navigate away.. activated: {_hasBeenRegistered}");
-
-            // Don't validate on first load
-            return Task.FromResult(true);
-        }
         var isValid = ValidateModel();
         Console.WriteLine($"Can navigate away..{isValid}");
         return Task.FromResult(isValid);
@@ -48,37 +40,44 @@ Hello from User profile page.
 
     private bool ValidateModel()
     {
-        Console.WriteLine("Validating model...");
+        Console.WriteLine($"Validating model...account:{AccountId} location:{LocationId}");
 
         return _validator.Validate(_model).IsValid;
     }
 
     public async Task SaveOnNavigateAsync()
     {
-        if (!_hasBeenRegistered)
+        if (_model == _originalModel)
         {
-            // Skip save on first render
+            Console.WriteLine("No changes — skipping save");
             return;
         }
         if (ValidateModel())
         {
             await _userService.SaveUserAsync(_model); // for example
+            _originalModel = _model with { }; // update snapshot
         }
     }
     private async Task Save()
     {
         Console.WriteLine("Save in panel has been called...");
+        if (_model == _originalModel)
+        {
+            Console.WriteLine("No changes — skipping save");
+            return;
+        }
         if (ValidateModel())
         {
             await _userService.SaveUserAsync(_model);
+            _originalModel = _model with { }; // update snapshot
         }
     }
-    public class UserProfileModel
+    public record UserProfileViewModel
     {
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
     }
-    public class UserProfileModelValidator : AbstractValidator<UserProfileModel>
+    public class UserProfileModelValidator : AbstractValidator<UserProfileViewModel>
     {
         public UserProfileModelValidator()
         {
@@ -89,7 +88,7 @@ Hello from User profile page.
 
     public class UserService
     {
-        public async Task SaveUserAsync(UserProfileModel model)
+        public async Task SaveUserAsync(UserProfileViewModel model)
         {
             Console.WriteLine("Saving user inside userService...");
             // Simulate saving user data
