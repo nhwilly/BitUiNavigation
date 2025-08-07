@@ -1,6 +1,7 @@
 ﻿@using BitUiNavigation.Client.Pages
 @using BitUiNavigation.Client.Pages.Modals
 @using BitUiNavigation.Client.Pages.UserProfile
+
 @inherits LayoutComponentBase
 @inject NavigationManager Nav
 <BitMediaQuery ScreenQuery="BitScreenQuery.Xs" OnChange="v => { IsSmall = v; }" />
@@ -66,7 +67,7 @@ else
         {
             <div style="position: sticky; top: 64px; height: calc(100vh - 64px); z-index: 1;">
                 <BitNav TItem="BitNavItem" Items="UserNavItems" FullWidth Style="background: #f5f5f5;" IconOnly="@UserIconsOnly" Match="BitNavMatch.Prefix" />
-                <BitButton OnClick="@(() => OpenSettings("User", nameof(UserProfilePanel)))">
+                <BitButton OnClick="@(() => OpenUserProfile())">
                     Open Profile
                 </BitButton>
                 <BitButton OnClick="@(() => OpenSettings("Workspace", nameof(WorkspaceDetailsPanel)))">
@@ -80,9 +81,53 @@ else
 }
 @code {
     private bool _modalOpen;
-    private void OpenSettings(string key, string section)
-        => Nav.NavigateTo(Nav.GetUriWithQueryParameter(key, section));
 
+    private void OpenUserProfile()
+    {
+        Console.WriteLine("MainLayout attempting to open user profile");
+        OpenSettings("User", $"{nameof(UserProfilePanel)}",new()
+            {
+                ["accountId"]=Guid.NewGuid(),
+                ["locationId"]=Guid.NewGuid(),
+            });
+    }
+    private void OpenSettings(string key, string section, Dictionary<string, object?>? additionalParams = null)
+    {
+        var uri = Nav.Uri;
+
+        var allParams = new Dictionary<string, object?>
+        {
+            [key] = section
+        };
+
+        if (additionalParams is not null)
+        {
+            foreach (var kvp in additionalParams)
+            {
+                allParams[kvp.Key] = kvp.Value;
+            }
+        }
+
+        var newUri = QueryStringHelper.AddQueryParameters(uri, allParams);
+        Console.WriteLine($"url: {newUri.ToString()}");
+        Nav.NavigateTo(newUri);
+    }
+
+
+    // private void OpenSettings(string key, string section, Dictionary<string, object?>? additionalParams = null)
+    // {
+    //     var uri = Nav.GetUriWithQueryParameter(key, section);
+
+    //     if (additionalParams is not null)
+    //     {
+    //         foreach (var param in additionalParams.Where(p => p.Value is not null))
+    //         {
+    //             uri = Nav.GetUriWithQueryParameter(uri, param.Key, param.Value?.ToString());
+    //         }
+    //     }
+
+    //     Nav.NavigateTo(uri);
+    // }
 
     private void CloseUser()
     {

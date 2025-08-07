@@ -28,6 +28,7 @@
     <PackageReference Include="Bit.BlazorUI.Assets" Version="9.11.3-pre-01" />
     <PackageReference Include="Bit.BlazorUI.Extras" Version="9.11.3-pre-01" />
     <PackageReference Include="Bit.BlazorUI.Icons" Version="9.11.3-pre-01" />
+    <PackageReference Include="Blazored.FluentValidation" Version="2.2.0" />
     <PackageReference Include="FluentValidation" Version="12.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.7" />
     <PackageReference Include="System.Private.Uri" Version="4.3.2" />

@@ -17,9 +17,9 @@
             <div style=" background: #f8f9fa;border-top-left-radius:20px; border-bottom-left-radius: 20px;">
                 <BitButton Style="margin: 1rem 0rem 0rem 1rem;" Color="BitColor.Tertiary" OnClick="@Close" Size="BitSize.Small" IconName="@BitIconName.ChromeClose" Variant="BitVariant.Text"></BitButton>
                 <BitNav Mode="BitNavMode.Automatic"
+                        Items="@_active.BuildNavItems(Nav, _active.QueryKey)"
                         Match="BitNavMatch.Wildcard"
                         FullWidth
-                        Items="@_active.BuildNavItems(Nav, _active.QueryKey)"
                         Style="width:150px; margin: 1rem;"
                         Classes="NavStyles" />
             </div>
@@ -84,6 +84,33 @@
     {
         _currentGuardedComponent = component;
     }
+
+    private async Task HandleNavItemClick(BitNavItem item)
+    {
+        var newSection = item.Key;
+
+        if (string.Equals(newSection, _section, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        // Intercept navigation
+        if (_currentGuardedComponent is not null)
+        {
+            var canNavigate = await _currentGuardedComponent.CanNavigateAwayAsync();
+            if (!canNavigate)
+            {
+                return;
+            }
+
+            if (_currentGuardedComponent is ISupportsSaveOnNavigate saver)
+            {
+                await saver.SaveOnNavigateAsync();
+            }
+        }
+
+        // Navigate via query string
+        Nav.NavigateTo(Nav.GetUriWithQueryParameter(_active!.QueryKey, newSection));
+    }
+
 
     private static string ModalContainerClass = "modal-container";
     private string CreateContainerCss()

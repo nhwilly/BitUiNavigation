@@ -1,59 +1,78 @@
 ﻿@using BitUiNavigation.Client.Pages.Modals
+@using Blazored.FluentValidation
 @using FluentValidation
 @implements IModalSectionGuard
-<EditForm EditContext="_editContext">
-    <DataAnnotationsValidator />
+@implements ISupportsSaveOnNavigate
+<EditForm Model="@_model">
+    <FluentValidationValidator />
     <ValidationSummary />
 
-    <InputText @bind-Value="_model.FirstName" />
-    <InputText @bind-Value="_model.LastName" />
+    <InputText @bind-Value="@_model.FirstName" />
+    <InputText @bind-Value="@_model.LastName" />
 
-    <BitButton OnClick="Save" Text="Save" />
+    <BitButton OnClick="Save">Save</BitButton>
 </EditForm>
 Hello from User profile page.
 @code {
     [CascadingParameter] public ModalGuardRegistration? RegisterGuard { get; set; }
     private EditContext _editContext = default!;
     private UserProfileModel _model = new();
-    private UserService _userService = new();
     protected override void OnInitialized()
     {
+        _model = new() { FirstName = "bill", LastName = "noel" };
+        _originalModel = _model with { };
+
         RegisterGuard?.Invoke(this);
     }
 
+
     public Task<bool> CanNavigateAwayAsync()
     {
-        // Validate with FluentValidation, e.g.:
         var isValid = ValidateModel();
+        Console.WriteLine($"Can navigate away..{isValid}");
         return Task.FromResult(isValid);
     }
 
     private bool ValidateModel()
     {
-        // run FluentValidation or EditContext.Validate()
-        return true;
+        Console.WriteLine($"Validating model...account:{AccountId} location:{LocationId}");
+
+        return _validator.Validate(_model).IsValid;
     }
 
     public async Task SaveOnNavigateAsync()
     {
-        if (_editContext is not null && _editContext.Validate())
+        if (_model == _originalModel)
+        {
+            Console.WriteLine("No changes — skipping save");
+            return;
+        }
+        if (ValidateModel())
         {
             await _userService.SaveUserAsync(_model); // for example
+            _originalModel = _model with { }; // update snapshot
         }
     }
     private async Task Save()
     {
-        if (_editContext.Validate())
+        Console.WriteLine("Save in panel has been called...");
+        if (_model == _originalModel)
+        {
+            Console.WriteLine("No changes — skipping save");
+            return;
+        }
+        if (ValidateModel())
         {
             await _userService.SaveUserAsync(_model);
+            _originalModel = _model with { }; // update snapshot
         }
     }
-    public class UserProfileModel
+    public record UserProfileViewModel
     {
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
     }
-    public class UserProfileModelValidator : AbstractValidator<UserProfileModel>
+    public class UserProfileModelValidator : AbstractValidator<UserProfileViewModel>
     {
         public UserProfileModelValidator()
         {
@@ -64,7 +83,7 @@ Hello from User profile page.
 
     public class UserService
     {
-        public async Task SaveUserAsync(UserProfileModel model)
+        public async Task SaveUserAsync(UserProfileViewModel model)
         {
             Console.WriteLine("Saving user inside userService...");
             // Simulate saving user data
@@ -72,5 +91,4 @@ Hello from User profile page.
         }
 
     }
-
 }
