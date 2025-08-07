@@ -17,9 +17,10 @@
             <div style=" background: #f8f9fa;border-top-left-radius:20px; border-bottom-left-radius: 20px;">
                 <BitButton Style="margin: 1rem 0rem 0rem 1rem;" Color="BitColor.Tertiary" OnClick="@Close" Size="BitSize.Small" IconName="@BitIconName.ChromeClose" Variant="BitVariant.Text"></BitButton>
                 <BitNav Mode="BitNavMode.Automatic"
-                        Match="BitNavMatch.Wildcard"
-                        FullWidth
                         Items="@_active.BuildNavItems(Nav, _active.QueryKey)"
+                        Match="BitNavMatch.Wildcard"
+                        OnItemClick="@(async (BitNavItem item) => await HandleNavItemClick(item))"
+                        FullWidth
                         Style="width:150px; margin: 1rem;"
                         Classes="NavStyles" />
             </div>
@@ -41,7 +42,7 @@
                 <div style="flex: 1; overflow: hidden; border-bottom-right-radius: 20px; position: relative;">
                     <div style="height: 100%; overflow-y: auto;">
                         <div style="padding: 0rem 1rem 1rem 1rem;">
-                            <CascadingValue Value="(ModalGuardRegistration)RegisterGuardedComponent">
+                            <CascadingValue TValue="@ModalGuardRegistration" Value="@RegisterGuardedComponent">
                                 <RouteView @key="_section"
                                            RouteData="@_active.BuildRouteData(_section)"
                                            DefaultLayout="@typeof(EmptyLayout)" />
@@ -85,6 +86,33 @@
         _currentGuardedComponent = component;
     }
 
+    private async Task HandleNavItemClick(BitNavItem item)
+    {
+        var newSection = item.Key;
+
+        if (string.Equals(newSection, _section, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        // Intercept navigation
+        if (_currentGuardedComponent is not null)
+        {
+            var canNavigate = await _currentGuardedComponent.CanNavigateAwayAsync();
+            if (!canNavigate)
+            {
+                return;
+            }
+
+            if (_currentGuardedComponent is ISupportsSaveOnNavigate saver)
+            {
+                await saver.SaveOnNavigateAsync();
+            }
+        }
+
+        // Navigate via query string
+        Nav.NavigateTo(Nav.GetUriWithQueryParameter(_active!.QueryKey, newSection));
+    }
+
+
     private static string ModalContainerClass = "modal-container";
     private string CreateContainerCss()
     {
@@ -125,7 +153,7 @@
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
         => ReadFromUri(e.Location, requestStateHasChanged: true);
 
-    private async void ReadFromUri(string fullUri, bool requestStateHasChanged)
+    private  void ReadFromUri(string fullUri, bool requestStateHasChanged)
     {
         var uri = new Uri(fullUri);
         var qs = HttpUtility.ParseQueryString(uri.Query);
@@ -149,25 +177,25 @@
             _preOpenUrl = null; // modal closed (or no modal present)
         }
 
-        var oldSection = _section;
+        // var oldSection = _section;
 
-        if (newSection != oldSection)
-        {
-            if (_currentGuardedComponent is not null)
-            {
-                var canNavigate = await _currentGuardedComponent.CanNavigateAwayAsync();
-                if (!canNavigate)
-                {
-                    // Cancel navigation by navigating back to old section
-                    Nav.NavigateTo(Nav.GetUriWithQueryParameter(_active!.QueryKey, oldSection));
-                    return;
-                }
-                if (_currentGuardedComponent is ISupportsSaveOnNavigate saver)
-                {
-                    await saver.SaveOnNavigateAsync();
-                }
-            }
-        }
+        // if (newSection != oldSection)
+        // {
+        //     if (_currentGuardedComponent is not null)
+        //     {
+        //         var canNavigate = await _currentGuardedComponent.CanNavigateAwayAsync();
+        //         if (!canNavigate)
+        //         {
+        //             Cancel navigation by navigating back to old section
+        //             Nav.NavigateTo(Nav.GetUriWithQueryParameter(_active!.QueryKey, oldSection));
+        //             return;
+        //         }
+        //         if (_currentGuardedComponent is ISupportsSaveOnNavigate saver)
+        //         {
+        //             await saver.SaveOnNavigateAsync();
+        //         }
+        //     }
+        // }
 
         _active = match;
         _section = newSection ?? string.Empty;

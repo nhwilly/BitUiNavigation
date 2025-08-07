@@ -1,50 +1,76 @@
 ﻿@using BitUiNavigation.Client.Pages.Modals
+@using Blazored.FluentValidation
 @using FluentValidation
 @implements IModalSectionGuard
-<EditForm EditContext="_editContext">
-    <DataAnnotationsValidator />
+@implements ISupportsSaveOnNavigate
+<EditForm Model="@_model">
+    <FluentValidationValidator />
     <ValidationSummary />
 
-    <InputText @bind-Value="_model.FirstName" />
-    <InputText @bind-Value="_model.LastName" />
+    <InputText @bind-Value="@_model.FirstName" />
+    <InputText @bind-Value="@_model.LastName" />
 
-    <BitButton OnClick="Save" Text="Save" />
+    <BitButton OnClick="Save">Save</BitButton>
 </EditForm>
 Hello from User profile page.
 @code {
     [CascadingParameter] public ModalGuardRegistration? RegisterGuard { get; set; }
-    private EditContext _editContext = default!;
+    private bool _hasBeenRegistered = false;
+
     private UserProfileModel _model = new();
+    private UserService _userService = new();
+    private UserProfileModelValidator _validator = new();
     protected override void OnInitialized()
     {
-        RegisterGuard?.Invoke(this);
+        if (!_hasBeenRegistered)
+        {
+            Console.WriteLine($"OnInitialized.. activated: {_hasBeenRegistered}");
+
+            _hasBeenRegistered = true;
+            RegisterGuard?.Invoke(this);
+        }
     }
+
 
     public Task<bool> CanNavigateAwayAsync()
     {
-        // Validate with FluentValidation, e.g.:
+        if (!_hasBeenRegistered)
+        {
+            Console.WriteLine($"Can navigate away.. activated: {_hasBeenRegistered}");
+
+            // Don't validate on first load
+            return Task.FromResult(true);
+        }
         var isValid = ValidateModel();
+        Console.WriteLine($"Can navigate away..{isValid}");
         return Task.FromResult(isValid);
     }
 
     private bool ValidateModel()
     {
-        // run FluentValidation or EditContext.Validate()
-        return true;
+        Console.WriteLine("Validating model...");
+
+        return _validator.Validate(_model).IsValid;
     }
 
     public async Task SaveOnNavigateAsync()
     {
-        if (_editContext is not null && _editContext.Validate())
+        if (!_hasBeenRegistered)
+        {
+            // Skip save on first render
+            return;
+        }
+        if (ValidateModel())
         {
             await _userService.SaveUserAsync(_model); // for example
         }
     }
     private async Task Save()
     {
-        if (_editContext.Validate())
+        Console.WriteLine("Save in panel has been called...");
+        if (ValidateModel())
         {
-            await UserService.SaveUserAsync(_model);
+            await _userService.SaveUserAsync(_model);
         }
     }
     public class UserProfileModel
@@ -61,5 +87,14 @@ Hello from User profile page.
         }
     }
 
+    public class UserService
+    {
+        public async Task SaveUserAsync(UserProfileModel model)
+        {
+            Console.WriteLine("Saving user inside userService...");
+            // Simulate saving user data
+            await Task.CompletedTask;
+        }
 
+    }
 }
