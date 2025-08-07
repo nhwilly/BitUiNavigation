@@ -29,7 +29,7 @@ public class UserService
     public async Task<UserProfileViewModel> GetUserAsync(Guid accountId, Guid locationId)
     {
         Console.WriteLine("Getting user inside userService...");
-        await Task.Delay(500);
+        await Task.Delay(5000);
         var p = new UserProfileViewModel() { FirstName = "bill", LastName = "noel" };
         return await Task.FromResult(p);
     }
