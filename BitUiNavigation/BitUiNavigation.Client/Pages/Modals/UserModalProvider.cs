@@ -3,48 +3,25 @@ using BitUiNavigation.Client.Pages.UserProfile;
 using Microsoft.AspNetCore.Components;
 
 namespace BitUiNavigation.Client.Pages.Modals;
-
-public sealed class UserModalProvider : IModalProvider
+public sealed class UserModalProvider : ModalProviderBase
 {
-    public string QueryKey => "User";
-    public string DefaultSection => nameof(UserMembershipsPanel);
-    public string Width => "900px";
-    public string Height => "640px";
+    public override string QueryKey => "User";
+    public override string DefaultSection => nameof(UserMembershipsPanel);
+    public override string Width => "900px";
+    public override string Height => "640px";
 
-    public List<BitNavItem> BuildNavItems(NavigationManager nav, string queryKey)
+    protected override Dictionary<string, Type> SectionMap { get; } = new(StringComparer.OrdinalIgnoreCase)
     {
-        string url(string section)
-        {
-            var currentPath = "/" + nav.ToBaseRelativePath(nav.Uri).Split('?')[0];
-            var qs = System.Web.HttpUtility.ParseQueryString(new Uri(nav.Uri).Query);
-            qs.Set(queryKey, Normalize(section, DefaultSection));
-            return $"{currentPath}?{qs}";
-        }
+        [nameof(UserMembershipsPanel)] = typeof(UserMembershipsPanel),
+        [nameof(UserProfilePanel)] = typeof(UserProfilePanel)
+    };
 
+    public override List<BitNavItem> BuildNavItems(NavigationManager nav, string queryKey)
+    {
         return
-    [
-        new() { Key = nameof(UserMembershipsPanel), Text = "Memberships", IconName=BitIconName.UserEvent, Url = url(nameof(UserMembershipsPanel)) },
-        new() { Key = nameof(UserProfilePanel),     Text = "Profile",     IconName=BitIconName.Contact, Url = url(nameof(UserProfilePanel)) }
-    ];
-    }
-
-    public RouteData BuildRouteData(string sectionKey)
-    {
-        var map = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
-        {
-            [nameof(UserMembershipsPanel)] = typeof(UserMembershipsPanel),
-            [nameof(UserProfilePanel)] = typeof(UserProfilePanel)
-        };
-        var type = map.TryGetValue(sectionKey, out var t) ? t : typeof(NotFoundPanel);
-        return new RouteData(type, new Dictionary<string, object?>());
-    }
-
-    private static string Normalize(string? value, string defaultSection)
-    {
-        if (string.IsNullOrWhiteSpace(value)) return defaultSection;
-        var v = value.Trim();
-        if (v.StartsWith('/')) v = v[1..];
-        return v;
+        [
+            new() { Key = nameof(UserMembershipsPanel), Text = "Memberships", IconName=BitIconName.UserEvent, Url = BuildSectionUrl(nav, nameof(UserMembershipsPanel)) },
+            new() { Key = nameof(UserProfilePanel),     Text = "Profile",     IconName=BitIconName.Contact,    Url = BuildSectionUrl(nav, nameof(UserProfilePanel)) }
+        ];
     }
 }
-
