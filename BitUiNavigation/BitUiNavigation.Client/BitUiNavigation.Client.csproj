@@ -35,4 +35,8 @@
     <PackageReference Include="TimeWarp.State" Version="11.0.3" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Services\" />
+  </ItemGroup>
+
 </Project>
