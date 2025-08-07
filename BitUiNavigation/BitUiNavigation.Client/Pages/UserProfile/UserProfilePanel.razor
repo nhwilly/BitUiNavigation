@@ -19,22 +19,21 @@
 
 
 @code {
-    [Parameter, SupplyParameterFromQuery] public Guid? AccountId { get; set; }
-    [Parameter, SupplyParameterFromQuery] public Guid? LocationId { get; set; }
+    [Parameter, SupplyParameterFromQuery] public Guid AccountId { get; set; }
+    [Parameter, SupplyParameterFromQuery] public Guid LocationId { get; set; }
 
     private readonly UserProfileModelValidator _validator = new();
     private readonly UserService _userService = new();
 
     protected override AbstractValidator<UserProfileViewModel> Validator => _validator;
 
-    protected override Task<UserProfileViewModel> CreateInitialModel()
+    protected override async Task<UserProfileViewModel> CreateInitialModel()
     {
-        return Task.FromResult(new UserProfileViewModel() { FirstName = "bill", LastName = "noel" });
+        await _userService.GetUserAsync(AccountId, LocationId);
+        return new UserProfileViewModel() { FirstName = "bill", LastName = "noel" };
     }
 
     protected override async Task PersistAsync(UserProfileViewModel model)
         => await _userService.SaveUserAsync(model);
-
-
 
 }

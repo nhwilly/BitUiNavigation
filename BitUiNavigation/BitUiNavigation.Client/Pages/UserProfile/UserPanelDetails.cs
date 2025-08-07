@@ -24,4 +24,11 @@ public class UserService
         await Task.CompletedTask;
     }
 
+    public async Task GetUserAsync(Guid accountId, Guid locationId)
+    {
+        Console.WriteLine("Getting user inside userService...");
+        // Simulate saving user data
+        await Task.CompletedTask;
+    }
+
 }
