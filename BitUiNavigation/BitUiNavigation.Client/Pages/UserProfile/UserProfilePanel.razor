@@ -1,94 +1,54 @@
-﻿@using BitUiNavigation.Client.Pages.Modals
+﻿@inherits ModalPanelBase<UserProfileViewModel>
 @using Blazored.FluentValidation
 @using FluentValidation
-@implements IModalSectionGuard
-@implements ISupportsSaveOnNavigate
-<EditForm Model="@_model">
+@using BitUiNavigation.Client.Pages.Modals
+
+<EditForm Model="@Model">
     <FluentValidationValidator />
     <ValidationSummary />
-
-    <InputText @bind-Value="@_model.FirstName" />
-    <InputText @bind-Value="@_model.LastName" />
-
+    <InputText @bind-Value="@Model.FirstName" />
+    <InputText @bind-Value="@Model.LastName" />
     <BitButton OnClick="Save">Save</BitButton>
+    <p>
+        <span>AccountId: @AccountId</span>
+    </p>
+    <p>
+        <span>LocationId: @LocationId</span>
+    </p>
 </EditForm>
-Hello from User profile page.
-@code {
-    [CascadingParameter] public ModalGuardRegistration? RegisterGuard { get; set; }
-    private EditContext _editContext = default!;
-    private UserProfileModel _model = new();
+
+    private UserProfileModelValidator _validator = new();
+    protected override void OnInitialized()
+    {
+        _model = new() { FirstName = "bill", LastName = "noel" };
+        _originalModel = _model with { };
+    private UserProfileModelValidator _validator = new();
+    protected override void OnInitialized()
+    {
+        _model = new() { FirstName = "bill", LastName = "noel" };
+        _originalModel = _model with { };
+    private UserProfileModelValidator _validator = new();
     protected override void OnInitialized()
     {
         _model = new() { FirstName = "bill", LastName = "noel" };
         _originalModel = _model with { };
 
-        RegisterGuard?.Invoke(this);
+@code {
+    [Parameter, SupplyParameterFromQuery] public Guid AccountId { get; set; }
+    [Parameter, SupplyParameterFromQuery] public Guid LocationId { get; set; }
+
+    private readonly UserProfileModelValidator _validator = new();
+    private readonly UserService _userService = new();
+
+    protected override AbstractValidator<UserProfileViewModel> Validator => _validator;
+
+    protected override async Task<UserProfileViewModel> CreateInitialModel()
+    {
+        await _userService.GetUserAsync(AccountId, LocationId);
+        return new UserProfileViewModel() { FirstName = "bill", LastName = "noel" };
     }
 
+    protected override async Task PersistAsync(UserProfileViewModel model)
+        => await _userService.SaveUserAsync(model);
 
-    public Task<bool> CanNavigateAwayAsync()
-    {
-        var isValid = ValidateModel();
-        Console.WriteLine($"Can navigate away..{isValid}");
-        return Task.FromResult(isValid);
-    }
-
-    private bool ValidateModel()
-    {
-        Console.WriteLine($"Validating model...account:{AccountId} location:{LocationId}");
-
-        return _validator.Validate(_model).IsValid;
-    }
-
-    public async Task SaveOnNavigateAsync()
-    {
-        if (_model == _originalModel)
-        {
-            Console.WriteLine("No changes — skipping save");
-            return;
-        }
-        if (ValidateModel())
-        {
-            await _userService.SaveUserAsync(_model); // for example
-            _originalModel = _model with { }; // update snapshot
-        }
-    }
-    private async Task Save()
-    {
-        Console.WriteLine("Save in panel has been called...");
-        if (_model == _originalModel)
-        {
-            Console.WriteLine("No changes — skipping save");
-            return;
-        }
-        if (ValidateModel())
-        {
-            await _userService.SaveUserAsync(_model);
-            _originalModel = _model with { }; // update snapshot
-        }
-    }
-    public record UserProfileViewModel
-    {
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-    }
-    public class UserProfileModelValidator : AbstractValidator<UserProfileViewModel>
-    {
-        public UserProfileModelValidator()
-        {
-            RuleFor(x => x.FirstName).NotEmpty().WithMessage("First name is required");
-            RuleFor(x => x.LastName).NotEmpty().WithMessage("Last name is required");
-        }
-    }
-
-    public class UserService
-    {
-        public async Task SaveUserAsync(UserProfileViewModel model)
-        {
-            Console.WriteLine("Saving user inside userService...");
-            // Simulate saving user data
-            await Task.CompletedTask;
-        }
-
-    }
 }
