@@ -1,0 +1,59 @@
+﻿@inherits TimeWarpStateComponent
+@using Bit.BlazorUI
+@using BitUiNavigation.Client.Services
+
+@if (Show)
+{
+    <BitStack Horizontal>
+        
+        @if (ModalHostState.IsSaving)
+        {
+            <BitProgress Circular />
+            <span>Saving...</span>
+        }
+        else if (ModalHostState.IsFetching)
+        {
+            <BitProgress Circular />
+            <span>Fetching...</span>
+        }
+        else if (ModalHostState.IsSaved)
+        {
+            <BitIcon IconName="CheckMark" Style="color: white;" />
+            <span>Saved</span>
+        }
+        else if (ModalHostState.IsChanged)
+        {
+            <BitIcon IconName="Info" Style="color: white;" />
+            <span>Unsaved changes</span>
+        }
+    </BitStack>
+}
+
+@code {
+
+    private bool FadingOut => ModalHostState.IsSaved && _fadeStartTime.HasValue && (DateTime.UtcNow - _fadeStartTime.Value).TotalMilliseconds > 1000;
+    private DateTime? _fadeStartTime;
+
+    ModalHostState ModalHostState => GetState<ModalHostState>();
+
+    private bool Show => ModalHostState.IsSaving || ModalHostState.IsChanged || ModalHostState.IsSaved;
+
+    protected override void OnParametersSet()
+    {
+        if (ModalHostState.IsSaved)
+        {
+            _fadeStartTime ??= DateTime.UtcNow;
+            // Trigger re-render for fade
+            _ = Task.Delay(100).ContinueWith(_ => InvokeAsync(StateHasChanged));
+        }
+        else
+        {
+            _fadeStartTime = null;
+        }
+    }
+
+    private string BackgroundColor =>
+        ModalHostState.IsSaving ? "#0078D4" :
+        ModalHostState.IsSaved ? "#107C10" :
+        ModalHostState.IsChanged ? "#605E5C" : "transparent";
+}

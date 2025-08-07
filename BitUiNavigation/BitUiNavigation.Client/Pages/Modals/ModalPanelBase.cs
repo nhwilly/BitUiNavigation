@@ -1,36 +1,37 @@
-﻿using System.Text.Json;
+﻿using BitUiNavigation.Client.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Components;
+using TimeWarp.State;
 
 namespace BitUiNavigation.Client.Pages.Modals;
-public abstract class ModalPanelBase<TModel> : ComponentBase,
+public abstract class ModalPanelBase<TModel> : TimeWarpStateComponent,
     IModalSectionGuard,
     ISupportsSaveOnNavigate
-    where TModel : IEquatable<TModel>
+    where TModel : BaseRecord
 {
     [CascadingParameter] public ModalGuardRegistration? RegisterGuard { get; set; }
 
     protected TModel Model { get; set; } = default!;
     private TModel OriginalModel = default!;
+    protected bool IsModelReady { get; private set; }
 
     protected abstract AbstractValidator<TModel> Validator { get; }
-
-    //protected override void OnInitialized()
-    //{
-    //    base.OnInitialized();
-    //    RegisterGuard?.Invoke(this);
-
-    //    Model = CreateInitialModel();
-    //    OriginalModel = CloneModel(Model);
-    //}
+    protected ModalHostState ModalHostState => GetState<ModalHostState>();
 
     protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await ModalHostState.SetModelReady(IsModelReady);
+
+        await base.OnInitializedAsync();
         RegisterGuard?.Invoke(this);
 
+        await ModalHostState.SetFetching(true);
         Model = await CreateInitialModel();
-        OriginalModel = CloneModel(Model);
+        OriginalModel = Model with { };
+        await ModalHostState.SetFetching(false);
+
+        await ModalHostState.SetModelReady(IsModelReady);
+        IsModelReady = true;
     }
 
     protected abstract Task<TModel> CreateInitialModel();
@@ -38,24 +39,20 @@ public abstract class ModalPanelBase<TModel> : ComponentBase,
 
     protected virtual async Task<bool> ValidateModel()
     {
-        //var result = Validator.Validate(Model);
         var result = await Validator.ValidateAsync(Model);
         return result.IsValid;
     }
 
-    public async Task<bool> CanNavigateAwayAsync()
-    {
-        var canNavigate = await Task.FromResult(!HasChanges() || (await ValidateModel()));
-        return canNavigate;
-    }
+    public async Task<bool> CanNavigateAwayAsync() => !HasChanges() || (await ValidateModel());
 
     public async Task SaveOnNavigateAsync()
     {
         if (!HasChanges()) return;
         if (!await ValidateModel()) return;
-
+        await ModalHostState.SetSaving();
         await PersistAsync(Model);
-        OriginalModel = CloneModel(Model);
+        OriginalModel = Model with { };
+        await ModalHostState.SetSaved();
     }
 
     protected async Task Save()
@@ -64,13 +61,7 @@ public abstract class ModalPanelBase<TModel> : ComponentBase,
         if (!await ValidateModel()) return;
 
         await PersistAsync(Model);
-        OriginalModel = CloneModel(Model);
+        OriginalModel = Model with { };
     }
-
-    protected bool HasChanges() => !Model.Equals(OriginalModel);
-    protected TModel CloneModel(TModel model) => model switch
-    {
-        ICloneable c => (TModel)c.Clone()!,
-        _ => JsonSerializer.Deserialize<TModel>(JsonSerializer.Serialize(model))!
-    };
+    protected bool HasChanges() => Model != OriginalModel;
 }

@@ -1,7 +1,8 @@
-﻿using FluentValidation;
+﻿using BitUiNavigation.Client.Pages.Modals;
+using FluentValidation;
 
 namespace BitUiNavigation.Client.Pages.UserProfile;
-public record UserProfileViewModel
+public record UserProfileViewModel : BaseRecord
 {
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
@@ -20,15 +21,17 @@ public class UserService
     public async Task SaveUserAsync(UserProfileViewModel model)
     {
         Console.WriteLine("Saving user inside userService...");
+        await Task.Delay(1500);
         // Simulate saving user data
-        await Task.CompletedTask;
+        //await Task.CompletedTask;
     }
 
-    public async Task GetUserAsync(Guid accountId, Guid locationId)
+    public async Task<UserProfileViewModel> GetUserAsync(Guid accountId, Guid locationId)
     {
         Console.WriteLine("Getting user inside userService...");
-        // Simulate saving user data
-        await Task.CompletedTask;
+        await Task.Delay(500);
+        var p = new UserProfileViewModel() { FirstName = "bill", LastName = "noel" };
+        return await Task.FromResult(p);
     }
 
 }

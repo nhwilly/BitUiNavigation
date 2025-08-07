@@ -1,10 +1,12 @@
-﻿@inject NavigationManager Nav
+﻿@inherits TimeWarpStateComponent
+@inject NavigationManager Nav
 @inject IModalProviderSource ModalProviderSource
 
 @implements IDisposable
 @using System.Web
 @using BitUiNavigation.Client.Layout
 @using Microsoft.AspNetCore.Components.Routing
+@using BitUiNavigation.Client.Services
 
 @if (_active is not null)
 {
@@ -31,8 +33,9 @@
                 <div style="flex-shrink: 0; border-top-right-radius: 20px;  padding-top: 1rem;">
                     <BitStack Horizontal>
                         <BitHeader Style="height: 24px;">
-                            <BitText Style="font-weight:600; font-size:16px; ">Modal Title</BitText>
+                            <BitText Style="font-weight:600; font-size:16px; ">@ModalHostState.Title</BitText>
                         </BitHeader>
+                        <ModelStateStatus />
                     </BitStack>
                 </div>
                 <BitSeparator Style="padding-bottom: 1rem;" Border="BitColorKind.Tertiary" />
@@ -84,6 +87,7 @@
     {
         _currentGuardedComponent = component;
     }
+    ModalHostState ModalHostState => GetState<ModalHostState>();
 
     private async Task HandleNavItemClick(BitNavItem item)
     {
@@ -233,7 +237,11 @@
         return v;
     }
 
-    public void Dispose() => Nav.LocationChanged -= OnLocationChanged;
+    public override void Dispose()
+    {
+        Nav.LocationChanged -= OnLocationChanged;
+        base.Dispose();
+    }
 
     // ---------- Types ----------
     private sealed record ModalConfig(

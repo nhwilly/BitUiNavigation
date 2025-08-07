@@ -3,35 +3,26 @@
 @using FluentValidation
 @using BitUiNavigation.Client.Pages.Modals
 
-<EditForm Model="@Model">
-    <FluentValidationValidator />
-    <ValidationSummary />
-    <InputText @bind-Value="@Model.FirstName" />
-    <InputText @bind-Value="@Model.LastName" />
-    <BitButton OnClick="Save">Save</BitButton>
-    <p>
-        <span>AccountId: @AccountId</span>
-    </p>
-    <p>
-        <span>LocationId: @LocationId</span>
-    </p>
-</EditForm>
-
-    private UserProfileModelValidator _validator = new();
-    protected override void OnInitialized()
-    {
-        _model = new() { FirstName = "bill", LastName = "noel" };
-        _originalModel = _model with { };
-    private UserProfileModelValidator _validator = new();
-    protected override void OnInitialized()
-    {
-        _model = new() { FirstName = "bill", LastName = "noel" };
-        _originalModel = _model with { };
-    private UserProfileModelValidator _validator = new();
-    protected override void OnInitialized()
-    {
-        _model = new() { FirstName = "bill", LastName = "noel" };
-        _originalModel = _model with { };
+@if (!IsModelReady)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <EditForm Model="@Model">
+        <FluentValidationValidator />
+        <ValidationSummary />
+        <InputText @bind-Value="@Model.FirstName" />
+        <InputText @bind-Value="@Model.LastName" />
+        <BitButton OnClick="Save">Save</BitButton>
+        <p>
+            <span>AccountId: @AccountId</span>
+        </p>
+        <p>
+            <span>LocationId: @LocationId</span>
+        </p>
+    </EditForm>
+}
 
 @code {
     [Parameter, SupplyParameterFromQuery] public Guid AccountId { get; set; }
@@ -44,8 +35,9 @@
 
     protected override async Task<UserProfileViewModel> CreateInitialModel()
     {
-        await _userService.GetUserAsync(AccountId, LocationId);
-        return new UserProfileViewModel() { FirstName = "bill", LastName = "noel" };
+        var p = await _userService.GetUserAsync(AccountId, LocationId);
+        await ModalHostState.SetTitle($"User Profile: {p.FirstName} {p.LastName}");
+        return p;
     }
 
     protected override async Task PersistAsync(UserProfileViewModel model)
