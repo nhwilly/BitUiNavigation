@@ -41,7 +41,7 @@
                 <div style="flex: 1; overflow: hidden; border-bottom-right-radius: 20px; position: relative;">
                     <div style="height: 100%; overflow-y: auto;">
                         <div style="padding: 0rem 1rem 1rem 1rem;">
-                            <CascadingValue Value="(ModalGuardRegistration)RegisterGuardedComponent">
+                            <CascadingValue TValue="@ModalGuardRegistration" Value="@RegisterGuardedComponent">
                                 <RouteView @key="_section"
                                            RouteData="@_active.BuildRouteData(_section)"
                                            DefaultLayout="@typeof(EmptyLayout)" />
