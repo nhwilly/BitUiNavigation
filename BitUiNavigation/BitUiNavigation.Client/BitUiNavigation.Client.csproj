@@ -9,11 +9,27 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="C:\Users\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\Constants.d.ts" />
+    <Content Remove="C:\Users\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\Logger.d.ts" />
+    <Content Remove="C:\Users\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\ReduxDevTools.d.ts" />
+    <Content Remove="C:\Users\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\ReduxDevToolsTypes.d.ts" />
+    <Content Remove="C:\Users\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\TimeWarp.State.lib.module.d.ts" />
+    <Content Remove="C:\Users\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\TimeWarpState.d.ts" />
+    <Content Remove="e:\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\Constants.d.ts" />
+    <Content Remove="e:\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\Logger.d.ts" />
+    <Content Remove="e:\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\ReduxDevTools.d.ts" />
+    <Content Remove="e:\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\ReduxDevToolsTypes.d.ts" />
+    <Content Remove="e:\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\TimeWarp.State.lib.module.d.ts" />
+    <Content Remove="e:\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\TimeWarpState.d.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Bit.BlazorUI" Version="9.11.3-pre-01" />
     <PackageReference Include="Bit.BlazorUI.Assets" Version="9.11.3-pre-01" />
     <PackageReference Include="Bit.BlazorUI.Extras" Version="9.11.3-pre-01" />
     <PackageReference Include="Bit.BlazorUI.Icons" Version="9.11.3-pre-01" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.7" />
+    <PackageReference Include="TimeWarp.State" Version="11.0.3" />
   </ItemGroup>
 
 </Project>

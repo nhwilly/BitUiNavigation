@@ -1,0 +1,194 @@
+﻿@inject NavigationManager Nav
+@inject IModalProviderSource ModalProviderSource
+
+@implements IDisposable
+@using System.Web
+@using BitUiNavigation.Client.Layout
+@using Microsoft.AspNetCore.Components.Routing
+
+@if (_active is not null)
+{
+    <BitModal IsOpen="true"
+              OnOverlayClick="@Close"
+              OnDismiss="@Close"
+              Classes="@ClassStyles">
+
+        <div style="display:flex; height:100%;">
+            <div style=" background: #f8f9fa;border-top-left-radius:20px; border-bottom-left-radius: 20px;">
+                <BitButton Style="margin: 1rem 0rem 0rem 1rem;" Color="BitColor.Tertiary" OnClick="@Close" Size="BitSize.Small" IconName="@BitIconName.ChromeClose" Variant="BitVariant.Text"></BitButton>
+                <BitNav Mode="BitNavMode.Automatic"
+                        Match="BitNavMatch.Wildcard"
+                        FullWidth
+                        Items="@_active.BuildNavItems(Nav, _active.QueryKey)"
+                        Style="width:150px; margin: 1rem;"
+                        Classes="NavStyles" />
+            </div>
+            <!-- Main right-side area -->
+            <!-- RIGHT SIDE: Full height, column layout -->
+            <div style="flex: 1; display: flex; flex-direction: column; height: 100%;">
+
+                <!-- Sticky Header -->
+                <div style="flex-shrink: 0; border-top-right-radius: 20px;  padding-top: 1rem;">
+                    <BitStack Horizontal>
+                        <BitHeader Style="height: 24px;">
+                            <BitText Style="font-weight:600; font-size:16px; ">Modal Title</BitText>
+                        </BitHeader>
+                    </BitStack>
+                </div>
+                <BitSeparator Style="padding-bottom: 1rem;" Border="BitColorKind.Tertiary" />
+
+                <!-- Scrollable Content Area with bottom radius -->
+                <div style="flex: 1; overflow: hidden; border-bottom-right-radius: 20px; position: relative;">
+                    <div style="height: 100%; overflow-y: auto;">
+                        <div style="padding: 0rem 1rem 1rem 1rem;">
+                            <RouteView @key="_section"
+                                       RouteData="@_active.BuildRouteData(_section)"
+                                       DefaultLayout="@typeof(EmptyLayout)" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </BitModal>
+}
+<style>
+    @((MarkupString)CreateContainerCss())
+
+    .bit-nav-ict-custom {
+        padding-inline-start: 12px !important;
+        border-radius: 12px !important;
+        margin-bottom: 4px !important;
+        height: 18px !important;
+        padding: 0px 4px 0px 4px !important;
+    }
+
+    .bit-nav-sel-item-custom {
+        border-color: transparent !important;
+    }
+
+</style>
+
+@code {
+    // ---------- Public API ----------
+    // Just drop <ModalHost /> in MainLayout. Configure modals below in _configs.
+    // Add more configs for other modals (e.g., QueryKey="help").
+
+    // ---------- Internal state ----------
+    private IModalProvider? _active;
+    private string _section = string.Empty;
+    private string? _preOpenUrl;
+
+    private static string ModalContainerClass = "modal-container";
+    private string CreateContainerCss()
+    {
+        if (_active == null) return string.Empty;
+        return $@"
+        .{ModalContainerClass} {{
+            width: {_active.Width};
+            height: {_active.Height};
+            border-radius: 20px;
+        }}
+    ";
+    }
+    BitModalClassStyles ClassStyles = new()
+    {
+        Content = ModalContainerClass,
+    };
+    BitNavClassStyles NavStyles => new()
+    {
+        SelectedItemContainer = "bit-nav-sel-item-custom",
+        ItemContainer = "bit-nav-ict-custom",
+        Item = "bit-nav-itm-custom",
+
+
+    };
+
+
+    protected override void OnInitialized()
+    {
+        Nav.LocationChanged += OnLocationChanged;
+        ReadFromUri(Nav.Uri, requestStateHasChanged: false);
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender) ReadFromUri(Nav.Uri, requestStateHasChanged: true);
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+        => ReadFromUri(e.Location, requestStateHasChanged: true);
+
+    private void ReadFromUri(string fullUri, bool requestStateHasChanged)
+    {
+        var uri = new Uri(fullUri);
+        var qs = HttpUtility.ParseQueryString(uri.Query);
+
+        // Find first config whose QueryKey exists in the query string
+        // var match = _configs.FirstOrDefault(c => !string.IsNullOrWhiteSpace(qs[c.QueryKey]));
+        var match = ModalProviderSource.GetModalProviders().FirstOrDefault(f => !string.IsNullOrWhiteSpace(qs[f.QueryKey]));
+
+        var newSection = match is null ? null : NormalizeSection(qs[match.QueryKey], match.DefaultSection);
+
+        var wasActive = _active is not null;
+        var willBeActive = match is not null;
+
+        if (willBeActive && !wasActive)
+        {
+            // First open: capture the URL before the modal query was added (preserve other params)
+            _preOpenUrl = RemoveQueryParam(fullUri, match!.QueryKey);
+        }
+        else if (!willBeActive)
+        {
+            _preOpenUrl = null; // modal closed (or no modal present)
+        }
+
+        _active = match;
+        _section = newSection ?? string.Empty;
+
+        if (requestStateHasChanged) StateHasChanged();
+    }
+
+    private void Close()
+    {
+        if (!string.IsNullOrEmpty(_preOpenUrl))
+        {
+            Nav.NavigateTo(_preOpenUrl!, replace: true);
+            _preOpenUrl = null;
+        }
+        else if (_active is not null)
+        {
+            // Deep-linked: strip only the active modal's query key
+            var stripped = Nav.GetUriWithQueryParameter(_active.QueryKey, (string?)null);
+            Nav.NavigateTo(stripped, replace: true);
+        }
+    }
+
+    private static string RemoveQueryParam(string fullUri, string key)
+    {
+        var uri = new Uri(fullUri);
+        var qs = HttpUtility.ParseQueryString(uri.Query);
+        qs.Remove(key);
+        var b = new UriBuilder(uri) { Query = qs.ToString() ?? string.Empty };
+        return b.Uri.ToString();
+    }
+
+    private static string NormalizeSection(string? value, string defaultSection)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return defaultSection;
+        var v = value.Trim();
+        if (v.StartsWith("/")) v = v[1..];
+        return v;
+    }
+
+    public void Dispose() => Nav.LocationChanged -= OnLocationChanged;
+
+    // ---------- Types ----------
+    private sealed record ModalConfig(
+        string QueryKey,
+        string DefaultSection,
+        string Width,
+        string Height,
+        Func<NavigationManager, string, List<BitNavItem>> BuildNavItems,
+        Func<string, RouteData> BuildRouteData
+    );
+}
