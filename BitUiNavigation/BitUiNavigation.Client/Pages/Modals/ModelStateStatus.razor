@@ -2,58 +2,68 @@
 @using Bit.BlazorUI
 @using BitUiNavigation.Client.Services
 
-@if (Show)
-{
-    <BitStack Horizontal>
-        
-        @if (ModalHostState.IsSaving)
-        {
-            <BitProgress Circular />
-            <span>Saving...</span>
-        }
-        else if (ModalHostState.IsFetching)
-        {
-            <BitProgress Circular />
-            <span>Fetching...</span>
-        }
-        else if (ModalHostState.IsSaved)
-        {
-            <BitIcon IconName="CheckMark" Style="color: white;" />
-            <span>Saved</span>
-        }
-        else if (ModalHostState.IsChanged)
-        {
-            <BitIcon IconName="Info" Style="color: white;" />
-            <span>Unsaved changes</span>
-        }
-    </BitStack>
-}
+<BitStack Horizontal Alignment="BitAlignment.End" Style="padding-right: 1rem;">
+    <BitText Class="modal-status">
+        @StatusIcon
+    </BitText>
+    @StatusText
+</BitStack>
+@* <style>
+    .extra-small-loading {
+        transform: scale(0.7);
+        transform-origin: center;
+    }
 
-@code {
+    .modal-status {
+        opacity: 1;
+        transition: opacity 0.5s ease-in-out;
+    }
 
-    private bool FadingOut => ModalHostState.IsSaved && _fadeStartTime.HasValue && (DateTime.UtcNow - _fadeStartTime.Value).TotalMilliseconds > 1000;
-    private DateTime? _fadeStartTime;
-
-    ModalHostState ModalHostState => GetState<ModalHostState>();
-
-    private bool Show => ModalHostState.IsSaving || ModalHostState.IsChanged || ModalHostState.IsSaved;
-
-    protected override void OnParametersSet()
-    {
-        if (ModalHostState.IsSaved)
-        {
-            _fadeStartTime ??= DateTime.UtcNow;
-            // Trigger re-render for fade
-            _ = Task.Delay(100).ContinueWith(_ => InvokeAsync(StateHasChanged));
+        .modal-status.bit-txt.bit-txt.subtitle1 {
+            line-height: 12px !important;
+            margin: 0px !important;
+            padding: 0px !important;
         }
-        else
-        {
-            _fadeStartTime = null;
+
+        /* Optional: Add a class to fade out “Saved” after a short time */
+        .modal-status.saved-fade {
+            animation: fadeOut 3s forwards;
+        }
+
+    @@keyframes fadeOut {
+        0% {
+            opacity: 1;
+        }
+
+        70% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 0;
         }
     }
 
-    private string BackgroundColor =>
-        ModalHostState.IsSaving ? "#0078D4" :
-        ModalHostState.IsSaved ? "#107C10" :
-        ModalHostState.IsChanged ? "#605E5C" : "transparent";
+</style> *@
+
+@code {
+
+    private ModalHostState ModalHostState => GetState<ModalHostState>();
+
+    private string StatusText =>
+        ModalHostState.IsSaving ? "Saving..."
+        : ModalHostState.IsSaved ? "Saved"
+        : ModalHostState.IsChanged ? "Unsaved changes"
+        : ModalHostState.IsFetching ? "Fetching"
+        : string.Empty;
+
+    private RenderFragment? StatusIcon => ModalHostState switch
+    {
+        { IsSaving: true } => @<BitIcon IconName="Sync" />,
+        { IsSaved: true } => @<BitIcon IconName="CheckMark" />,
+        { IsChanged: true } => @<BitIcon IconName="Edit" />,
+        { IsFetching: true } =>@<BitDotsRingLoading CustomSize=24 />,
+    _ => null
+    };
+
 }
