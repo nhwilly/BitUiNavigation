@@ -3,17 +3,16 @@
 @using FluentValidation
 @using BitUiNavigation.Client.Pages.Modals
 
-@if (!IsModelReady)
-{
-    <p>Loading...</p>
-}
-else
-{
+<ShimmerUntilReady IsReady=@IsModelReady>
     <EditForm Model="@Model">
         <FluentValidationValidator />
-        <ValidationSummary />
-        <InputText @bind-Value="@Model.FirstName" />
-        <InputText @bind-Value="@Model.LastName" />
+
+        <BitTextField Label="First name" @bind-Value="@Model.FirstName" Trim IsEnabled="IsNotBusy" />
+        <ValidationMessage For="() => Model.FirstName" />
+
+        <BitTextField Label="Last name" @bind-Value="@Model.LastName" Trim IsEnabled="IsNotBusy" />
+        <ValidationMessage For="() => Model.LastName" />
+
         <BitButton OnClick="Save">Save</BitButton>
         <p>
             <span>AccountId: @AccountId</span>
@@ -22,16 +21,14 @@ else
             <span>LocationId: @LocationId</span>
         </p>
     </EditForm>
-}
+</ShimmerUntilReady>
 
 @code {
     [Parameter, SupplyParameterFromQuery] public Guid AccountId { get; set; }
     [Parameter, SupplyParameterFromQuery] public Guid LocationId { get; set; }
 
-    private readonly UserProfileModelValidator _validator = new();
     private readonly UserService _userService = new();
-
-    protected override AbstractValidator<UserProfileViewModel> Validator => _validator;
+    bool IsNotBusy => !ModalHostState.IsSaving;
 
     protected override async Task<UserProfileViewModel> CreateInitialModel()
     {

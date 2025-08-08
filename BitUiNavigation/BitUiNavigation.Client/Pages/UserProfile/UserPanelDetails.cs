@@ -22,14 +22,12 @@ public class UserService
     {
         Console.WriteLine("Saving user inside userService...");
         await Task.Delay(1500);
-        // Simulate saving user data
-        //await Task.CompletedTask;
     }
 
     public async Task<UserProfileViewModel> GetUserAsync(Guid accountId, Guid locationId)
     {
         Console.WriteLine("Getting user inside userService...");
-        await Task.Delay(5000);
+        await Task.Delay(500);
         var p = new UserProfileViewModel() { FirstName = "bill", LastName = "noel" };
         return await Task.FromResult(p);
     }

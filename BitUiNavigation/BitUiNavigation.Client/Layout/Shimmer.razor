@@ -1,0 +1,24 @@
+﻿<BitStack Style="@Style" Gap="1rem;">
+    @for (int i = 0; i < Sections; i++)
+    {
+        <BitStack Gap=".5rem;">
+            @for (int l = 0; l < LinesPerSection; l++)
+            {
+                <BitShimmer Style="border-radius: 20px;" Width="@(GetRandomPercentage(70, 95))" Height="1rem" />
+            }
+        </BitStack>
+    }
+</BitStack>
+
+@code {
+    [Parameter] public int Sections { get; set; } = 3;
+    [Parameter] public int LinesPerSection { get; set; } = 4;
+    [Parameter] public string Style { get; set; } = "margin-top: 1rem;";
+    static string GetRandomPercentage(double min, double max)
+    {
+        var random = new Random();
+        double value = random.NextDouble() * (max - min) + min;
+        return $"{value:F1}%"; // One decimal place
+    }
+
+}

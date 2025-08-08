@@ -10,12 +10,20 @@ public abstract class ModalPanelBase<TModel> : TimeWarpStateComponent,
     where TModel : BaseRecord
 {
     [CascadingParameter] public ModalGuardRegistration? RegisterGuard { get; set; }
+    [Inject] private IValidator<TModel>? Validator { get; set; } = default!;
 
+    protected virtual async Task<bool> ValidateModel()
+    {
+        if (Validator is null)
+            return true;
+        
+        var result = await Validator.ValidateAsync(Model);
+        return result.IsValid;
+    }
     protected TModel Model { get; set; } = default!;
     private TModel OriginalModel = default!;
     protected bool IsModelReady { get; private set; }
 
-    protected abstract AbstractValidator<TModel> Validator { get; }
     protected ModalHostState ModalHostState => GetState<ModalHostState>();
 
     protected override async Task OnInitializedAsync()
@@ -36,12 +44,6 @@ public abstract class ModalPanelBase<TModel> : TimeWarpStateComponent,
 
     protected abstract Task<TModel> CreateInitialModel();
     protected abstract Task PersistAsync(TModel model);
-
-    protected virtual async Task<bool> ValidateModel()
-    {
-        var result = await Validator.ValidateAsync(Model);
-        return result.IsValid;
-    }
 
     public async Task<bool> CanNavigateAwayAsync() => !HasChanges() || (await ValidateModel());
 
