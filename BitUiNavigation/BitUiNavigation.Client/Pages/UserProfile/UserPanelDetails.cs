@@ -21,7 +21,7 @@ public class UserService
     public async Task SaveUserAsync(UserProfileViewModel model)
     {
         Console.WriteLine("Saving user inside userService...");
-        await Task.Delay(1500);
+        await Task.Delay(5000);
     }
 
     public async Task<UserProfileViewModel> GetUserAsync(Guid accountId, Guid locationId)

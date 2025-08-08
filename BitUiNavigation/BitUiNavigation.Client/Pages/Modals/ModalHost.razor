@@ -18,7 +18,7 @@
         <BitStack Horizontal Gap="0rem" Style="height: 100%">
             <BitStack Class="nav-panel" FitWidth Style="border-top-left-radius:20px; border-bottom-left-radius: 20px;">
                 <BitButton Style="margin: 1rem 0rem 0rem 1rem;" Color="BitColor.Tertiary" OnClick="@Close" IconOnly Size="BitSize.Small" IconName="@BitIconName.ChromeClose" Variant="BitVariant.Text"></BitButton>
-                <BitNav Mode="BitNavMode.Automatic"
+                <BitNav IsEnabled="@(!ModalHostState.IsSaving)" Mode="BitNavMode.Automatic"
                         Items="@_active.BuildNavItems(Nav, _active.QueryKey)"
                         Match="BitNavMatch.Wildcard"
                         FitWidth
