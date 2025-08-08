@@ -7,9 +7,11 @@
     <EditForm Model="@Model">
         <FluentValidationValidator />
 
-        <BitTextField Label="First name" @bind-Value="@Model.FirstName" Trim IsEnabled="IsNotBusy" />
+        <BitStack Horizontal HorizontalAlign="BitAlignment.SpaceBetween" VerticalAlign="BitAlignment.Baseline">
+            <BitLabel>First name boys</BitLabel>
+            <BitTextField @bind-Value="@Model.FirstName" Trim IsEnabled="IsNotBusy" />
+        </BitStack>
         <ValidationMessage For="() => Model.FirstName" />
-
         <BitTextField Label="Last name" @bind-Value="@Model.LastName" Trim IsEnabled="IsNotBusy" />
         <ValidationMessage For="() => Model.LastName" />
 
@@ -26,7 +28,7 @@
 @code {
     [Parameter, SupplyParameterFromQuery] public Guid AccountId { get; set; }
     [Parameter, SupplyParameterFromQuery] public Guid LocationId { get; set; }
-
+    [CascadingParameter] public bool IsSmallScreen { get; set; }
     private readonly UserService _userService = new();
     bool IsNotBusy => !ModalHostState.IsSaving;
 

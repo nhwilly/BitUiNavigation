@@ -2,50 +2,11 @@
 @using Bit.BlazorUI
 @using BitUiNavigation.Client.Services
 
-<BitStack Horizontal Alignment="BitAlignment.End" Style="padding-right: 1rem;">
-    <BitText Class="modal-status">
-        @StatusIcon
+<BitStack FitWidth Horizontal Gap="0rem;"AutoHeight VerticalAlign="BitAlignment.Center">
+    <BitText>
+        @StatusText
     </BitText>
-    @StatusText
 </BitStack>
-@* <style>
-    .extra-small-loading {
-        transform: scale(0.7);
-        transform-origin: center;
-    }
-
-    .modal-status {
-        opacity: 1;
-        transition: opacity 0.5s ease-in-out;
-    }
-
-        .modal-status.bit-txt.bit-txt.subtitle1 {
-            line-height: 12px !important;
-            margin: 0px !important;
-            padding: 0px !important;
-        }
-
-        /* Optional: Add a class to fade out “Saved” after a short time */
-        .modal-status.saved-fade {
-            animation: fadeOut 3s forwards;
-        }
-
-    @@keyframes fadeOut {
-        0% {
-            opacity: 1;
-        }
-
-        70% {
-            opacity: 1;
-        }
-
-        100% {
-            opacity: 0;
-        }
-    }
-
-</style> *@
-
 @code {
 
     private ModalHostState ModalHostState => GetState<ModalHostState>();
@@ -62,8 +23,13 @@
         { IsSaving: true } => @<BitIcon IconName="Sync" />,
         { IsSaved: true } => @<BitIcon IconName="CheckMark" />,
         { IsChanged: true } => @<BitIcon IconName="Edit" />,
-        { IsFetching: true } =>@<BitDotsRingLoading CustomSize=24 />,
-    _ => null
+        { IsFetching: true } => @<BitIcon Style="margin: 0px; padding:0px;" IconName="@BitIconName.Process" />,
+    _ => @<BitIcon/>
     };
-
+    /*
+     * buttons to save, discard, see what changed
+     * indicator for saving
+     * indicator for loading
+     * indicator for save complete
+     */
 }
