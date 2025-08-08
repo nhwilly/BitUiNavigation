@@ -3,32 +3,45 @@
 @using FluentValidation
 @using BitUiNavigation.Client.Pages.Modals
 
+<BitMediaQuery ScreenQuery="@BitScreenQuery.LtMd"
+               OnChange="(isSmall) =>{ IsSmallScreen = isSmall;}" />
+
 <ShimmerUntilReady IsReady=@IsModelReady>
     <EditForm Model="@Model">
         <FluentValidationValidator />
 
-        <BitStack Horizontal HorizontalAlign="BitAlignment.SpaceBetween" VerticalAlign="BitAlignment.Baseline">
-            <BitLabel>First name boys</BitLabel>
-            <BitTextField @bind-Value="@Model.FirstName" Trim IsEnabled="IsNotBusy" />
-        </BitStack>
-        <ValidationMessage For="() => Model.FirstName" />
-        <BitTextField Label="Last name" @bind-Value="@Model.LastName" Trim IsEnabled="IsNotBusy" />
-        <ValidationMessage For="() => Model.LastName" />
+        <BitGrid Columns="@(IsSmallScreen ? 1 : 2)" HorizontalSpacing="1rem" VerticalSpacing="0.75rem">
+            <!-- First/Last side-by-side on large, stacked on small -->
+            <BitGridItem ColumnSpan="1">
+                <BitTextField Label="First name" @bind-Value="@Model.FirstName" Trim IsEnabled="IsNotBusy" />
+                <ValidationMessage For="() => Model.FirstName" />
+            </BitGridItem>
 
-        <BitButton OnClick="Save">Save</BitButton>
-        <p>
-            <span>AccountId: @AccountId</span>
-        </p>
-        <p>
-            <span>LocationId: @LocationId</span>
-        </p>
+            <BitGridItem ColumnSpan="1">
+                <BitTextField Label="Last name" @bind-Value="@Model.LastName" Trim IsEnabled="IsNotBusy" />
+                <ValidationMessage For="() => Model.LastName" />
+            </BitGridItem>
+
+            <!-- Save button full width -->
+            <BitGridItem ColumnSpan="@(IsSmallScreen ? 1 : 2)">
+                <BitButton OnClick="Save">Save</BitButton>
+            </BitGridItem>
+
+            <!-- Info full width -->
+            <BitGridItem ColumnSpan="@(IsSmallScreen ? 1 : 2)">
+                <BitStack Gap="0.25rem">
+                    <BitText>AccountId: @AccountId</BitText>
+                    <BitText>LocationId: @LocationId</BitText>
+                </BitStack>
+            </BitGridItem>
+        </BitGrid>
     </EditForm>
 </ShimmerUntilReady>
 
 @code {
     [Parameter, SupplyParameterFromQuery] public Guid AccountId { get; set; }
     [Parameter, SupplyParameterFromQuery] public Guid LocationId { get; set; }
-    [CascadingParameter] public bool IsSmallScreen { get; set; }
+    private bool IsSmallScreen { get; set; }
     private readonly UserService _userService = new();
     bool IsNotBusy => !ModalHostState.IsSaving;
 

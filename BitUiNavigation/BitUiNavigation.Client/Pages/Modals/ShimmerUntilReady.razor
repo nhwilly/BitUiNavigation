@@ -1,9 +1,6 @@
 ﻿@inherits TimeWarpStateComponent
 @using BitUiNavigation.Client.Services
 
-<BitMediaQuery ScreenQuery="@BitScreenQuery.LtSm"
-               OnChange="(isSmall) => IsSmallScreen = isSmall" />
-
 @if (ShowLoading)
 {
     if (LoadingContent is not null)
@@ -17,9 +14,7 @@
 }
 else
 {
-    <CascadingValue TValue="bool" Value="IsSmallScreen">
-        @ChildContent
-    </CascadingValue>
+    @ChildContent
 }
 @code {
     [Parameter, EditorRequired] public bool IsReady { get; set; }
@@ -27,7 +22,7 @@ else
     [Parameter] public RenderFragment? LoadingContent { get; set; }
     [Parameter] public int Sections { get; set; } = 3;
     [Parameter] public int LinesPerSection { get; set; } = 4;
-    protected bool IsSmallScreen { get; set; }
+    public bool IsSmallScreen { get; set; }
     private ModalHostState ModalHostState => GetState<ModalHostState>
 ();
     private bool ShowLoading => !IsReady || ModalHostState.IsFetching;
