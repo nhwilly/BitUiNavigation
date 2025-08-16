@@ -1,8 +1,9 @@
 ﻿@inherits ModalPanelBase<UserProfileViewModel>
+@using BitUiNavigation.Client.Services
 @using Blazored.FluentValidation
 @using FluentValidation
 @using BitUiNavigation.Client.Pages.Modals
-
+@inject UserService _userService
 <BitMediaQuery ScreenQuery="@BitScreenQuery.LtMd"
                OnChange="(isSmall) =>{ IsSmallScreen = isSmall;}" />
 
@@ -53,17 +54,19 @@
     [Parameter, SupplyParameterFromQuery] public Guid AccountId { get; set; }
     [Parameter, SupplyParameterFromQuery] public Guid LocationId { get; set; }
     private bool IsSmallScreen { get; set; }
-    private readonly UserService _userService = new();
+    private UserModalState UserModalState => GetState<UserModalState>();
     bool IsNotBusy => !ModalHostState.IsSaving;
 
     protected override async Task<UserProfileViewModel> CreateInitialModel()
     {
-        var p = await _userService.GetUserAsync(AccountId, LocationId);
-        await ModalHostState.SetTitle($"User Profile: {p.FirstName} {p.LastName}");
-        return p;
+        if (UserModalState.UserProfileViewModel is null)
+        {
+            await UserModalState.GetUser("my id", CancellationToken);
+        }
+        return await Task.FromResult(UserModalState.UserProfileViewModel!);
     }
 
-    protected override async Task PersistAsync(UserProfileViewModel model)
-        => await _userService.SaveUserAsync(model);
+    protected override async Task PersistAsync()
+        => await UserModalState.SaveUser(CancellationToken);
 
 }

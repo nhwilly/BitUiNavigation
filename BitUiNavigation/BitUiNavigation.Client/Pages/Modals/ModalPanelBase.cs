@@ -16,7 +16,7 @@ public abstract class ModalPanelBase<TModel> : TimeWarpStateComponent,
     {
         if (Validator is null)
             return true;
-        
+
         var result = await Validator.ValidateAsync(Model);
         return result.IsValid;
     }
@@ -43,16 +43,20 @@ public abstract class ModalPanelBase<TModel> : TimeWarpStateComponent,
     }
 
     protected abstract Task<TModel> CreateInitialModel();
-    protected abstract Task PersistAsync(TModel model);
+    protected abstract Task PersistAsync();
 
-    public async Task<bool> CanNavigateAwayAsync() => !HasChanges() || (await ValidateModel());
+    /// <summary>
+    /// REMOVE OR TRUE TO RETURN TO NORMAL
+    /// </summary>
+    /// <returns></returns>
+    public async Task<bool> CanNavigateAwayAsync() => !HasChanges() || ((await ValidateModel()) || true);
 
     public async Task SaveOnNavigateAsync()
     {
         if (!HasChanges()) return;
         if (!await ValidateModel()) return;
         await ModalHostState.SetSaving();
-        await PersistAsync(Model);
+        await PersistAsync();
         OriginalModel = Model with { };
         await ModalHostState.SetSaved();
     }
@@ -62,7 +66,7 @@ public abstract class ModalPanelBase<TModel> : TimeWarpStateComponent,
         if (!HasChanges()) return;
         if (!await ValidateModel()) return;
 
-        await PersistAsync(Model);
+        await PersistAsync();
         OriginalModel = Model with { };
     }
     protected bool HasChanges() => Model != OriginalModel;

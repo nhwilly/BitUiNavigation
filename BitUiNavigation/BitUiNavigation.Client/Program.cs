@@ -23,5 +23,6 @@ public class Program
         services.AddSingleton<IModalProvider, UserModalProvider>();
         services.AddSingleton<IModalProvider, WorkspaceModalProvider>();
         services.AddValidatorsFromAssemblyContaining<UserProfileModelValidator>();
+        services.AddScoped<UserService>();
     }
 }
