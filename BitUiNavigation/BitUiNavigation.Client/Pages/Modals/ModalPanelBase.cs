@@ -41,6 +41,19 @@ public abstract class ModalPanelBase<TModel> : TimeWarpStateComponent,
         await ModalHostState.SetModelReady(IsModelReady);
         IsModelReady = true;
     }
+    public async Task<bool> CanNavigateToAnotherSectionAsync()
+    {
+        // Between panes → allow even if invalid
+        // but still trigger save-on-navigate
+        return await Task.FromResult(true);
+    }
+
+    public async Task<bool> CanCloseModalAsync()
+    {
+        // Only block if invalid when closing the modal
+        if (!HasChanges()) return true;
+        return await ValidateModel();
+    }
 
     protected abstract Task<TModel> CreateInitialModel();
     protected abstract Task PersistAsync();

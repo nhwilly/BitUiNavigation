@@ -1,5 +1,6 @@
 ﻿using Bit.BlazorUI;
 using BitUiNavigation.Client.Pages.UserProfile;
+using BitUiNavigation.Client.Services;
 using Microsoft.AspNetCore.Components;
 
 namespace BitUiNavigation.Client.Pages.Modals;
@@ -9,6 +10,9 @@ public sealed class UserModalProvider : ModalProviderBase
     public override string DefaultSection => nameof(UserMembershipsPanel);
     public override string Width => "900px";
     public override string Height => "640px";
+    [Parameter, SupplyParameterFromQuery] public Guid AccountId { get; set; }
+    [Parameter, SupplyParameterFromQuery] public Guid LocationId { get; set; }
+    private UserModalState UserModalState => GetState<UserModalState>();
 
     protected override Dictionary<string, Type> SectionMap { get; } = new(StringComparer.OrdinalIgnoreCase)
     {

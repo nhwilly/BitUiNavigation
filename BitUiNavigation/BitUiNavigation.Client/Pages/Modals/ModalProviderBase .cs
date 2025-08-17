@@ -1,10 +1,11 @@
 ﻿using Bit.BlazorUI;
 using BitUiNavigation.Client.Pages.UserProfile;
 using Microsoft.AspNetCore.Components;
+using TimeWarp.State;
 
 namespace BitUiNavigation.Client.Pages.Modals;
 
-public abstract class ModalProviderBase : IModalProvider
+public abstract class ModalProviderBase : TimeWarpStateComponent, IModalProvider
 {
     public abstract string QueryKey { get; }
     public abstract string DefaultSection { get; }
