@@ -1,72 +1,27 @@
 ﻿@inherits ModalPanelBase<UserProfileViewModel>
 @using BitUiNavigation.Client.Services
 @using Blazored.FluentValidation
-@using FluentValidation
 @using BitUiNavigation.Client.Pages.Modals
-@inject UserService _userService
-<BitMediaQuery ScreenQuery="@BitScreenQuery.LtMd"
-               OnChange="(isSmall) =>{ IsSmallScreen = isSmall;}" />
 
-<ShimmerUntilReady IsReady="@IsModelReady">
+<ShimmerUntilReady IsReady="@(!UserEditSessionState.IsLoading)">
     <EditForm Model="@Model">
         <FluentValidationValidator />
-        <BitGrid Columns="@(IsSmallScreen ? 1 : 2)"
-                 HorizontalSpacing="1rem" VerticalSpacing="0.5rem"
-                 Style="@(!IsSmallScreen ? "grid-template-columns: 150px 1fr;" : null)">
-            <!-- First name -->
+        <BitGrid Columns="2" HorizontalSpacing="1rem" VerticalSpacing="0.5rem" Style="grid-template-columns:150px 1fr;">
+            <BitGridItem><BitText>First name</BitText></BitGridItem>
             <BitGridItem>
-                <BitText>First name</BitText>
-            </BitGridItem>
-            <BitGridItem>
-                <BitStack Gap="0.25rem" Style="min-width:0;">
-                    <BitTextField @bind-Value="@Model.FirstName" Trim IsEnabled="IsNotBusy" />
-                    <ValidationMessage For="() => Model.FirstName" />
-                </BitStack>
+                <BitTextField @bind-Value="Model.FirstName" Trim />
+                <ValidationMessage For="() => Model.FirstName" />
             </BitGridItem>
 
-            <!-- Last name -->
+            <BitGridItem><BitText>Last name</BitText></BitGridItem>
             <BitGridItem>
-                <BitText>Last name</BitText>
-            </BitGridItem>
-            <BitGridItem>
-                <BitStack Gap="0.25rem" Style="min-width:0;">
-                    <BitTextField @bind-Value="@Model.LastName" Trim IsEnabled="IsNotBusy" />
-                    <ValidationMessage For="() => Model.LastName" />
-                </BitStack>
-            </BitGridItem>
-
-            <!-- Save button (full width in both layouts) -->
-            <BitGridItem ColumnSpan="@(IsSmallScreen ? 1 : 2)">
-                <BitButton OnClick="Save">Save</BitButton>
-            </BitGridItem>
-
-            <!-- Info (full width) -->
-            <BitGridItem ColumnSpan="@(IsSmallScreen ? 1 : 2)">
-                <BitStack Gap="0.25rem">
-                    <BitText>AccountId: @AccountId</BitText>
-                    <BitText>LocationId: @LocationId</BitText>
-                </BitStack>
+                <BitTextField @bind-Value="Model.LastName" Trim />
+                <ValidationMessage For="() => Model.LastName" />
             </BitGridItem>
         </BitGrid>
     </EditForm>
 </ShimmerUntilReady>
 @code {
-    [Parameter, SupplyParameterFromQuery] public Guid AccountId { get; set; }
-    [Parameter, SupplyParameterFromQuery] public Guid LocationId { get; set; }
-    private bool IsSmallScreen { get; set; }
-    private UserModalState UserModalState => GetState<UserModalState>();
-    bool IsNotBusy => !ModalHostState.IsSaving;
-
-    protected override async Task<UserProfileViewModel> CreateInitialModel()
-    {
-        if (UserModalState.UserProfileViewModel is null)
-        {
-            await UserModalState.GetUser("my id", CancellationToken);
-        }
-        return await Task.FromResult(UserModalState.UserProfileViewModel!);
-    }
-
-    protected override async Task PersistAsync()
-        => await UserModalState.SaveUser(CancellationToken);
-
+    private UserEditSessionState UserEditSessionState => GetState<UserEditSessionState>();
+    protected override UserProfileViewModel ViewModelFromState => UserEditSessionState.ProfileVm;
 }

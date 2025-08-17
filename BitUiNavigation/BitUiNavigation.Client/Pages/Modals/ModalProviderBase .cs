@@ -1,18 +1,25 @@
 ﻿using Bit.BlazorUI;
+using BitUiNavigation.Client.Pages.Modals;
 using BitUiNavigation.Client.Pages.UserProfile;
 using Microsoft.AspNetCore.Components;
 using TimeWarp.State;
 
-namespace BitUiNavigation.Client.Pages.Modals;
-
-public abstract class ModalProviderBase : TimeWarpStateComponent, IModalProvider
+public abstract class ModalProviderBase : IModalProvider
 {
     public abstract string QueryKey { get; }
     public abstract string DefaultSection { get; }
     public abstract string Width { get; }
     public abstract string Height { get; }
-
+    protected readonly IStore Store;
+    protected ModalProviderBase(IStore store)
+    {
+        Store = store;
+    }
     protected abstract Dictionary<string, Type> SectionMap { get; }
+
+    // 🟢 NEW: called by ModalHost when the modal is first opened.
+    // Default does nothing; override in concrete provider to send init action.
+    public virtual Task OnModalOpenedAsync(CancellationToken ct) => Task.CompletedTask;
 
     protected string BuildSectionUrl(NavigationManager nav, string section)
     {
@@ -33,8 +40,7 @@ public abstract class ModalProviderBase : TimeWarpStateComponent, IModalProvider
     {
         if (string.IsNullOrWhiteSpace(value)) return defaultSection;
         var v = value.Trim();
-        if (v.StartsWith('/')) v = v[1..];
-        return v;
+        return v.StartsWith('/') ? v[1..] : v;
     }
 
     public abstract List<BitNavItem> BuildNavItems(NavigationManager nav, string queryKey);

@@ -11,38 +11,46 @@
 @if (_active is not null)
 {
     <BitModal IsOpen="true"
-              OnOverlayClick="@Close"
-              OnDismiss="@Close"
+              OnOverlayClick="@CloseAsync"
+              OnDismiss="@CloseAsync"
               Classes="@ClassStyles">
 
         <BitStack Horizontal Gap="0rem" Style="height: 100%">
-            <BitStack Class="nav-panel" FitWidth Style="border-top-left-radius:20px; border-bottom-left-radius: 20px;">
-                <BitButton Style="margin: 1rem 0rem 0rem 1rem;" Color="BitColor.Tertiary" OnClick="@Close" IconOnly Size="BitSize.Small" IconName="@BitIconName.ChromeClose" Variant="BitVariant.Text"></BitButton>
-                <BitNav IsEnabled="@(!ModalHostState.IsSaving)" Mode="BitNavMode.Automatic"
+            <BitStack Class="nav-panel" FitWidth Style="border-top-left-radius:20px; border-bottom-left-radius:20px;">
+                <BitButton Style="margin: 1rem 0 0 1rem"
+                           Color="BitColor.Tertiary"
+                           OnClick="@CloseAsync"
+                           IconOnly
+                           Size="BitSize.Small"
+                           IconName="@BitIconName.ChromeClose"
+                           Variant="BitVariant.Text" />
+                <BitNav IsEnabled="@(!ModalHostState.IsSaving)"
+                        Mode="BitNavMode.Automatic"
                         Items="@_active.BuildNavItems(Nav, _active.QueryKey)"
                         Match="BitNavMatch.Wildcard"
                         FitWidth
-                        Style="margin: 0rem 1rem;"
+                        Style="margin:0 1rem"
                         Classes="NavStyles" />
             </BitStack>
 
-            <!-- RIGHT SIDE: Full height, column layout -->
-            <div style="flex: 1; display: flex; flex-direction: column; height: 100%;">
-
-                <!-- Sticky Header -->
-                <div style="flex-shrink: 0; border-top-right-radius: 20px;">
-                    <BitStack Style="padding: 1.25rem 1rem 1rem;" Horizontal VerticalAlign="BitAlignment.Baseline" HorizontalAlign="BitAlignment.SpaceBetween">
-                        <BitText Style="font-weight:600; font-size:16px;">@ModalHostState.Title</BitText>
+            <div style="flex:1;display:flex;flex-direction:column;height:100%">
+                <div style="flex-shrink:0;border-top-right-radius:20px;">
+                    <BitStack Style="padding:1.25rem 1rem 1rem;"
+                              Horizontal
+                              VerticalAlign="BitAlignment.Baseline"
+                              HorizontalAlign="BitAlignment.SpaceBetween">
+                        <BitText Style="font-weight:600;font-size:16px;">
+                            @ModalHostState.Title
+                        </BitText>
                         <ModelStateStatus />
                     </BitStack>
                 </div>
 
                 <BitSeparator Border="BitColorKind.Tertiary" />
 
-                <!-- Scrollable Content Area with bottom radius -->
-                <div style="flex: 1; overflow: hidden; border-bottom-right-radius: 20px; position: relative;">
-                    <div style="height: 100%; overflow-y: auto;">
-                        <div style="padding: 1rem;">
+                <div style="flex:1;overflow:hidden;border-bottom-right-radius:20px;position:relative;">
+                    <div style="height:100%;overflow-y:auto;">
+                        <div style="padding:1rem;">
                             <CascadingValue TValue="@ModalGuardRegistration" Value="@RegisterGuardedComponent">
                                 <RouteView @key="_section"
                                            RouteData="@_active.BuildRouteData(_section)"
@@ -55,12 +63,9 @@
         </BitStack>
     </BitModal>
 }
+
 <style>
     @((MarkupString)CreateContainerCss())
-
-    @* * {
-        outline: 1px solid red;
-    } *@
 
     .nav-panel {
         background-color: var(--bit-clr-bg-sec);
@@ -72,35 +77,18 @@
         height: 18px !important;
     }
 
-    @* applies to all nav items *@
-    .nav-item {
-        @* color: red;
-        background-color: purple; *@
-    }
-
     .nav-selected-item-container {
-        @* this removes the selected accent on the edge*@
         border-color: transparent !important;
     }
-
-    .nav-selected-item {
-        @* color: green;
-        background-color: blue; *@
-    }
-
 </style>
 
 @code {
-    // ---------- Public API ----------
-    // Just drop <ModalHost /> in MainLayout. Configure modals below in _configs.
-    // Add more configs for other modals (e.g., QueryKey="help").
-
-    // ---------- Internal state ----------
     private IModalProvider? _active;
     private string _section = string.Empty;
     private string? _preOpenUrl;
     private IModalSectionGuard? _currentGuardedComponent;
-    ModalHostState ModalHostState => GetState<ModalHostState>();
+
+    private ModalHostState ModalHostState => GetState<ModalHostState>();
 
     BitModalClassStyles ClassStyles = new()
     {
@@ -114,47 +102,8 @@
         SelectedItem = "nav-selected-item",
     };
 
-    private void RegisterGuardedComponent(IModalSectionGuard component) => _currentGuardedComponent = component;
-
-    private async Task HandleNavItemClick(BitNavItem item)
-    {
-        var newSection = item.Key;
-
-        if (string.Equals(newSection, _section, StringComparison.OrdinalIgnoreCase))
-            return;
-
-        // Intercept navigation
-        if (_currentGuardedComponent is not null)
-        {
-            var canNavigate = await _currentGuardedComponent.CanNavigateAwayAsync();
-            if (!canNavigate)
-            {
-                return;
-            }
-
-            if (_currentGuardedComponent is ISupportsSaveOnNavigate saver)
-            {
-                await saver.SaveOnNavigateAsync();
-            }
-        }
-
-        // Navigate via query string
-        Nav.NavigateTo(Nav.GetUriWithQueryParameter(_active!.QueryKey, newSection));
-    }
-
-
-    private static string ModalContainerClass = "modal-container";
-    private string CreateContainerCss()
-    {
-        if (_active == null) return string.Empty;
-        return $@"
-        .{ModalContainerClass} {{
-            width: {_active.Width};
-            height: {_active.Height};
-            border-radius: 20px;
-        }}
-    ";
-    }
+    private void RegisterGuardedComponent(IModalSectionGuard component)
+        => _currentGuardedComponent = component;
 
     protected override void OnInitialized()
     {
@@ -164,7 +113,10 @@
 
     protected override void OnAfterRender(bool firstRender)
     {
-        if (firstRender) ReadFromUri(Nav.Uri, requestStateHasChanged: true);
+        if (firstRender)
+        {
+            ReadFromUri(Nav.Uri, requestStateHasChanged: true);
+        }
     }
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
@@ -175,60 +127,77 @@
         var uri = new Uri(fullUri);
         var qs = HttpUtility.ParseQueryString(uri.Query);
 
-        var match = ModalProviderSource.GetModalProviders().FirstOrDefault(f => !string.IsNullOrWhiteSpace(qs[f.QueryKey]));
+        var match = ModalProviderSource.GetModalProviders()
+            .FirstOrDefault(p => !string.IsNullOrWhiteSpace(qs[p.QueryKey]));
 
-        var newSection = match is null ? null : NormalizeSection(qs[match.QueryKey], match.DefaultSection);
+        var newSection = match is null
+            ? null
+            : NormalizeSection(qs[match.QueryKey], match.DefaultSection);
 
         var wasActive = _active is not null;
         var willBeActive = match is not null;
 
+        // Detect first open
         if (willBeActive && !wasActive)
         {
+            // Store previous URL (to restore when modal closes)
             _preOpenUrl = RemoveQueryParam(fullUri, match!.QueryKey);
+
+            // 🔔 call provider hook to initialize
+            await match!.OnModalOpenedAsync(CancellationToken.None);
         }
-        else if (!willBeActive)
+
+        // Detect modal close
+        if (!willBeActive && wasActive)
         {
-            _preOpenUrl = null; // modal closed (or no modal present)
+            _preOpenUrl = null;
         }
 
-        var oldSection = _section;
-
-        if (newSection != oldSection)
-        {
-            if (_currentGuardedComponent is not null)
-            {
-                var canNavigate = await _currentGuardedComponent.CanNavigateAwayAsync();
-                if (!canNavigate)
-                {
-                    // Cancel navigation by navigating back to old section
-                    Nav.NavigateTo(Nav.GetUriWithQueryParameter(_active!.QueryKey, oldSection));
-                    return;
-                }
-                if (_currentGuardedComponent is ISupportsSaveOnNavigate saver)
-                {
-                    await saver.SaveOnNavigateAsync();
-                }
-            }
-        }
-
+        // Handle section change (panel navigation)
         _active = match;
+        var oldSection = _section;
         _section = newSection ?? string.Empty;
-        if (requestStateHasChanged) StateHasChanged();
+
+        // Always allow navigation between panels (no validation / save here)
+        // Just avoid duplicate navigation
+        if (oldSection != _section)
+        {
+            // nothing else to do
+        }
+
+        if (requestStateHasChanged)
+            StateHasChanged();
     }
 
-    private void Close()
+    private async Task CloseAsync()
     {
+        // Check with current panel guard before closing
+        if (_currentGuardedComponent is not null)
+        {
+            var canClose = await _currentGuardedComponent.CanCloseModalAsync();
+            if (!canClose)
+                return;
+        }
+
+        // NOTE: saving should now be done either via a Save button OR by dispatching
+        //       SaveUserActionSet.Action here (if you want "save on close").
+        // await Store.Send(new SaveUserActionSet.Action());
+
+        // Restore original URL
         if (!string.IsNullOrEmpty(_preOpenUrl))
         {
             Nav.NavigateTo(_preOpenUrl!, replace: true);
-            _preOpenUrl = null;
         }
         else if (_active is not null)
         {
-            // Deep-linked: strip only the active modal's query key
             var stripped = Nav.GetUriWithQueryParameter(_active.QueryKey, (string?)null);
             Nav.NavigateTo(stripped, replace: true);
         }
+
+        _preOpenUrl = null;
+        _active = null;
+        _section = string.Empty;
+        _currentGuardedComponent = null;
     }
 
     private static string RemoveQueryParam(string fullUri, string key)
@@ -236,16 +205,28 @@
         var uri = new Uri(fullUri);
         var qs = HttpUtility.ParseQueryString(uri.Query);
         qs.Remove(key);
-        var b = new UriBuilder(uri) { Query = qs.ToString() ?? string.Empty };
-        return b.Uri.ToString();
+        var ub = new UriBuilder(uri) { Query = qs.ToString() ?? string.Empty };
+        return ub.Uri.ToString();
     }
 
     private static string NormalizeSection(string? value, string defaultSection)
     {
         if (string.IsNullOrWhiteSpace(value)) return defaultSection;
         var v = value.Trim();
-        if (v.StartsWith("/")) v = v[1..];
-        return v;
+        return v.StartsWith("/") ? v[1..] : v;
+    }
+
+    private static string ModalContainerClass = "modal-container";
+
+    private string CreateContainerCss()
+    {
+        if (_active is null) return string.Empty;
+        return $@"
+        .{ModalContainerClass} {{
+            width:  {_active.Width};
+            height: {_active.Height};
+            border-radius:20px;
+        }}";
     }
 
     public override void Dispose()
@@ -253,14 +234,4 @@
         Nav.LocationChanged -= OnLocationChanged;
         base.Dispose();
     }
-
-    // ---------- Types ----------
-    // private sealed record ModalConfig(
-    //     string QueryKey,
-    //     string DefaultSection,
-    //     string Width,
-    //     string Height,
-    //     Func<NavigationManager, string, List<BitNavItem>> BuildNavItems,
-    //     Func<string, RouteData> BuildRouteData
-    // );
 }

@@ -19,9 +19,9 @@ public class Program
     {
         services.AddBitBlazorUIServices();
         services.AddTimeWarpState();
-        services.AddSingleton<IModalProviderSource, DefaultModalProviderSource>();
-        services.AddSingleton<IModalProvider, UserModalProvider>();
-        services.AddSingleton<IModalProvider, WorkspaceModalProvider>();
+        services.AddScoped<IModalProviderSource, DefaultModalProviderSource>();
+        services.AddScoped<IModalProvider, UserModalProvider>();
+        services.AddScoped<IModalProvider, WorkspaceModalProvider>();
         services.AddValidatorsFromAssemblyContaining<UserProfileModelValidator>();
         services.AddScoped<UserService>();
     }

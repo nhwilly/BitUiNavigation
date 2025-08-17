@@ -1,10 +1,12 @@
 ﻿using Bit.BlazorUI;
 using BitUiNavigation.Client.Pages.UserProfile;
+using BitUiNavigation.Client.Services;
 using Microsoft.AspNetCore.Components;
+using TimeWarp.State;
 
 namespace BitUiNavigation.Client.Pages.Modals;
 
-public sealed class WorkspaceModalProvider : IModalProvider
+public sealed class WorkspaceModalProvider : TimeWarpStateComponent, IModalProvider
 {
     public string QueryKey => "Workspace";
     public string DefaultSection => nameof(WorkspaceDetailsPanel);
@@ -45,5 +47,17 @@ public sealed class WorkspaceModalProvider : IModalProvider
         var v = value.Trim();
         if (v.StartsWith('/')) v = v[1..];
         return v;
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        // Register the modal provider with the state manager
+        UserModalState userModalState = GetState<UserModalState>();
+    }
+    public Task OnModalOpenedAsync(CancellationToken ct)
+    {
+        UserModalState userModalState = GetState<UserModalState>();
+        throw new NotImplementedException();
     }
 }
