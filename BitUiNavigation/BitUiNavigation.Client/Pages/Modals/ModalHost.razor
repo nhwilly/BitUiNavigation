@@ -87,6 +87,7 @@
     private string _section = string.Empty;
     private string? _preOpenUrl;
     private IModalSectionGuard? _currentGuardedComponent;
+    private bool _needsSessionInit = false;
 
     private ModalHostState ModalHostState => GetState<ModalHostState>();
 
@@ -101,6 +102,23 @@
         Item = "nav-item",
         SelectedItem = "nav-selected-item",
     };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_needsSessionInit && _active is not null)
+        {
+            _needsSessionInit = false;
+
+            // call provider *after* first render
+            await _active.OnModalOpenedAsync(CancellationToken.None);
+
+            // optionally force a UI refresh (usually not needed, as state change triggers it)
+            // StateHasChanged();
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
 
     private void RegisterGuardedComponent(IModalSectionGuard component)
         => _currentGuardedComponent = component;
@@ -142,9 +160,9 @@
         {
             // Store previous URL (to restore when modal closes)
             _preOpenUrl = RemoveQueryParam(fullUri, match!.QueryKey);
-
             // 🔔 call provider hook to initialize
-            await match!.OnModalOpenedAsync(CancellationToken.None);
+            await match!.OnModalOpeningAsync(CancellationToken);
+            _needsSessionInit = true;
         }
 
         // Detect modal close

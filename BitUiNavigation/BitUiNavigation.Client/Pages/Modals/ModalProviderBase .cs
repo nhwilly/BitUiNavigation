@@ -20,6 +20,7 @@ public abstract class ModalProviderBase : IModalProvider
     // 🟢 NEW: called by ModalHost when the modal is first opened.
     // Default does nothing; override in concrete provider to send init action.
     public virtual Task OnModalOpenedAsync(CancellationToken ct) => Task.CompletedTask;
+    public virtual Task OnModalOpeningAsync(CancellationToken ct) => Task.CompletedTask;
 
     protected string BuildSectionUrl(NavigationManager nav, string section)
     {

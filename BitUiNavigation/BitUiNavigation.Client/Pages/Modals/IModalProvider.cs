@@ -21,4 +21,5 @@ public interface IModalProvider
     /// <summary>Maps the current section key to a RouteData (component type + parameters) for the right pane.</summary>
     RouteData BuildRouteData(string sectionKey);
     Task OnModalOpenedAsync(CancellationToken ct);
+    Task OnModalOpeningAsync(CancellationToken ct);
 }

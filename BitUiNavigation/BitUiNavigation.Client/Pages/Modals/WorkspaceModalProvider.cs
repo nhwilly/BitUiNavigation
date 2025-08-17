@@ -60,4 +60,9 @@ public sealed class WorkspaceModalProvider : TimeWarpStateComponent, IModalProvi
         UserModalState userModalState = GetState<UserModalState>();
         throw new NotImplementedException();
     }
+    public Task OnModalOpeningAsync(CancellationToken ct)
+    {
+        UserModalState userModalState = GetState<UserModalState>();
+        throw new NotImplementedException();
+    }
 }
