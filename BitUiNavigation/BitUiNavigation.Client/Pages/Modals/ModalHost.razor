@@ -53,8 +53,8 @@
                     <div style="height:100%;overflow-y:auto;">
                         <div style="padding:1rem;">
                             <CascadingValue TValue="@ModalGuardRegistration" Value="@RegisterPanel">
-                                <RouteView @key="_section"
-                                           RouteData="@_activeModalProvider.BuildRouteData(_section)"
+                                <RouteView @key="_panelKey"
+                                           RouteData="@_activeModalProvider.BuildRouteData(_panelKey)"
                                            DefaultLayout="@typeof(EmptyLayout)" />
                             </CascadingValue>
                         </div>
@@ -85,24 +85,12 @@
 
 @code {
     private IModalProvider? _activeModalProvider;
-    private string _section = string.Empty;
+    private string _panelKey = string.Empty;
     private string? _preOpenUrl;
     private IModalPanel? _panel;
     private bool _needsSessionInit = false;
 
     private ModalHostState ModalHostState => GetState<ModalHostState>();
-
-    BitModalClassStyles ClassStyles = new()
-    {
-        Content = ModalContainerClass,
-    };
-    BitNavClassStyles NavStyles => new()
-    {
-        SelectedItemContainer = "nav-selected-item-container",
-        ItemContainer = "nav-item-container",
-        Item = "nav-item",
-        SelectedItem = "nav-selected-item",
-    };
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -150,7 +138,7 @@
 
         var newSection = match is null
             ? null
-            : NormalizeSection(qs[match.ProviderKey], match.DefaultPanel);
+            : Normalize(qs[match.ProviderKey], match.DefaultPanel);
 
         var wasActive = _activeModalProvider is not null;
         var willBeActive = match is not null;
@@ -173,12 +161,12 @@
 
         // Handle section change (panel navigation)
         _activeModalProvider = match;
-        var oldSection = _section;
-        _section = newSection ?? string.Empty;
+        var oldSection = _panelKey;
+        _panelKey = newSection ?? string.Empty;
 
         // Always allow navigation between panels (no validation / save here)
         // Just avoid duplicate navigation
-        if (oldSection != _section)
+        if (oldSection != _panelKey)
         {
             // nothing else to do
         }
@@ -197,10 +185,6 @@
                 return;
         }
 
-        // NOTE: saving should now be done either via a Save button OR by dispatching
-        //       SaveUserActionSet.Action here (if you want "save on close").
-        // await Store.Send(new SaveUserActionSet.Action());
-
         // Restore original URL
         if (!string.IsNullOrEmpty(_preOpenUrl))
         {
@@ -214,24 +198,30 @@
 
         _preOpenUrl = null;
         _activeModalProvider = null;
-        _section = string.Empty;
+        _panelKey = string.Empty;
         _panel = null;
     }
 
-    private static string RemoveQueryParam(string fullUri, string key)
-    {
-        var uri = new Uri(fullUri);
-        var qs = HttpUtility.ParseQueryString(uri.Query);
-        qs.Remove(key);
-        var ub = new UriBuilder(uri) { Query = qs.ToString() ?? string.Empty };
-        return ub.Uri.ToString();
-    }
+    // private static string RemoveQueryParam(string fullUri, string key)
+    // {
+    //     var uri = new Uri(fullUri);
+    //     var qs = HttpUtility.ParseQueryString(uri.Query);
+    //     qs.Remove(key);
+    //     var ub = new UriBuilder(uri) { Query = qs.ToString() ?? string.Empty };
+    //     return ub.Uri.ToString();
+    // }
 
-    private static string NormalizeSection(string? value, string defaultSection)
+    // private static string NormalizeSection(string? value, string defaultSection)
+    // {
+    //     if (string.IsNullOrWhiteSpace(value)) return defaultSection;
+    //     var v = value.Trim();
+    //     return v.StartsWith("/") ? v[1..] : v;
+    // }
+
+    public override void Dispose()
     {
-        if (string.IsNullOrWhiteSpace(value)) return defaultSection;
-        var v = value.Trim();
-        return v.StartsWith("/") ? v[1..] : v;
+        Nav.LocationChanged -= OnLocationChanged;
+        base.Dispose();
     }
 
     private static string ModalContainerClass = "modal-container";
@@ -246,10 +236,16 @@
             border-radius:20px;
         }}";
     }
-
-    public override void Dispose()
+    BitModalClassStyles ClassStyles = new()
     {
-        Nav.LocationChanged -= OnLocationChanged;
-        base.Dispose();
-    }
+        Content = ModalContainerClass,
+    };
+    BitNavClassStyles NavStyles => new()
+    {
+        SelectedItemContainer = "nav-selected-item-container",
+        ItemContainer = "nav-item-container",
+        Item = "nav-item",
+        SelectedItem = "nav-selected-item",
+    };
+
 }

@@ -31,4 +31,14 @@ public static class UrlExtensions
         var v = value.Trim();
         return v.StartsWith('/') ? v[1..] : v;
     }
+
+    public static string RemoveQueryParam(string fullUri, string key)
+    {
+        var uri = new Uri(fullUri);
+        var qs = HttpUtility.ParseQueryString(uri.Query);
+        qs.Remove(key);
+        var ub = new UriBuilder(uri) { Query = qs.ToString() ?? string.Empty };
+        return ub.Uri.ToString();
+    }
+
 }
