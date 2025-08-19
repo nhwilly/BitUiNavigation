@@ -97,12 +97,8 @@
         if (_needsSessionInit && _activeModalProvider is not null)
         {
             _needsSessionInit = false;
-
             // call provider *after* first render
-            await _activeModalProvider.OnModalOpenedAsync(CancellationToken.None);
-
-            // optionally force a UI refresh (usually not needed, as state change triggers it)
-            // StateHasChanged();
+            await _activeModalProvider.OnModalOpenedAsync(CancellationToken);
         }
 
         await base.OnAfterRenderAsync(firstRender);
@@ -152,7 +148,8 @@
         {
             // Store previous URL (to restore when modal closes)
             _preOpenUrl = RemoveQueryParam(fullUri, match!.ProviderKey);
-            // 🔔 call provider hook to initialize
+
+            // call modal provider hook to initialize
             await match!.OnModalOpeningAsync(CancellationToken);
             _needsSessionInit = true;
         }
@@ -189,7 +186,7 @@
                 return;
         }
 
-        // Restore original URL
+        // Navigate to the original URL
         if (!string.IsNullOrEmpty(_preOpenUrl))
         {
             Nav.NavigateTo(_preOpenUrl!, replace: true);
@@ -201,28 +198,11 @@
             Nav.NavigateTo(stripped, replace: true);
         }
 
-        // TODO Does this ever get executed?
         _preOpenUrl = null;
         _activeModalProvider = null;
         _panelKey = string.Empty;
         _panel = null;
     }
-
-    // private static string RemoveQueryParam(string fullUri, string key)
-    // {
-    //     var uri = new Uri(fullUri);
-    //     var qs = HttpUtility.ParseQueryString(uri.Query);
-    //     qs.Remove(key);
-    //     var ub = new UriBuilder(uri) { Query = qs.ToString() ?? string.Empty };
-    //     return ub.Uri.ToString();
-    // }
-
-    // private static string NormalizeSection(string? value, string defaultSection)
-    // {
-    //     if (string.IsNullOrWhiteSpace(value)) return defaultSection;
-    //     var v = value.Trim();
-    //     return v.StartsWith("/") ? v[1..] : v;
-    // }
 
     public override void Dispose()
     {
