@@ -194,12 +194,14 @@
         {
             Nav.NavigateTo(_preOpenUrl!, replace: true);
         }
+        // the preOpenUrl was empty, let's just deduce it from our current location.
         else if (_activeModalProvider is not null)
         {
             var stripped = Nav.GetUriWithQueryParameter(_activeModalProvider.ProviderKey, (string?)null);
             Nav.NavigateTo(stripped, replace: true);
         }
 
+        // TODO Does this ever get executed?
         _preOpenUrl = null;
         _activeModalProvider = null;
         _panelKey = string.Empty;
