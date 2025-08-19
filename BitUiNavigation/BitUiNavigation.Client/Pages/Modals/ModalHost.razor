@@ -134,16 +134,20 @@
         var uri = new Uri(fullUri);
         var qs = HttpUtility.ParseQueryString(uri.Query);
 
-        var match = ModalProviderSource.GetModalProviders().FirstOrDefault(p => !string.IsNullOrWhiteSpace(qs[p.ProviderKey]));
+        // check all the modal providers and ensure that the one 
+        // we are navigating to matches.
+        var match = ModalProviderSource
+            .GetModalProviders()
+            .FirstOrDefault(p => 
+                !string.IsNullOrWhiteSpace(qs[p.ProviderKey]));
 
-        var newSection = match is null
+        var newPanel = match is null
             ? null
             : Normalize(qs[match.ProviderKey], match.DefaultPanel);
 
         var wasActive = _activeModalProvider is not null;
         var willBeActive = match is not null;
 
-        // Detect firPanelen
         if (willBeActive && !wasActive)
         {
             // Store previous URL (to restore when modal closes)
@@ -159,14 +163,14 @@
             _preOpenUrl = null;
         }
 
-        // Handle section change (panel navigation)
+        // Handle panel change (panel navigation)
         _activeModalProvider = match;
-        var oldSection = _panelKey;
-        _panelKey = newSection ?? string.Empty;
+        var oldPanel = _panelKey;
+        _panelKey = newPanel ?? string.Empty;
 
         // Always allow navigation between panels (no validation / save here)
         // Just avoid duplicate navigation
-        if (oldSection != _panelKey)
+        if (oldPanel != _panelKey)
         {
             // nothing else to do
         }
