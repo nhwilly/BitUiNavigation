@@ -1,5 +1,5 @@
 ﻿@inherits TimeWarpStateComponent
-@inject NavigationManager Nav
+@inject NavigationManager NavManager
 @inject IModalProviderSource ModalProviderSource
 
 @implements IDisposable
@@ -27,7 +27,7 @@
                            Variant="BitVariant.Text" />
                 <BitNav IsEnabled="@(!ModalHostState.IsSaving)"
                         Mode="BitNavMode.Automatic"
-                        Items="@_activeModalProvider.BuildNavItems(Nav, _activeModalProvider.ProviderKey)"
+                        Items="@_activeModalProvider.BuildNavItems(NavManager, _activeModalProvider.ProviderKey)"
                         Match="BitNavMatch.Wildcard"
                         FitWidth
                         Style="margin:0 1rem"
@@ -110,15 +110,15 @@
 
     protected override void OnInitialized()
     {
-        Nav.LocationChanged += OnLocationChanged;
-        ReadFromUri(Nav.Uri, requestStateHasChanged: false);
+        NavManager.LocationChanged += OnLocationChanged;
+        ReadFromUri(NavManager.Uri, requestStateHasChanged: false);
     }
 
     protected override void OnAfterRender(bool firstRender)
     {
         if (firstRender)
         {
-            ReadFromUri(Nav.Uri, requestStateHasChanged: true);
+            ReadFromUri(NavManager.Uri, requestStateHasChanged: true);
         }
     }
 
@@ -189,13 +189,13 @@
         // Navigate to the original URL
         if (!string.IsNullOrEmpty(_preOpenUrl))
         {
-            Nav.NavigateTo(_preOpenUrl!, replace: true);
+            NavManager.NavigateTo(_preOpenUrl!, replace: true);
         }
         // the preOpenUrl was empty, let's just deduce it from our current location.
         else if (_activeModalProvider is not null)
         {
-            var stripped = Nav.GetUriWithQueryParameter(_activeModalProvider.ProviderKey, (string?)null);
-            Nav.NavigateTo(stripped, replace: true);
+            var stripped = NavManager.GetUriWithQueryParameter(_activeModalProvider.ProviderKey, (string?)null);
+            NavManager.NavigateTo(stripped, replace: true);
         }
 
         _preOpenUrl = null;
@@ -206,7 +206,7 @@
 
     public override void Dispose()
     {
-        Nav.LocationChanged -= OnLocationChanged;
+        NavManager.LocationChanged -= OnLocationChanged;
         base.Dispose();
     }
 
