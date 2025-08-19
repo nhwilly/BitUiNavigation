@@ -1,7 +1,7 @@
 ﻿@inherits TimeWarpStateComponent
 @inject NavigationManager NavManager
 @inject IModalProviderSource ModalProviderSource
-
+@inject ILogger<ModalHost> Logger
 @implements IDisposable
 @using System.Web
 @using BitUiNavigation.Client.Layout
@@ -27,7 +27,7 @@
                            Variant="BitVariant.Text" />
                 <BitNav IsEnabled="@(!ModalHostState.IsSaving)"
                         Mode="BitNavMode.Automatic"
-                        Items="@_activeModalProvider.BuildNavItems(NavManager, _activeModalProvider.ProviderName)"
+                        Items="@_activeModalProvider.BuildNavItems(NavManager)"
                         Match="BitNavMatch.Wildcard"
                         FitWidth
                         Style="margin:0 1rem"
@@ -52,7 +52,7 @@
                 <div style="flex:1;overflow:hidden;border-bottom-right-radius:20px;position:relative;">
                     <div style="height:100%;overflow-y:auto;">
                         <div style="padding:1rem;">
-                            <CascadingValue TValue="@ModalGuardRegistration" Value="@RegisterPanel">
+                            <CascadingValue TValue="@ModalPanelRegistration" Value="@RegisterPanel">
                                 <RouteView @key="_panelName"
                                            RouteData="@_activeModalProvider.BuildRouteData(_panelName)"
                                            DefaultLayout="@typeof(EmptyLayout)" />
@@ -125,19 +125,27 @@
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
         => ReadFromUri(e.Location, requestStateHasChanged: true);
 
+    /// <summary>
+    /// Inspects the provided URI and determines if it matches any of the model providers
+    /// that were registered in dependency injection.  Selects a panel from the route
+    /// or selects a default panel if none exists.  Finally it fires the OnModalOpeningAsync
+    /// to allow the modal provider to initialize it's values.
+    /// </summary>
+    /// <param name="fullUri"></param>
+    /// <param name="requestStateHasChanged"></param>
     private async void ReadFromUri(string fullUri, bool requestStateHasChanged)
     {
         var uri = new Uri(fullUri);
         var qs = HttpUtility.ParseQueryString(uri.Query);
 
-        // check all the modal providers and ensure that the one 
+        // check all the modal providers and ensure that the one
         // we are navigating to matches.
         var match = ModalProviderSource
             .GetModalProviders()
-            .FirstOrDefault(p => 
+            .FirstOrDefault(p =>
                 !string.IsNullOrWhiteSpace(qs[p.ProviderName]));
 
-        var newPanel = match is null
+        var newPanelName = match is null
             ? null
             : Normalize(qs[match.ProviderName], match.DefaultPanel);
 
@@ -149,6 +157,7 @@
             // Store previous URL (to restore when modal closes)
             _preOpenUrl = RemoveQueryParam(fullUri, match!.ProviderName);
 
+            Logger.LogInformation("OnModalOpeningAsync for provider '{ProviderName}'", match.ProviderName);
             // call modal provider hook to initialize
             await match!.OnModalOpeningAsync(CancellationToken);
             _needsSessionInit = true;
@@ -160,17 +169,11 @@
             _preOpenUrl = null;
         }
 
-        // Handle panel change (panel navigation)
+        // Handle panel navigation
         _activeModalProvider = match;
-        var oldPanel = _panelName;
-        _panelName = newPanel ?? string.Empty;
-
-        // Always allow navigation between panels (no validation / save here)
-        // Just avoid duplicate navigation
-        if (oldPanel != _panelName)
-        {
-            // nothing else to do
-        }
+        var oldPanelName = _panelName;
+        _panelName = newPanelName ?? string.Empty;
+        Logger.LogInformation("Changing panels from '{OldPanel}' to '{NewPanel}'", oldPanelName, newPanelName);
 
         if (requestStateHasChanged)
             StateHasChanged();

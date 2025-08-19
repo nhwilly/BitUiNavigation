@@ -8,6 +8,7 @@ namespace BitUiNavigation.Client.Pages.Modals;
 public abstract class ModalProviderBase : IModalProvider
 {
     public abstract string ProviderName { get; }
+
     public abstract string DefaultPanel { get; }
     public abstract string Width { get; }
     public abstract string Height { get; }
@@ -25,7 +26,7 @@ public abstract class ModalProviderBase : IModalProvider
     /// <returns></returns>
     /// 
     public virtual Task OnModalOpenedAsync(CancellationToken ct) => Task.CompletedTask;
-    
+
     /// <summary>
     /// Optional override to handle logic before the modal is opened.
     /// </summary>
@@ -61,5 +62,5 @@ public abstract class ModalProviderBase : IModalProvider
     /// <param name="nav"></param>
     /// <param name="panelName"></param>
     /// <returns></returns>
-    public abstract List<BitNavItem> BuildNavItems(NavigationManager nav, string panelName);
+    public abstract List<BitNavItem> BuildNavItems(NavigationManager nav);
 }

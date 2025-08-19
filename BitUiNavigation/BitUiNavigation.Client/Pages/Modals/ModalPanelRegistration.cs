@@ -4,5 +4,5 @@
 /// A delegate used to register a modal panel with the modal host.
 /// </summary>
 /// <param name="panel"></param>
-public delegate void ModalGuardRegistration(IModalPanel panel);
+public delegate void ModalPanelRegistration(IModalPanel panel);
 

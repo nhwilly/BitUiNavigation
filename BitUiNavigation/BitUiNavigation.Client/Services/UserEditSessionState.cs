@@ -10,16 +10,15 @@ public sealed partial class UserEditSessionState : State<UserEditSessionState>
     public UserProfileViewModel ProfileVm { get; private set; } = new();
     public UserMembershipsViewModel MembershipsVm { get; private set; } = new();
 
+    public override void Initialize() { }
+
     public bool IsDirty => Entity is not null &&
                            OriginalEntity is not null &&
                            Entity != OriginalEntity;
 
     public bool IsLoading { get; private set; }
-    public override void Initialize()
-    {
-        // NOP – session is started via actions
-    }
 
+    public string ProviderTitle => Entity is null ? "User" : $"User: {Entity.FirstName} {Entity.LastName}";
     private void MapDtoToViewModel()
     {
         if (Entity is null) return;
@@ -52,7 +51,8 @@ public sealed partial class UserEditSessionState : State<UserEditSessionState>
         Entity = dto;
         OriginalEntity = dto with { };
     }
-}
+
+    }
 
 public partial class UserEditSessionState
 {

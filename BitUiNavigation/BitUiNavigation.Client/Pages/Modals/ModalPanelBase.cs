@@ -10,17 +10,17 @@ public abstract class ModalPanelBase<TModel> :
     ISupportsSaveOnNavigate
     where TModel : BaseRecord
 {
-    [CascadingParameter] public ModalGuardRegistration? RegisterGuard { get; set; }
+    [CascadingParameter] public ModalPanelRegistration? RegisterPanel { get; set; }
     [Inject] private IValidator<TModel>? Validator { get; set; } = default!;
 
     /// <summary>
-    /// Provides a reference to the model from the derived panel.
+    /// Provides a reference to the model used by the derived panel.
     /// </summary>
-    protected abstract TModel Model { get; }// => ViewModelFromState;
+    protected abstract TModel Model { get; }
 
     protected override Task OnInitializedAsync()
     {
-        RegisterGuard?.Invoke(this);
+        RegisterPanel?.Invoke(this);
         return base.OnInitializedAsync();
     }
 

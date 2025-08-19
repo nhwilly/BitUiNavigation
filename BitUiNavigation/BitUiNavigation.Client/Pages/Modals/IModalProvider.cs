@@ -7,7 +7,6 @@ public interface IModalProvider
 {
     /// <summary>The query-string key that activates this modal (e.g., "modal", "help").</summary>
     string ProviderName { get; }
-
     /// <summary>The section used when the key exists but has no value.</summary>
     string DefaultPanel { get; }
 
@@ -16,7 +15,7 @@ public interface IModalProvider
     string Height { get; }
 
     /// <summary>Builds the BitNav items for this modal. Each item’s Url should include the query param.</summary>
-    List<BitNavItem> BuildNavItems(NavigationManager nav, string providerKey);
+    List<BitNavItem> BuildNavItems(NavigationManager nav);
 
     /// <summary>
     /// Maps the current panel key to a RouteData (component type + parameters) for the right panel.

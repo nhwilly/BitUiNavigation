@@ -5,7 +5,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
-
+	<PropertyGroup>
+		<NoWarn>$(NoWarn);IDE0290</NoWarn>
+	</PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\BitUiNavigation.Client\BitUiNavigation.Client.csproj" />
     <PackageReference Include="Bit.BlazorUI" Version="9.11.3" />
