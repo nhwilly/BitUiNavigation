@@ -6,7 +6,7 @@ namespace BitUiNavigation.Client.Pages.Modals;
 public interface IModalProvider
 {
     /// <summary>The query-string key that activates this modal (e.g., "modal", "help").</summary>
-    string ProviderKey { get; }
+    string ProviderName { get; }
 
     /// <summary>The section used when the key exists but has no value.</summary>
     string DefaultPanel { get; }

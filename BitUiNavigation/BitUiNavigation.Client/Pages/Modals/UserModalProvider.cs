@@ -9,7 +9,7 @@ public sealed class UserModalProvider : ModalProviderBase
 {
     [Parameter, SupplyParameterFromQuery] public Guid AccountId { get; set; }
     [Parameter, SupplyParameterFromQuery] public Guid LocationId { get; set; }
-    public override string ProviderKey => "User";
+    public override string ProviderName => "User";
     public override string DefaultPanel => nameof(UserMembershipsPanel);
     public override string Width => "900px";
     public override string Height => "640px";

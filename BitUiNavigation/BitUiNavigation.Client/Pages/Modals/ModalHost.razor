@@ -27,7 +27,7 @@
                            Variant="BitVariant.Text" />
                 <BitNav IsEnabled="@(!ModalHostState.IsSaving)"
                         Mode="BitNavMode.Automatic"
-                        Items="@_activeModalProvider.BuildNavItems(NavManager, _activeModalProvider.ProviderKey)"
+                        Items="@_activeModalProvider.BuildNavItems(NavManager, _activeModalProvider.ProviderName)"
                         Match="BitNavMatch.Wildcard"
                         FitWidth
                         Style="margin:0 1rem"
@@ -135,11 +135,11 @@
         var match = ModalProviderSource
             .GetModalProviders()
             .FirstOrDefault(p => 
-                !string.IsNullOrWhiteSpace(qs[p.ProviderKey]));
+                !string.IsNullOrWhiteSpace(qs[p.ProviderName]));
 
         var newPanel = match is null
             ? null
-            : Normalize(qs[match.ProviderKey], match.DefaultPanel);
+            : Normalize(qs[match.ProviderName], match.DefaultPanel);
 
         var wasActive = _activeModalProvider is not null;
         var willBeActive = match is not null;
@@ -147,7 +147,7 @@
         if (willBeActive && !wasActive)
         {
             // Store previous URL (to restore when modal closes)
-            _preOpenUrl = RemoveQueryParam(fullUri, match!.ProviderKey);
+            _preOpenUrl = RemoveQueryParam(fullUri, match!.ProviderName);
 
             // call modal provider hook to initialize
             await match!.OnModalOpeningAsync(CancellationToken);
@@ -194,7 +194,7 @@
         // the preOpenUrl was empty, let's just deduce it from our current location.
         else if (_activeModalProvider is not null)
         {
-            var stripped = NavManager.GetUriWithQueryParameter(_activeModalProvider.ProviderKey, (string?)null);
+            var stripped = NavManager.GetUriWithQueryParameter(_activeModalProvider.ProviderName, (string?)null);
             NavManager.NavigateTo(stripped, replace: true);
         }
 

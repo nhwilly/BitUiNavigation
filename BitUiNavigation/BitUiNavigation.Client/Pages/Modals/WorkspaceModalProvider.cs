@@ -8,7 +8,7 @@ namespace BitUiNavigation.Client.Pages.Modals;
 
 public sealed class WorkspaceModalProvider : TimeWarpStateComponent, IModalProvider
 {
-    public string ProviderKey => "Workspace";
+    public string ProviderName => "Workspace";
     public string DefaultPanel => nameof(WorkspaceDetailsPanel);
     public string Width => "900px";
     public string Height => "640px";

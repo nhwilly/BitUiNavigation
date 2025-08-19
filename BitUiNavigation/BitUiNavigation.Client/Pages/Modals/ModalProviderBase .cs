@@ -7,7 +7,7 @@ using static BitUiNavigation.Client.Pages.Modals.UrlExtensions;
 namespace BitUiNavigation.Client.Pages.Modals;
 public abstract class ModalProviderBase : IModalProvider
 {
-    public abstract string ProviderKey { get; }
+    public abstract string ProviderName { get; }
     public abstract string DefaultPanel { get; }
     public abstract string Width { get; }
     public abstract string Height { get; }
@@ -38,41 +38,28 @@ public abstract class ModalProviderBase : IModalProvider
     /// navigate to a specific panel in the modal.
     /// </summary>
     /// <param name="nav"></param>
-    /// <param name="panel"></param>
+    /// <param name="panelName"></param>
     /// <returns></returns>
-    protected string BuildPanelUrl(NavigationManager nav, string panel)
+    protected string BuildPanelUrl(NavigationManager nav, string panelName)
     {
         var currentPath = "/" + nav.ToBaseRelativePath(nav.Uri).Split('?')[0];
         var qs = System.Web.HttpUtility.ParseQueryString(new Uri(nav.Uri).Query);
-        qs.Set(ProviderKey, Normalize(panel, DefaultPanel));
+        qs.Set(ProviderName, Normalize(panelName, DefaultPanel));
         return $"{currentPath}?{qs}";
     }
 
-    public virtual RouteData BuildRouteData(string panelKey)
+    public virtual RouteData BuildRouteData(string panelName)
     {
-        var key = Normalize(panelKey, DefaultPanel);
+        var key = Normalize(panelName, DefaultPanel);
         var type = PanelMap.TryGetValue(key, out var t) ? t : typeof(NotFoundPanel);
         return new RouteData(type, new Dictionary<string, object?>());
     }
 
     /// <summary>
-    /// Normalizes the panel URL value to ensure it is a valid path.
-    /// </summary>
-    /// <param name="value"></param>
-    /// <param name="defaultPanel"></param>
-    /// <returns></returns>
-    //protected static string Normalize(string? value, string defaultPanel)
-    //{
-    //    if (string.IsNullOrWhiteSpace(value)) return defaultPanel;
-    //    var v = value.Trim();
-    //    return v.StartsWith('/') ? v[1..] : v;
-    //}
-
-    /// <summary>
     /// Requires that all modal providers implement this method to build the navigation items.
     /// </summary>
     /// <param name="nav"></param>
-    /// <param name="panelKey"></param>
+    /// <param name="panelName"></param>
     /// <returns></returns>
-    public abstract List<BitNavItem> BuildNavItems(NavigationManager nav, string panelKey);
+    public abstract List<BitNavItem> BuildNavItems(NavigationManager nav, string panelName);
 }
