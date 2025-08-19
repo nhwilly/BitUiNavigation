@@ -53,8 +53,8 @@
                     <div style="height:100%;overflow-y:auto;">
                         <div style="padding:1rem;">
                             <CascadingValue TValue="@ModalGuardRegistration" Value="@RegisterPanel">
-                                <RouteView @key="_panelKey"
-                                           RouteData="@_activeModalProvider.BuildRouteData(_panelKey)"
+                                <RouteView @key="_panelName"
+                                           RouteData="@_activeModalProvider.BuildRouteData(_panelName)"
                                            DefaultLayout="@typeof(EmptyLayout)" />
                             </CascadingValue>
                         </div>
@@ -85,7 +85,7 @@
 
 @code {
     private IModalProvider? _activeModalProvider;
-    private string _panelKey = string.Empty;
+    private string _panelName = string.Empty;
     private string? _preOpenUrl;
     private IModalPanel? _panel;
     private bool _needsSessionInit = false;
@@ -162,12 +162,12 @@
 
         // Handle panel change (panel navigation)
         _activeModalProvider = match;
-        var oldPanel = _panelKey;
-        _panelKey = newPanel ?? string.Empty;
+        var oldPanel = _panelName;
+        _panelName = newPanel ?? string.Empty;
 
         // Always allow navigation between panels (no validation / save here)
         // Just avoid duplicate navigation
-        if (oldPanel != _panelKey)
+        if (oldPanel != _panelName)
         {
             // nothing else to do
         }
@@ -200,7 +200,7 @@
 
         _preOpenUrl = null;
         _activeModalProvider = null;
-        _panelKey = string.Empty;
+        _panelName = string.Empty;
         _panel = null;
     }
 
