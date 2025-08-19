@@ -4,7 +4,7 @@
 @using BitUiNavigation.Client.Pages.Modals
 
 <ShimmerUntilReady IsReady="@(!UserEditSessionState.IsLoading)">
-    <EditForm Model="@Model">
+    <EditForm @ref="editForm" Model="@Model">
         <FluentValidationValidator />
         <BitGrid Columns="2" HorizontalSpacing="1rem" VerticalSpacing="0.5rem" Style="grid-template-columns:150px 1fr;">
             <BitGridItem><BitText>First name</BitText></BitGridItem>
@@ -23,5 +23,5 @@
 </ShimmerUntilReady>
 @code {
     private UserEditSessionState UserEditSessionState => GetState<UserEditSessionState>();
-    protected override UserProfileViewModel ViewModelFromState => UserEditSessionState.ProfileVm;
+    protected override UserProfileViewModel Model => UserEditSessionState.ProfileVm;
 }

@@ -8,8 +8,8 @@ namespace BitUiNavigation.Client.Pages.Modals;
 
 public sealed class WorkspaceModalProvider : TimeWarpStateComponent, IModalProvider
 {
-    public string QueryKey => "Workspace";
-    public string DefaultSection => nameof(WorkspaceDetailsPanel);
+    public string ProviderKey => "Workspace";
+    public string DefaultPanel => nameof(WorkspaceDetailsPanel);
     public string Width => "900px";
     public string Height => "640px";
 
@@ -19,7 +19,7 @@ public sealed class WorkspaceModalProvider : TimeWarpStateComponent, IModalProvi
         {
             var currentPath = "/" + nav.ToBaseRelativePath(nav.Uri).Split('?')[0];
             var qs = System.Web.HttpUtility.ParseQueryString(new Uri(nav.Uri).Query);
-            qs.Set(queryKey, Normalize(section, DefaultSection));
+            qs.Set(queryKey, Normalize(section, DefaultPanel));
             return $"{currentPath}?{qs}";
         }
 

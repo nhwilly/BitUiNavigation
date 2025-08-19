@@ -7,8 +7,9 @@
 @using BitUiNavigation.Client.Layout
 @using Microsoft.AspNetCore.Components.Routing
 @using BitUiNavigation.Client.Services
+@using static BitUiNavigation.Client.Pages.Modals.UrlExtensions
 
-@if (_active is not null)
+@if (_activeModalProvider is not null)
 {
     <BitModal IsOpen="true"
               OnOverlayClick="@CloseAsync"
@@ -26,7 +27,7 @@
                            Variant="BitVariant.Text" />
                 <BitNav IsEnabled="@(!ModalHostState.IsSaving)"
                         Mode="BitNavMode.Automatic"
-                        Items="@_active.BuildNavItems(Nav, _active.QueryKey)"
+                        Items="@_activeModalProvider.BuildNavItems(Nav, _activeModalProvider.ProviderKey)"
                         Match="BitNavMatch.Wildcard"
                         FitWidth
                         Style="margin:0 1rem"
@@ -51,9 +52,9 @@
                 <div style="flex:1;overflow:hidden;border-bottom-right-radius:20px;position:relative;">
                     <div style="height:100%;overflow-y:auto;">
                         <div style="padding:1rem;">
-                            <CascadingValue TValue="@ModalGuardRegistration" Value="@RegisterGuardedComponent">
+                            <CascadingValue TValue="@ModalGuardRegistration" Value="@RegisterPanel">
                                 <RouteView @key="_section"
-                                           RouteData="@_active.BuildRouteData(_section)"
+                                           RouteData="@_activeModalProvider.BuildRouteData(_section)"
                                            DefaultLayout="@typeof(EmptyLayout)" />
                             </CascadingValue>
                         </div>
@@ -83,10 +84,10 @@
 </style>
 
 @code {
-    private IModalProvider? _active;
+    private IModalProvider? _activeModalProvider;
     private string _section = string.Empty;
     private string? _preOpenUrl;
-    private IModalSectionGuard? _currentGuardedComponent;
+    private IModalPanel? _panel;
     private bool _needsSessionInit = false;
 
     private ModalHostState ModalHostState => GetState<ModalHostState>();
@@ -105,12 +106,12 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_needsSessionInit && _active is not null)
+        if (_needsSessionInit && _activeModalProvider is not null)
         {
             _needsSessionInit = false;
 
             // call provider *after* first render
-            await _active.OnModalOpenedAsync(CancellationToken.None);
+            await _activeModalProvider.OnModalOpenedAsync(CancellationToken.None);
 
             // optionally force a UI refresh (usually not needed, as state change triggers it)
             // StateHasChanged();
@@ -120,8 +121,8 @@
     }
 
 
-    private void RegisterGuardedComponent(IModalSectionGuard component)
-        => _currentGuardedComponent = component;
+    private void RegisterPanel(IModalPanel panel)
+        => _panel = panel;
 
     protected override void OnInitialized()
     {
@@ -145,21 +146,20 @@
         var uri = new Uri(fullUri);
         var qs = HttpUtility.ParseQueryString(uri.Query);
 
-        var match = ModalProviderSource.GetModalProviders()
-            .FirstOrDefault(p => !string.IsNullOrWhiteSpace(qs[p.QueryKey]));
+        var match = ModalProviderSource.GetModalProviders().FirstOrDefault(p => !string.IsNullOrWhiteSpace(qs[p.ProviderKey]));
 
         var newSection = match is null
             ? null
-            : NormalizeSection(qs[match.QueryKey], match.DefaultSection);
+            : NormalizeSection(qs[match.ProviderKey], match.DefaultPanel);
 
-        var wasActive = _active is not null;
+        var wasActive = _activeModalProvider is not null;
         var willBeActive = match is not null;
 
-        // Detect first open
+        // Detect firPanelen
         if (willBeActive && !wasActive)
         {
             // Store previous URL (to restore when modal closes)
-            _preOpenUrl = RemoveQueryParam(fullUri, match!.QueryKey);
+            _preOpenUrl = RemoveQueryParam(fullUri, match!.ProviderKey);
             // 🔔 call provider hook to initialize
             await match!.OnModalOpeningAsync(CancellationToken);
             _needsSessionInit = true;
@@ -172,7 +172,7 @@
         }
 
         // Handle section change (panel navigation)
-        _active = match;
+        _activeModalProvider = match;
         var oldSection = _section;
         _section = newSection ?? string.Empty;
 
@@ -190,9 +190,9 @@
     private async Task CloseAsync()
     {
         // Check with current panel guard before closing
-        if (_currentGuardedComponent is not null)
+        if (_panel is not null)
         {
-            var canClose = await _currentGuardedComponent.CanCloseModalAsync();
+            var canClose = await _panel.CanCloseModalAsync();
             if (!canClose)
                 return;
         }
@@ -206,16 +206,16 @@
         {
             Nav.NavigateTo(_preOpenUrl!, replace: true);
         }
-        else if (_active is not null)
+        else if (_activeModalProvider is not null)
         {
-            var stripped = Nav.GetUriWithQueryParameter(_active.QueryKey, (string?)null);
+            var stripped = Nav.GetUriWithQueryParameter(_activeModalProvider.ProviderKey, (string?)null);
             Nav.NavigateTo(stripped, replace: true);
         }
 
         _preOpenUrl = null;
-        _active = null;
+        _activeModalProvider = null;
         _section = string.Empty;
-        _currentGuardedComponent = null;
+        _panel = null;
     }
 
     private static string RemoveQueryParam(string fullUri, string key)
@@ -238,11 +238,11 @@
 
     private string CreateContainerCss()
     {
-        if (_active is null) return string.Empty;
+        if (_activeModalProvider is null) return string.Empty;
         return $@"
         .{ModalContainerClass} {{
-            width:  {_active.Width};
-            height: {_active.Height};
+            width:  {_activeModalProvider.Width};
+            height: {_activeModalProvider.Height};
             border-radius:20px;
         }}";
     }

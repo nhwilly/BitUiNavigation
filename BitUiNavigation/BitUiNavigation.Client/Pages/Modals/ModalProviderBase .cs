@@ -1,13 +1,14 @@
 ﻿using Bit.BlazorUI;
-using BitUiNavigation.Client.Pages.Modals;
 using BitUiNavigation.Client.Pages.UserProfile;
 using Microsoft.AspNetCore.Components;
 using TimeWarp.State;
+using static BitUiNavigation.Client.Pages.Modals.UrlExtensions;
 
+namespace BitUiNavigation.Client.Pages.Modals;
 public abstract class ModalProviderBase : IModalProvider
 {
-    public abstract string QueryKey { get; }
-    public abstract string DefaultSection { get; }
+    public abstract string ProviderKey { get; }
+    public abstract string DefaultPanel { get; }
     public abstract string Width { get; }
     public abstract string Height { get; }
     protected readonly IStore Store;
@@ -15,34 +16,63 @@ public abstract class ModalProviderBase : IModalProvider
     {
         Store = store;
     }
-    protected abstract Dictionary<string, Type> SectionMap { get; }
+    protected abstract Dictionary<string, Type> PanelMap { get; }
 
-    // 🟢 NEW: called by ModalHost when the modal is first opened.
-    // Default does nothing; override in concrete provider to send init action.
+    /// <summary>
+    /// Optional override to handle logic after the modal is opened.
+    /// </summary>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    /// 
     public virtual Task OnModalOpenedAsync(CancellationToken ct) => Task.CompletedTask;
+    
+    /// <summary>
+    /// Optional override to handle logic before the modal is opened.
+    /// </summary>
+    /// <param name="ct"></param>
+    /// <returns></returns>
     public virtual Task OnModalOpeningAsync(CancellationToken ct) => Task.CompletedTask;
 
-    protected string BuildSectionUrl(NavigationManager nav, string section)
+    /// <summary>
+    /// Creates a panel url that can be used by NavigationManager to 
+    /// navigate to a specific panel in the modal.
+    /// </summary>
+    /// <param name="nav"></param>
+    /// <param name="panel"></param>
+    /// <returns></returns>
+    protected string BuildPanelUrl(NavigationManager nav, string panel)
     {
         var currentPath = "/" + nav.ToBaseRelativePath(nav.Uri).Split('?')[0];
         var qs = System.Web.HttpUtility.ParseQueryString(new Uri(nav.Uri).Query);
-        qs.Set(QueryKey, Normalize(section, DefaultSection));
+        qs.Set(ProviderKey, Normalize(panel, DefaultPanel));
         return $"{currentPath}?{qs}";
     }
 
-    public virtual RouteData BuildRouteData(string sectionKey)
+    public virtual RouteData BuildRouteData(string panelKey)
     {
-        var key = Normalize(sectionKey, DefaultSection);
-        var type = SectionMap.TryGetValue(key, out var t) ? t : typeof(NotFoundPanel);
+        var key = Normalize(panelKey, DefaultPanel);
+        var type = PanelMap.TryGetValue(key, out var t) ? t : typeof(NotFoundPanel);
         return new RouteData(type, new Dictionary<string, object?>());
     }
 
-    protected static string Normalize(string? value, string defaultSection)
-    {
-        if (string.IsNullOrWhiteSpace(value)) return defaultSection;
-        var v = value.Trim();
-        return v.StartsWith('/') ? v[1..] : v;
-    }
+    /// <summary>
+    /// Normalizes the panel URL value to ensure it is a valid path.
+    /// </summary>
+    /// <param name="value"></param>
+    /// <param name="defaultPanel"></param>
+    /// <returns></returns>
+    //protected static string Normalize(string? value, string defaultPanel)
+    //{
+    //    if (string.IsNullOrWhiteSpace(value)) return defaultPanel;
+    //    var v = value.Trim();
+    //    return v.StartsWith('/') ? v[1..] : v;
+    //}
 
-    public abstract List<BitNavItem> BuildNavItems(NavigationManager nav, string queryKey);
+    /// <summary>
+    /// Requires that all modal providers implement this method to build the navigation items.
+    /// </summary>
+    /// <param name="nav"></param>
+    /// <param name="panelKey"></param>
+    /// <returns></returns>
+    public abstract List<BitNavItem> BuildNavItems(NavigationManager nav, string panelKey);
 }

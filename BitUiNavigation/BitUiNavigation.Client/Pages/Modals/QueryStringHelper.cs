@@ -22,3 +22,13 @@ public static class QueryStringHelper
         return builder.Uri.ToString();
     }
 }
+
+public static class UrlExtensions
+{
+    public static string Normalize(string? value, string defaultPanel)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return defaultPanel;
+        var v = value.Trim();
+        return v.StartsWith('/') ? v[1..] : v;
+    }
+}

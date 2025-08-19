@@ -12,8 +12,8 @@ public class UserService
     public async Task<UserDto> GetUserAsync(string userId)
     {
         Console.WriteLine("Getting user inside userService...");
-        await Task.Delay(1000);
-        var u = new UserDto() { FirstName = "bill", LastName = "noel", UpdatedAt = DateTimeOffset.UtcNow };
+        await Task.Delay(250);
+        var u = new UserDto() { FirstName = "", LastName = "", UpdatedAt = DateTimeOffset.UtcNow };
         return await Task.FromResult(u);
     }
 
