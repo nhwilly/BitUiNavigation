@@ -10,13 +10,15 @@ public sealed partial class UserEditSessionState : State<UserEditSessionState>
     public UserProfileViewModel ProfileVm { get; private set; } = new();
     public UserMembershipsViewModel MembershipsVm { get; private set; } = new();
 
+    // todo: originals for all views so we can see if they changed.
+    // this also allows us to reset the view models to the original state.
+    // then isDirty checks all view models to see if any have changed.
+
     public override void Initialize() { }
 
     public bool IsDirty => Entity is not null &&
                            OriginalEntity is not null &&
                            Entity != OriginalEntity;
-
-    public bool IsLoading { get; private set; }
 
     public string ProviderTitle => Entity is null ? "User" : $"User: {Entity.FirstName} {Entity.LastName}";
     private void MapDtoToViewModel()
@@ -52,7 +54,7 @@ public sealed partial class UserEditSessionState : State<UserEditSessionState>
         OriginalEntity = dto with { };
     }
 
-    }
+}
 
 public partial class UserEditSessionState
 {
@@ -75,7 +77,7 @@ public partial class UserEditSessionState
             private readonly UserService _userService;
             private readonly ILogger<UserEditSessionState> _logger;
             private UserEditSessionState State => Store.GetState<UserEditSessionState>();
-
+            private BusyState BusyState => Store.GetState<BusyState>();
             public Handler(
                 IStore store,
                 ILogger<UserEditSessionState> logger,
@@ -88,92 +90,71 @@ public partial class UserEditSessionState
 
             public override async Task Handle(Action action, CancellationToken cancellationToken)
             {
-                _logger.LogDebug("Initializing UserEditSession for AccountId={AccountId}, LocationId={LocationId}",
-                    action.AccountId, action.LocationId);
-                State.IsLoading = true;
-                // Load DTO
-                var dto = await _userService.GetUserAsync(action.AccountId.ToString());
+                try
+                {
+                    _logger.LogDebug("Initializing UserEditSession for AccountId={AccountId}, LocationId={LocationId}",
+                        action.AccountId, action.LocationId);
+                    await BusyState.SetModalIsBusy(true);
+                    // Load DTO
+                    var dto = await _userService.GetUserAsync(action.AccountId.ToString());
 
-                // Initialize state
-                State.Commit(dto);
-                State.MapDtoToViewModel();
-                State.IsLoading = false;
+                    // Initialize state
+                    State.Commit(dto);
+                    State.MapDtoToViewModel();
+
+                }
+                catch (Exception ex)
+                {
+                    // put up toast here...
+                    _logger.LogError("Exception: {Message}", ex.Message);
+                }
+                finally
+                {
+                    await BusyState.SetModalIsBusy(false);
+                }
             }
         }
-    }
 
-    public static class SaveUserActionSet
-    {
-        public sealed class Action : IAction { }
-
-        public sealed class Handler : ActionHandler<Action>
+        public static class SaveUserActionSet
         {
-            private readonly UserService _userService;
-            private readonly ILogger<UserEditSessionState> _logger;
-            private UserEditSessionState State => Store.GetState<UserEditSessionState>();
+            public sealed class Action : IAction { }
 
-            public Handler(
-                IStore store,
-                ILogger<UserEditSessionState> logger,
-                UserService userService)
-                : base(store)
+            public sealed class Handler : ActionHandler<Action>
             {
-                _logger = logger;
-                _userService = userService;
-            }
+                private readonly UserService _userService;
+                private readonly ILogger<UserEditSessionState> _logger;
+                private UserEditSessionState State => Store.GetState<UserEditSessionState>();
 
-            public override async Task Handle(Action action, CancellationToken cancellationToken)
-            {
-                if (State.Entity is null)
+                public Handler(
+                    IStore store,
+                    ILogger<UserEditSessionState> logger,
+                    UserService userService)
+                    : base(store)
                 {
-                    _logger.LogWarning("Entity is null – save aborted.");
-                    return;
+                    _logger = logger;
+                    _userService = userService;
                 }
 
-                _logger.LogDebug("Saving user {LastName}", State.Entity.LastName);
+                public override async Task Handle(Action action, CancellationToken cancellationToken)
+                {
+                    if (State.Entity is null)
+                    {
+                        _logger.LogWarning("Entity is null – save aborted.");
+                        return;
+                    }
 
-                // Map VMs → Entity, then save
-                State.MapViewModelToDto();
+                    _logger.LogDebug("Saving user {LastName}", State.Entity.LastName);
 
-                var saved = await _userService.SaveUserAsync(State.Entity);
+                    // Map VMs → Entity, then save
+                    State.MapViewModelToDto();
 
-                // Update state (Entity + Original + VM)
-                State.Commit(saved);
-                State.MapDtoToViewModel();
+                    var saved = await _userService.SaveUserAsync(State.Entity);
+
+                    // Update state (Entity + Original + VM)
+                    State.Commit(saved);
+                    State.MapDtoToViewModel();
+                }
             }
         }
     }
-    public static class SetIsLoadingActionSet
-    {
-        public sealed class Action : IAction
-        {
-            public bool IsLoading { get; private set; }
-            public Action(bool isLoading)
-            {
-                IsLoading = isLoading;
-            }
-        }
-
-        public sealed class Handler : ActionHandler<Action>
-        {
-            private readonly ILogger<UserEditSessionState> _logger;
-            private UserEditSessionState State => Store.GetState<UserEditSessionState>();
-
-            public Handler(
-                IStore store,
-                ILogger<UserEditSessionState> logger)
-                : base(store)
-            {
-                _logger = logger;
-            }
-
-            public override async Task Handle(Action action, CancellationToken cancellationToken)
-            {
-                State.IsLoading = action.IsLoading;
-                _logger.LogDebug("Set IsLoading to {IsLoading}", action.IsLoading);
-                await Task.CompletedTask; // Simulate async operation if needed
-            }
-        }
-    }
-
 }

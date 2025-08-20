@@ -1,15 +1,15 @@
 ﻿@inherits TimeWarpStateComponent
 @using BitUiNavigation.Client.Services
 
-@if (ShowLoading)
+@if (IsBusy)
 {
-    if (LoadingContent is not null)
+    if (LoadingContent is null)
     {
-        @LoadingContent
+        <Shimmer Sections="@Sections" LinesPerSection="@LinesPerSection" />
     }
     else
     {
-        <Shimmer Sections="@Sections" LinesPerSection="@LinesPerSection" />
+        @LoadingContent
     }
 }
 else
@@ -17,14 +17,10 @@ else
     @ChildContent
 }
 @code {
-    [Parameter, EditorRequired] public bool IsReady { get; set; }
+    [Parameter, EditorRequired] public bool IsBusy { get; set; }
     [Parameter, EditorRequired] public RenderFragment ChildContent { get; set; } = default!;
     [Parameter] public RenderFragment? LoadingContent { get; set; }
     [Parameter] public int Sections { get; set; } = 3;
     [Parameter] public int LinesPerSection { get; set; } = 4;
-    public bool IsSmallScreen { get; set; }
-    private ModalHostState ModalHostState => GetState<ModalHostState>
-();
-    private bool ShowLoading => !IsReady || ModalHostState.IsFetching;
 
 }

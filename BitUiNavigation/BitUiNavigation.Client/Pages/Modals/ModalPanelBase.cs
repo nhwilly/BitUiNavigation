@@ -70,15 +70,6 @@ public abstract class ModalPanelBase<TModel> :
         }
     }
 
-    private void HandleValidSubmit()
-    {
-
-    }
-
-    private void HandleInvalidSubmit()
-    {
-
-    }
     // ✔ between panels → validate only if you want, but no blocking
     public virtual Task<bool> CanNavigateToAnotherSectionAsync() => Task.FromResult(true);
 

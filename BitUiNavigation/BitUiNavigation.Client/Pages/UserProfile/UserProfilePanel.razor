@@ -3,25 +3,30 @@
 @using Blazored.FluentValidation
 @using BitUiNavigation.Client.Pages.Modals
 
-<ShimmerUntilReady IsReady="@(!UserEditSessionState.IsLoading)">
+<SkeletonWhileBusy IsBusy="@(BusyState.ModalIsBusy)">
     <EditForm @ref="editForm" Model="@Model">
         <FluentValidationValidator />
         <BitGrid Columns="2" HorizontalSpacing="1rem" VerticalSpacing="0.5rem" Style="grid-template-columns:150px 1fr;">
-            <BitGridItem><BitText>First name</BitText></BitGridItem>
+            <BitGridItem>
+                <BitText>First name</BitText>
+            </BitGridItem>
             <BitGridItem>
                 <BitTextField @bind-Value="Model.FirstName" Trim />
                 <ValidationMessage For="() => Model.FirstName" />
             </BitGridItem>
 
-            <BitGridItem><BitText>Last name</BitText></BitGridItem>
+            <BitGridItem>
+                <BitText>Last name</BitText>
+            </BitGridItem>
             <BitGridItem>
                 <BitTextField @bind-Value="Model.LastName" Trim />
                 <ValidationMessage For="() => Model.LastName" />
             </BitGridItem>
         </BitGrid>
     </EditForm>
-</ShimmerUntilReady>
+</SkeletonWhileBusy>
 @code {
     private UserEditSessionState UserEditSessionState => GetState<UserEditSessionState>();
     protected override UserProfileViewModel Model => UserEditSessionState.ProfileVm;
+    private BusyState BusyState => GetState<BusyState>();
 }
