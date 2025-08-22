@@ -7,21 +7,21 @@ public sealed partial class UserModalState : State<UserModalState>
 {
     public override void Initialize()
     {
-        _userDto = new UserDto { FirstName = "", LastName = "" };
+        UserDto = new UserDto { FirstName = "", LastName = "" };
         UserProfileViewModel = new UserProfileViewModel { FirstName = "", LastName = "" };
     }
-    private UserDto _userDto { get; set; } = default!;
+    private UserDto UserDto { get; set; } = default!;
     public UserProfileViewModel UserProfileViewModel { get; private set; } = default!;
 
     private void MapDtoToViewModel()
     {
-        UserProfileViewModel.FirstName = _userDto?.FirstName ?? "";
-        UserProfileViewModel.LastName = _userDto?.LastName ?? "";
+        UserProfileViewModel.FirstName = UserDto?.FirstName ?? "";
+        UserProfileViewModel.LastName = UserDto?.LastName ?? "";
     }
     private void MapViewModelToDto()
     {
-        _userDto.FirstName = UserProfileViewModel.FirstName;
-        _userDto.LastName = UserProfileViewModel.LastName;
+        UserDto.FirstName = UserProfileViewModel.FirstName;
+        UserDto.LastName = UserProfileViewModel.LastName;
     }
     public static class GetUserActionSet
     {
@@ -48,7 +48,7 @@ public sealed partial class UserModalState : State<UserModalState>
                 _logger.LogDebug("Fetching user with ID: {UserId}", action.UserId);
 
                 // fetch from source
-                UserModalState._userDto = await _userService.GetUserAsync(action.UserId);
+                UserModalState.UserDto = await _userService.GetUserAsync(action.UserId);
 
                 // update view model(s)
                 UserModalState.MapDtoToViewModel();
@@ -74,8 +74,8 @@ public sealed partial class UserModalState : State<UserModalState>
             }
             public override async Task Handle(Action action, CancellationToken cancellationToken)
             {
-                _logger.LogDebug("Saving user with ID: {UserId}", UserModalState._userDto?.LastName);
-                if (UserModalState._userDto is null)
+                _logger.LogDebug("Saving user with ID: {UserId}", UserModalState.UserDto?.LastName);
+                if (UserModalState.UserDto is null)
                 {
                     _logger.LogWarning("UserDto is null, cannot save user.");
                     return;
@@ -83,8 +83,8 @@ public sealed partial class UserModalState : State<UserModalState>
                 // create new dto from view model(s)
                 UserModalState.MapViewModelToDto();
                 // refresh dto and view model(s)
-                var dto = await _userService.SaveUserAsync(UserModalState._userDto);
-                UserModalState._userDto = dto;
+                var dto = await _userService.SaveUserAsync(UserModalState.UserDto);
+                UserModalState.UserDto = dto;
                 UserModalState.MapDtoToViewModel();
                 await Task.CompletedTask;
             }

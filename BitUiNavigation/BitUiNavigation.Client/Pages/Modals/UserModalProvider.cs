@@ -32,6 +32,7 @@ public sealed class UserModalProvider : ModalProviderBase
     public override async Task OnModalOpeningAsync(CancellationToken ct)
     {
         await State.SetIsLoading(true, ct);
+        await Task.CompletedTask;
     }
     public override async Task OnModalOpenedAsync(CancellationToken ct)
     {

@@ -1,9 +1,9 @@
-﻿using BitUiNavigation.Client.Pages.Modals;
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using TimeWarp.State;
 
+namespace BitUiNavigation.Client.Pages.Modals;
 public abstract class ModalPanelBase<TModel> :
     TimeWarpStateComponent,
     IModalPanel,
