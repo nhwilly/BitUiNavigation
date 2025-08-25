@@ -7,7 +7,7 @@ public sealed partial class UserModalState : State<UserModalState>
 {
     public override void Initialize()
     {
-        UserDto = new UserDto { FirstName = "", LastName = "" };
+        UserDto = new UserDto { FirstName = "", LastName = "", Name="" };
         UserProfileViewModel = new UserProfileViewModel { FirstName = "", LastName = "" };
     }
     private UserDto UserDto { get; set; } = default!;

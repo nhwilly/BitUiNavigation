@@ -21,7 +21,6 @@ public class Program
         services.AddTimeWarpState();
         services.AddScoped<IModalProviderSource, DefaultModalProviderSource>();
         services.AddScoped<IModalProvider, UserModalProvider>();
-        //services.AddScoped<IModalProvider, WorkspaceModalProvider>();
         services.AddValidatorsFromAssemblyContaining<UserProfileModelValidator>();
         services.AddScoped<UserService>();
     }

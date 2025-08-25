@@ -16,6 +16,7 @@ public sealed class UserModalProvider : ModalProviderBase
     private UserEditSessionState State => Store.GetState<UserEditSessionState>();
     private ModalHostState ModalHostState => Store.GetState<ModalHostState>();
     public UserModalProvider(IStore store) : base(store) { }
+
     protected override Dictionary<string, Type> PanelMap { get; } = new(StringComparer.OrdinalIgnoreCase)
     {
         [nameof(UserMembershipsPanel)] = typeof(UserMembershipsPanel),
@@ -40,5 +41,25 @@ public sealed class UserModalProvider : ModalProviderBase
         await ModalHostState.SetTitle(State.ProviderTitle, ct);
         await State.SetIsLoading(false, ct);
     }
+    public override async Task<bool> CanCloseAsync(CancellationToken ct)
+    {
+        var lastKnown = PanelRegistry.LastKnownValidityByType;
 
+        foreach (var kv in PanelMap) // kv.Value is the component Type
+        {
+            var panelType = kv.Value;
+
+            if (lastKnown.TryGetValue(panelType, out var isValid))
+            {
+                if (!isValid) return false; // block close
+            }
+            else
+            {
+                // If you want to require that the user visits every panel before closing,
+                // uncomment the next line:
+                // return Task.FromResult(false);
+            }
+        }
+        return await Task.FromResult(true);
+    }
 }

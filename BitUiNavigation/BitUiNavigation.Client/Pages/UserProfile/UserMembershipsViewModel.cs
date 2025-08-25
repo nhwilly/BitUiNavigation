@@ -13,7 +13,7 @@ public record UserMembershipsViewModel : BaseRecord
 
     // Optional: track the selected item in the list
     public Guid? SelectedItemId { get; set; }
-
+    public string Name { get; set; } = string.Empty;
     // Optional: working/viewmodel for the selected item
     public MembershipItemViewModel? SelectedItemVm { get; set; }
 }

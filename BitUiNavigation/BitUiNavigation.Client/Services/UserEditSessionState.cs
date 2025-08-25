@@ -34,6 +34,7 @@ public sealed partial class UserEditSessionState : State<UserEditSessionState>
             UpdatedAt = Entity.UpdatedAt.ToString("O")
         };
 
+        MembershipsVm = new UserMembershipsViewModel { Name = Entity.Name };
         // TODO: Map other panel VMs from Entity as needed
     }
 
@@ -44,7 +45,8 @@ public sealed partial class UserEditSessionState : State<UserEditSessionState>
         Entity = Entity with
         {
             FirstName = ProfileVm.FirstName,
-            LastName = ProfileVm.LastName
+            LastName = ProfileVm.LastName,
+            Name = MembershipsVm.Name,
         };
 
         // TODO: include additional viewmodel → entity mappings
@@ -145,45 +147,45 @@ public sealed partial class UserEditSessionState : State<UserEditSessionState>
             }
         }
     }
-    //public static class SaveUserActionSet
-    //{
-    //    public sealed class Action : IAction { }
+    public static class SaveUserActionSet
+    {
+        public sealed class Action : IAction { }
 
-    //    public sealed class Handler : ActionHandler<Action>
-    //    {
-    //        private readonly UserService _userService;
-    //        private readonly ILogger<UserEditSessionState> _logger;
-    //        private UserEditSessionState State => Store.GetState<UserEditSessionState>();
+        public sealed class Handler : ActionHandler<Action>
+        {
+            private readonly UserService _userService;
+            private readonly ILogger<UserEditSessionState> _logger;
+            private UserEditSessionState State => Store.GetState<UserEditSessionState>();
 
-    //        public Handler(
-    //            IStore store,
-    //            ILogger<UserEditSessionState> logger,
-    //            UserService userService)
-    //            : base(store)
-    //        {
-    //            _logger = logger;
-    //            _userService = userService;
-    //        }
+            public Handler(
+                IStore store,
+                ILogger<UserEditSessionState> logger,
+                UserService userService)
+                : base(store)
+            {
+                _logger = logger;
+                _userService = userService;
+            }
 
-    //        public override async Task Handle(Action action, CancellationToken cancellationToken)
-    //        {
-    //            if (State.Entity is null)
-    //            {
-    //                _logger.LogWarning("Entity is null – save aborted.");
-    //                return;
-    //            }
+            public override async Task Handle(Action action, CancellationToken cancellationToken)
+            {
+                if (State.Entity is null)
+                {
+                    _logger.LogWarning("Entity is null – save aborted.");
+                    return;
+                }
 
-    //            _logger.LogDebug("Saving user {LastName}", State.Entity.LastName);
+                _logger.LogDebug("Saving user {LastName}", State.Entity.LastName);
 
-    //            // Map VMs → Entity, then save
-    //            State.MapViewModelToDto();
+                // Map VMs → Entity, then save
+                State.MapViewModelToDto();
 
-    //            var saved = await _userService.SaveUserAsync(State.Entity);
+                var saved = await _userService.SaveUserAsync(State.Entity);
 
-    //            // Update state (Entity + Original + VM)
-    //            State.Commit(saved);
-    //            State.MapDtoToViewModel();
-    //        }
-    //    }
-    //}
+                // Update state (Entity + Original + VM)
+                State.Commit(saved);
+                State.MapDtoToViewModel();
+            }
+        }
+    }
 }

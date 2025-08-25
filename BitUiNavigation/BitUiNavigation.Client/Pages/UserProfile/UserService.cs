@@ -13,7 +13,7 @@ public class UserService
     {
         Console.WriteLine("Getting user inside userService...");
         await Task.Delay(250);
-        var u = new UserDto() { FirstName = "Wondky", LastName = "Dude", UpdatedAt = DateTimeOffset.UtcNow };
+        var u = new UserDto() {Name="bob", FirstName = "Wondky", LastName = "Dude", UpdatedAt = DateTimeOffset.UtcNow };
         return await Task.FromResult(u);
     }
 

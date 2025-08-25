@@ -18,6 +18,8 @@ public abstract class ModalProviderBase : IModalProvider
         Store = store;
     }
     protected abstract Dictionary<string, Type> PanelMap { get; }
+    //public IModalPanelRegistry PanelRegistry { get; } = new ModalPanelRegistry();
+    public IModalPanelRegistry PanelRegistry { get; } = new ModalPanelRegistry();
 
     /// <summary>
     /// Optional override to handle logic after the modal is opened.
@@ -63,4 +65,12 @@ public abstract class ModalProviderBase : IModalProvider
     /// <param name="panelName"></param>
     /// <returns></returns>
     public abstract List<BitNavItem> BuildNavItems(NavigationManager nav);
+
+    public abstract Task<bool> CanCloseAsync(CancellationToken ct);
+
+
+    public Task<List<BitNavItem>> BuildNavItemsWithValidationAsync(NavigationManager nav, CancellationToken ct)
+    {
+        throw new NotImplementedException();
+    }
 }

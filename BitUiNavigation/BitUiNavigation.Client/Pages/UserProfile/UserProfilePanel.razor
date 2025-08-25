@@ -28,5 +28,4 @@
 @code {
     private UserEditSessionState UserEditSessionState => GetState<UserEditSessionState>();
     protected override UserProfileViewModel Model => UserEditSessionState.ProfileVm;
-    private BusyState BusyState => GetState<BusyState>();
 }

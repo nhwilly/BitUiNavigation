@@ -52,7 +52,7 @@
                 <div style="flex:1;overflow:hidden;border-bottom-right-radius:20px;position:relative;">
                     <div style="height:100%;overflow-y:auto;">
                         <div style="padding:1rem;">
-                            <CascadingValue TValue="@ModalPanelRegistration" Value="@RegisterPanel">
+                                <CascadingValue TValue="@IModalPanelRegistry" Value="@_activeModalProvider!.PanelRegistry">
                                 <RouteView @key="_panelName"
                                            RouteData="@_activeModalProvider.BuildRouteData(_panelName)"
                                            DefaultLayout="@typeof(EmptyLayout)" />
@@ -179,17 +179,20 @@
             StateHasChanged();
     }
 
-    private async Task CloseAsync()
+    private async void CloseAsync()
     {
-        // Check with current panel guard before closing
-        if (_panel is not null)
+        if (_activeModalProvider is not null)
         {
-            var canClose = await _panel.CanCloseModalAsync();
+            var canClose = await _activeModalProvider.CanCloseAsync(CancellationToken.None);
+            Console.WriteLine($"Modal host canClose: {canClose}");
             if (!canClose)
+            {
+                // show your prompt here
                 return;
+            }
         }
 
-        // Navigate to the original URL
+        // proceed with existing close logic...
         if (!string.IsNullOrEmpty(_preOpenUrl))
         {
             NavManager.NavigateTo(_preOpenUrl!, replace: true);
@@ -206,6 +209,34 @@
         _panelName = string.Empty;
         _panel = null;
     }
+
+    // private async Task CloseAsync()
+    // {
+    //     Check with current panel guard before closing
+    //     if (_panel is not null)
+    //     {
+    //         var canClose = await _panel.CanCloseModalAsync();
+    //         if (!canClose)
+    //             return;
+    //     }
+
+    //     Navigate to the original URL
+    //     if (!string.IsNullOrEmpty(_preOpenUrl))
+    //     {
+    //         NavManager.NavigateTo(_preOpenUrl!, replace: true);
+    //     }
+    //     the preOpenUrl was empty, let's just deduce it from our current location.
+    //     else if (_activeModalProvider is not null)
+    //     {
+    //         var stripped = NavManager.GetUriWithQueryParameter(_activeModalProvider.ProviderName, (string?)null);
+    //         NavManager.NavigateTo(stripped, replace: true);
+    //     }
+
+    //     _preOpenUrl = null;
+    //     _activeModalProvider = null;
+    //     _panelName = string.Empty;
+    //     _panel = null;
+    // }
 
     public override void Dispose()
     {

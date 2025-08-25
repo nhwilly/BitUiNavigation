@@ -13,7 +13,7 @@ public interface IModalProvider
     /// <summary>Host BitModal width/height (CSS values).</summary>
     string Width { get; }
     string Height { get; }
-
+    public IModalPanelRegistry? PanelRegistry { get; }
     /// <summary>Builds the BitNav items for this modal. Each item’s Url should include the query param.</summary>
     List<BitNavItem> BuildNavItems(NavigationManager nav);
 
@@ -23,4 +23,10 @@ public interface IModalProvider
     RouteData BuildRouteData(string panelKey);
     Task OnModalOpenedAsync(CancellationToken ct);
     Task OnModalOpeningAsync(CancellationToken ct);
+
+    // 🔹 NEW: Ask provider if navigation is allowed (aggregates panels)
+    Task<bool> CanCloseAsync(CancellationToken ct);
+
+    // 🔹 NEW: Refresh nav items to show validation indicators
+    Task<List<BitNavItem>> BuildNavItemsWithValidationAsync(NavigationManager nav, CancellationToken ct);
 }
