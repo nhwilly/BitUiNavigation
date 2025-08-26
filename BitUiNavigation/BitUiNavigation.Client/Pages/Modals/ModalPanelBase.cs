@@ -10,10 +10,9 @@ public abstract class ModalPanelBase<TModel> :
     ISupportsSaveOnNavigate
     where TModel : BaseRecord
 {
-    [CascadingParameter] public ModalPanelRegistration? RegisterPanel { get; set; }
+    [Inject] public ILogger<TModel>? Logger { get; set; }
     [Inject] private IValidator<TModel>? Validator { get; set; } = default!;
     [CascadingParameter] public IModalPanelRegistry? PanelRegistry { get; set; }
-
     protected override Task OnInitializedAsync()
     {
         PanelRegistry?.Register(this);
@@ -24,7 +23,6 @@ public abstract class ModalPanelBase<TModel> :
     {
         PanelRegistry?.Unregister(this);
         base.Dispose();
-
     }
 
     /// <summary>
@@ -45,20 +43,20 @@ public abstract class ModalPanelBase<TModel> :
 
     protected virtual async Task<bool> ValidateModel()
     {
-        var editContextValid = ShowAllValidationErrors();
+        var editContextValid = await ShowAllValidationErrors();
         if (Validator is null)
         {
             // Registry already updated by ShowAllValidationErrors
-            Console.WriteLine($"Validator for {this.GetType().Name} is null...");
+            Logger?.LogInformation("ValidateModel - Validator for {Name} is null...", this.GetType().Name);
             return editContextValid;
         }
         else
         {
-            Console.WriteLine($"Using validator for {Validator.GetType().Name}");
+            Logger?.LogInformation("ValidateModel - Using validator for {Name}", Validator.GetType().Name);
         }
         var fv = await Validator.ValidateAsync(Model);
         var finalValid = editContextValid && fv.IsValid;
-        Console.WriteLine($"Validator result for {this.GetType().Name} is {finalValid}...");
+        Logger?.LogInformation("ValidateModel - Validator result for {Name} is {Valid}...", this.GetType().Name, finalValid);
 
         // Update the registry with the combined truth
         PanelRegistry?.SetValidity(this, finalValid);
@@ -70,11 +68,13 @@ public abstract class ModalPanelBase<TModel> :
     }
 
     protected EditForm editForm = default!;
-    private bool ShowAllValidationErrors()
+    private async Task<bool> ShowAllValidationErrors()
     {
         var editContext = editForm?.EditContext;
         if (editContext == null)
         {
+            Logger?.LogError("EditContext for Panel: {Name} is null", this.GetType().Name);
+
             // No form → treat as valid (or skip touching the registry)
             PanelRegistry?.SetValidity(this, true);
             return true;
@@ -85,8 +85,10 @@ public abstract class ModalPanelBase<TModel> :
 
         // Validate the form
         var isValid = editContext.Validate();
-
+        var isFluentValid = Validator is null ? true : (await Validator.ValidateAsync(Model)).IsValid;
         PanelRegistry?.SetValidity(this, isValid);
+        Logger?.LogInformation("ShowAllValidationErrors for Panel: {Name} IsValid - Fluent: {FluentValid} - EditContext: {IsValid}", this.GetType().Name, isFluentValid, isValid);
+
         return isValid;
 
     }
@@ -109,7 +111,7 @@ public abstract class ModalPanelBase<TModel> :
     public virtual async Task<bool> CanCloseModalAsync()
     {
         var isValid = await ValidateModel();
-        Console.WriteLine($"CanCloseModalAsync - {editForm?.Model?.GetType().Name} isValid: {isValid}");
+        Logger?.LogInformation("CanCloseModalAsync - {Name} isValid: {Valid}", editForm?.Model?.GetType().Name,isValid);
         return isValid;
     }
 
@@ -119,6 +121,6 @@ public abstract class ModalPanelBase<TModel> :
         // Here we'd normally map VM → Entity and mark dirty (via state action)
         // For now we simply validate and assume mapping will occur in save action.
         var isValid = await ValidateModel();
-        Console.WriteLine($"SaveOnNavigateAsync - {editForm?.Model?.GetType().Name} isValid: {isValid}");
+        Logger?.LogInformation("SaveOnNavigateAsync - {Name} isValid: {Valid}", editForm?.Model?.GetType().Name,isValid);
     }
 }

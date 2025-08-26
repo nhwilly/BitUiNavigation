@@ -7,6 +7,8 @@ using TimeWarp.State;
 namespace BitUiNavigation.Client.Pages.Modals;
 public sealed class UserModalProvider : ModalProviderBase
 {
+    private readonly ILogger<UserModalProvider> _logger;
+
     [Parameter, SupplyParameterFromQuery] public Guid AccountId { get; set; }
     [Parameter, SupplyParameterFromQuery] public Guid LocationId { get; set; }
     public override string ProviderName => "User";
@@ -15,7 +17,11 @@ public sealed class UserModalProvider : ModalProviderBase
     public override string Height => "640px";
     private UserEditSessionState State => Store.GetState<UserEditSessionState>();
     private ModalHostState ModalHostState => Store.GetState<ModalHostState>();
-    public UserModalProvider(IStore store) : base(store) { }
+    public UserModalProvider(
+        IStore store, 
+        IModalPanelRegistry modalPanelRegistry, 
+        ILogger<UserModalProvider> logger) 
+            : base(store, modalPanelRegistry) { _logger = logger;  }
 
     protected override Dictionary<string, Type> PanelMap { get; } = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -43,15 +49,17 @@ public sealed class UserModalProvider : ModalProviderBase
     }
     public override async Task<bool> CanCloseAsync(CancellationToken ct)
     {
+        var canClose = true;
         var lastKnown = PanelRegistry.LastKnownValidityByType;
-
         foreach (var kv in PanelMap) // kv.Value is the component Type
         {
             var panelType = kv.Value;
-
-            if (lastKnown.TryGetValue(panelType, out var isValid))
+            var exists = lastKnown.TryGetValue(panelType, out var isValid);
+            _logger.LogInformation("Last known validity state for Panel: {Name} Exists: {Exists} IsValid: {IsValid}", panelType.Name, exists, isValid);
+            if (exists & !isValid)
             {
-                if (!isValid) return false; // block close
+                _logger.LogWarning("Panel {PanelType} is invalid, cannot close modal", panelType.Name);
+                if (!isValid) canClose = false; // block close
             }
             else
             {
@@ -60,6 +68,6 @@ public sealed class UserModalProvider : ModalProviderBase
                 // return Task.FromResult(false);
             }
         }
-        return await Task.FromResult(true);
+        return await Task.FromResult(canClose);
     }
 }

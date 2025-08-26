@@ -183,7 +183,7 @@
     {
         if (_activeModalProvider is not null)
         {
-            var canClose = await _activeModalProvider.CanCloseAsync(CancellationToken.None);
+            var canClose = await _activeModalProvider.CanCloseAsync(CancellationToken);
             Console.WriteLine($"Modal host canClose: {canClose}");
             if (!canClose)
             {

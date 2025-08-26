@@ -9,13 +9,13 @@ namespace BitUiNavigation.Client.Pages.UserProfile;
 public record UserMembershipsViewModel : BaseRecord
 {
     // A list of child items being edited in this panel.
-    public List<MembershipItemViewModel> Items { get; init; } = new();
+    //public List<MembershipItemViewModel> Items { get; init; } = new();
 
     // Optional: track the selected item in the list
-    public Guid? SelectedItemId { get; set; }
+    //public Guid? SelectedItemId { get; set; }
     public string Name { get; set; } = string.Empty;
     // Optional: working/viewmodel for the selected item
-    public MembershipItemViewModel? SelectedItemVm { get; set; }
+    //public MembershipItemViewModel? SelectedItemVm { get; set; }
 }
 
 /// <summary>

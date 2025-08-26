@@ -13,13 +13,14 @@ public abstract class ModalProviderBase : IModalProvider
     public abstract string Width { get; }
     public abstract string Height { get; }
     protected readonly IStore Store;
-    protected ModalProviderBase(IStore store)
+    protected ModalProviderBase(IStore store, IModalPanelRegistry registry)
     {
-        Store = store;
+        Store = store; PanelRegistry = registry;
     }
+
     protected abstract Dictionary<string, Type> PanelMap { get; }
-    //public IModalPanelRegistry PanelRegistry { get; } = new ModalPanelRegistry();
-    public IModalPanelRegistry PanelRegistry { get; } = new ModalPanelRegistry();
+
+    public IModalPanelRegistry PanelRegistry { get; }// = new ModalPanelRegistry();
 
     /// <summary>
     /// Optional override to handle logic after the modal is opened.

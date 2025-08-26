@@ -37,6 +37,7 @@
     <PackageReference Include="FluentValidation" Version="12.0.0" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="9.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.8" />
     <PackageReference Include="System.Private.Uri" Version="4.3.2" />
     <PackageReference Include="TimeWarp.State" Version="11.0.3" />
   </ItemGroup>
