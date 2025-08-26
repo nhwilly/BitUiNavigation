@@ -13,6 +13,10 @@ public abstract class ModalPanelBase<TModel> :
     [Inject] public ILogger<TModel>? Logger { get; set; }
     [Inject] private IValidator<TModel>? Validator { get; set; } = default!;
     [CascadingParameter] public IModalPanelRegistry? PanelRegistry { get; set; }
+    [CascadingParameter] protected EditContext? CurrentEditContext { get; set; }
+    protected EditForm editForm = default!;
+    private EditContext? _subscribedCtx;
+
     protected override Task OnInitializedAsync()
     {
         PanelRegistry?.Register(this);
@@ -21,23 +25,98 @@ public abstract class ModalPanelBase<TModel> :
 
     public override void Dispose()
     {
+        Unsubscribe();
         PanelRegistry?.Unregister(this);
         base.Dispose();
     }
+    private void Subscribe(EditContext ctx)
+    {
+        _subscribedCtx = ctx;
+        ctx.OnValidationStateChanged += HandleValidationStateChanged;
+        RehydrateValidationUiIfNeeded(ctx);
+        //ctx.OnFieldChanged += HandleFieldChanged; // optional if you want updates on blur/typing
+        //_ = PushValidityAsync(ctx);
+        //if (ctx is null) return;
 
+        //_subscribedCtx = ctx;
+        //ctx.OnValidationStateChanged += HandleValidationStateChanged;
+
+        //// Optional: enable this if you want per-keystroke/per-field updates:
+        //// editContext.OnFieldChanged += HandleFieldChanged;
+
+        //// Push an initial snapshot now that we have a context
+        //_ = PushValidityFromEditContextAsync(ctx);
+    }
+    private void RehydrateValidationUiIfNeeded(EditContext ctx)
+    {
+        // If registry remembers this component type as invalid, show messages now.
+        var wasInvalid =
+            PanelRegistry?.LastKnownValidityByType.TryGetValue(GetType(), out var lastKnown) == true
+            && lastKnown == false;
+
+        if (wasInvalid)
+        {
+            // This will mark fields as modified, run EC.Validate(), and (below) we'll push combined truth.
+            _ = ValidateModel();
+        }
+    }
+
+    private void Unsubscribe()
+    {
+        if (_subscribedCtx is null) return;
+        _subscribedCtx.OnValidationStateChanged -= HandleValidationStateChanged;
+        // _subscribedEditContext.OnFieldChanged -= HandleFieldChanged;
+        _subscribedCtx = null;
+    }
+    private async Task PushValidityAsync(EditContext? ctx)
+    {
+        if (ctx is null) return;
+        var isValid = !ctx.GetValidationMessages().Any();
+        PanelRegistry?.SetValidity(this, isValid);
+        await Task.CompletedTask;
+    }
+
+    private void HandleValidationStateChanged(object? sender, ValidationStateChangedEventArgs e)
+        => _ = PushValidityFromEditContextAsync(sender as EditContext);
+
+    // Optional if you want more frequent updates:
+    // private void HandleFieldChanged(object? sender, FieldChangedEventArgs e)
+    //     => _ = PushValidityFromEditContextAsync(sender as EditContext);
+
+    private async Task PushValidityFromEditContextAsync(EditContext? ctx)
+    {
+        if (ctx is null)
+        {
+            Logger?.LogDebug("EditContext null; skipping validity push for {Panel}", GetType().Name);
+            return;
+        }
+        var fvValid = Validator is null ? true : (await Validator.ValidateAsync(Model)).IsValid;
+
+        // (Optional) combine with EC messages if you also use data annotations or other validators
+        // var ecValid = !ctx.GetValidationMessages().Any();
+        // var finalValid = fvValid && ecValid;
+
+        var finalValid = fvValid;
+
+        PanelRegistry?.SetValidity(this, finalValid);
+        Logger?.LogInformation("PushValidityFromEditContextAsync({Panel}) -> IsValid: {IsValid}", GetType().Name, finalValid);
+        await Task.CompletedTask;
+    }
     /// <summary>
     /// Provides a reference to the model used by the derived panel.
     /// </summary>
     protected abstract TModel Model { get; }
 
-    protected override Task OnParametersSetAsync()
-    {
-        return base.OnParametersSetAsync();
-    }
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender) await ValidateModel();
+        // Try to get an EditContext from @ref *after* render
+        var ctx = editForm?.EditContext;
+
+        if (ctx is not null && !ReferenceEquals(_subscribedCtx, ctx))
+        {
+            Unsubscribe();
+            Subscribe(ctx);
+        }
         await base.OnAfterRenderAsync(firstRender);
     }
 
@@ -67,16 +146,15 @@ public abstract class ModalPanelBase<TModel> :
         //return result.IsValid;
     }
 
-    protected EditForm editForm = default!;
     private async Task<bool> ShowAllValidationErrors()
     {
-        var editContext = editForm?.EditContext;
+        var editContext = CurrentEditContext ?? editForm?.EditContext;
         if (editContext == null)
         {
-            Logger?.LogError("EditContext for Panel: {Name} is null", this.GetType().Name);
+            Logger?.LogWarning("ShowAllValidationErrors: EditContext is null for {Panel}", GetType().Name);
 
             // No form → treat as valid (or skip touching the registry)
-            PanelRegistry?.SetValidity(this, true);
+            //PanelRegistry?.SetValidity(this, true);
             return true;
         }
 
@@ -85,12 +163,21 @@ public abstract class ModalPanelBase<TModel> :
 
         // Validate the form
         var isValid = editContext.Validate();
-        var isFluentValid = Validator is null ? true : (await Validator.ValidateAsync(Model)).IsValid;
-        PanelRegistry?.SetValidity(this, isValid);
-        Logger?.LogInformation("ShowAllValidationErrors for Panel: {Name} IsValid - Fluent: {FluentValid} - EditContext: {IsValid}", this.GetType().Name, isFluentValid, isValid);
+        // Optionally also run FV here (you already do inside ValidateModel)
+        if (Validator is not null)
+        {
+            var fvValid = (await Validator.ValidateAsync(Model)).IsValid;
+            Logger?.LogInformation("ShowAllValidationErrors: EC={ECValid}, FV={FVValid} for {Panel}",
+                                   isValid, fvValid, GetType().Name);
+            // Let ValidateModel() compute/push the final combined truth.
+        }
+        else
+        {
+            // If no FV, ensure registry reflects EC result immediately
+            PanelRegistry?.SetValidity(this, isValid);
+        }
 
         return isValid;
-
     }
     private void MarkAllFieldsAsModified(EditContext editContext)
     {
@@ -111,7 +198,7 @@ public abstract class ModalPanelBase<TModel> :
     public virtual async Task<bool> CanCloseModalAsync()
     {
         var isValid = await ValidateModel();
-        Logger?.LogInformation("CanCloseModalAsync - {Name} isValid: {Valid}", editForm?.Model?.GetType().Name,isValid);
+        Logger?.LogInformation("CanCloseModalAsync - {Name} isValid: {Valid}", typeof(TModel).Name, isValid);
         return isValid;
     }
 
@@ -121,6 +208,6 @@ public abstract class ModalPanelBase<TModel> :
         // Here we'd normally map VM → Entity and mark dirty (via state action)
         // For now we simply validate and assume mapping will occur in save action.
         var isValid = await ValidateModel();
-        Logger?.LogInformation("SaveOnNavigateAsync - {Name} isValid: {Valid}", editForm?.Model?.GetType().Name,isValid);
+        Logger?.LogInformation("SaveOnNavigateAsync - {Name} isValid: {Valid}", typeof(TModel).Name, isValid);
     }
 }
