@@ -55,7 +55,7 @@ public sealed class UserModalProvider : ModalProviderBase
         {
             var panelType = kv.Value;
             var exists = lastKnown.TryGetValue(panelType, out var isValid);
-            _logger.LogInformation("Last known validity state for Panel: {Name} Exists: {Exists} IsValid: {IsValid}", panelType.Name, exists, isValid);
+            _logger.LogDebug("Last known validity state for Panel: {Name} Exists: {Exists} IsValid: {IsValid}", panelType.Name, exists, isValid);
             if (exists & !isValid)
             {
                 _logger.LogWarning("Panel {PanelType} is invalid, cannot close modal", panelType.Name);

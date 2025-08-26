@@ -157,7 +157,7 @@
             // Store previous URL (to restore when modal closes)
             _preOpenUrl = RemoveQueryParam(fullUri, match!.ProviderName);
 
-            Logger.LogInformation("OnModalOpeningAsync for provider '{ProviderName}'", match.ProviderName);
+            Logger.LogDebug("OnModalOpeningAsync for provider '{ProviderName}'", match.ProviderName);
             // call modal provider hook to initialize
             await match!.OnModalOpeningAsync(CancellationToken);
             _needsSessionInit = true;
@@ -173,7 +173,7 @@
         _activeModalProvider = match;
         var oldPanelName = _panelName;
         _panelName = newPanelName ?? string.Empty;
-        Logger.LogInformation("Changing panels from '{OldPanel}' to '{NewPanel}'", oldPanelName, newPanelName);
+        Logger.LogDebug("Changing panels from '{OldPanel}' to '{NewPanel}'", oldPanelName, newPanelName);
 
         if (requestStateHasChanged)
             StateHasChanged();

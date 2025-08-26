@@ -21,7 +21,7 @@ internal sealed class ModalPanelRegistry : IModalPanelRegistry
         var panelExists = _live.Contains(panel);
         if (!panelExists)
             _live.Add(panel);
-        _logger.LogInformation("Registered panel {PanelType}, total live panels: {Count}", panel.GetType().Name, _live.Count);
+        _logger.LogDebug("Registered panel {PanelType}, total live panels: {Count}", panel.GetType().Name, _live.Count);
     }
 
     public void Unregister(IModalPanel panel)
@@ -30,16 +30,16 @@ internal sealed class ModalPanelRegistry : IModalPanelRegistry
         if (panelExists)
             _live.Remove(panel);
 
-        _logger.LogInformation("Unregistered panel {PanelType}, total live panels: {Count}", panel.GetType().Name, _live.Count);
+        _logger.LogDebug("Unregistered panel {PanelType}, total live panels: {Count}", panel.GetType().Name, _live.Count);
     }
     public void SetValidity(IModalPanel panel, bool isValid)
     {
         var panelExists = _live.Contains(panel);
         var type = panel.GetType();
-        _logger.LogInformation("Setting validity for panel {PanelType} to {IsValid}, panel exists: {PanelExists} lastKnownByType", type.Name, isValid, panelExists);
+        _logger.LogDebug("Setting validity for panel {PanelType} to {IsValid}, panel exists: {PanelExists} lastKnownByType", type.Name, isValid, panelExists);
 
         var lastKnown = _lastKnownByType.TryGetValue(type, out bool value) ? value : (bool?)null;
-        _logger.LogInformation("Previous known validity for panel {PanelType} was {LastKnown}", type.Name, lastKnown.HasValue ? lastKnown.Value.ToString() : "null");
+        _logger.LogDebug("Previous known validity for panel {PanelType} was {LastKnown}", type.Name, lastKnown.HasValue ? lastKnown.Value.ToString() : "null");
         _lastKnownByType[type] = isValid;
 
     }
