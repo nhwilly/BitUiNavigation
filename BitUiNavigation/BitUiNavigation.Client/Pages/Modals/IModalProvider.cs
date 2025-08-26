@@ -16,6 +16,7 @@ public interface IModalProvider
     public IModalPanelRegistry? PanelRegistry { get; }
     /// <summary>Builds the BitNav items for this modal. Each item’s Url should include the query param.</summary>
     List<BitNavItem> BuildNavItems(NavigationManager nav);
+    List<CustomNavItem> BuildCustomNavItems(NavigationManager nav);
 
     /// <summary>
     /// Maps the current panel key to a RouteData (component type + parameters) for the right panel.

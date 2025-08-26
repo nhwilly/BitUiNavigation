@@ -66,6 +66,7 @@ public abstract class ModalProviderBase : IModalProvider
     /// <param name="panelName"></param>
     /// <returns></returns>
     public abstract List<BitNavItem> BuildNavItems(NavigationManager nav);
+    public abstract List<CustomNavItem> BuildCustomNavItems(NavigationManager nav);
 
     public abstract Task<bool> CanCloseAsync(CancellationToken ct);
 

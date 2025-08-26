@@ -27,11 +27,24 @@
                            Variant="BitVariant.Text" />
                 <BitNav IsEnabled="@(!ModalHostState.IsSaving)"
                         Mode="BitNavMode.Automatic"
-                        Items="@_activeModalProvider.BuildNavItems(NavManager)"
+                        Items="@_activeModalProvider.BuildCustomNavItems(NavManager)"
                         Match="BitNavMatch.Wildcard"
                         FitWidth
                         Style="margin:0 1rem"
-                        Classes="NavStyles" />
+                        Classes="NavStyles"
+                        NameSelectors="@(new BitNavNameSelectors<CustomNavItem> { 
+                            Text = { Name = nameof(CustomNavItem.Text) }, 
+                            Url = { Name = nameof(CustomNavItem.Url) } })">
+                    <ItemTemplate Context="item">
+                        <div class="nav-custom-item">
+                            <BitIcon IconName="@item.IconName">
+                            </BitIcon>
+                            <BitText>@item.Text</BitText>
+                            <BitIcon IconName="@item.ValidationIconName"></BitIcon>
+                        </div>
+                    </ItemTemplate>
+
+                </BitNav>
             </BitStack>
 
             <div style="flex:1;display:flex;flex-direction:column;height:100%">
@@ -52,7 +65,7 @@
                 <div style="flex:1;overflow:hidden;border-bottom-right-radius:20px;position:relative;">
                     <div style="height:100%;overflow-y:auto;">
                         <div style="padding:1rem;">
-                                <CascadingValue TValue="@IModalPanelRegistry" Value="@_activeModalProvider!.PanelRegistry">
+                            <CascadingValue TValue="@IModalPanelRegistry" Value="@_activeModalProvider!.PanelRegistry">
                                 <RouteView @key="_panelName"
                                            RouteData="@_activeModalProvider.BuildRouteData(_panelName)"
                                            DefaultLayout="@typeof(EmptyLayout)" />
