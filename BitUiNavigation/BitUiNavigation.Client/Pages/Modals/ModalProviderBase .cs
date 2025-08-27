@@ -12,6 +12,7 @@ public abstract class ModalProviderBase : IModalProvider
     public abstract string ProviderName { get; }
     public abstract string DefaultPanel { get; }
     public abstract string Width { get; }
+    public virtual string MinWidth => "350px";
     public abstract string Height { get; }
 
     protected readonly IStore Store;
@@ -27,7 +28,7 @@ public abstract class ModalProviderBase : IModalProvider
     protected ModalHostState HostState => Store.GetState<ModalHostState>();
 
     // Map from normalized panel key -> component type
-    protected abstract Dictionary<string, Type> PanelMap { get;  }
+    protected abstract Dictionary<string, Type> PanelMap { get; }
     /// <summary>
     /// Public, normalized keys that ModalHost can use.
     /// Normalization must match what you publish in ModalPanelBase / ModalContext.
@@ -47,7 +48,7 @@ public abstract class ModalProviderBase : IModalProvider
     /// <summary>
     /// Build nav items for this provider.
     /// </summary>
-    public abstract List<BitNavItem> BuildNavItems(NavigationManager nav);
+    //public abstract List<BitNavItem> BuildNavItems(NavigationManager nav);
 
     public abstract List<CustomNavItem> BuildCustomNavItems(NavigationManager nav);
 
@@ -75,45 +76,46 @@ public abstract class ModalProviderBase : IModalProvider
     /// </summary>
     protected virtual bool MissingPanelValidityBlocksClose => false;
 
-    public virtual  Task<bool> CanCloseAsync(CancellationToken ct)=> Task.FromResult(true);  
-    //{
-    //    var canClose = true;
+    public virtual Task<bool> CanCloseAsync(CancellationToken ct) => Task.FromResult(true);
 
-    //    // Provider -> (Panel -> Validity)
-    //    HostState.Validity.TryGetValue(ProviderName, out var perPanel);
+    protected void DecorateCustomNavItemsWithValidationIndicators(List<CustomNavItem> items)
+    {
+        // Snapshot to avoid repeated state reads
+        var host = Store.GetState<ModalHostState>();
 
-    //    foreach (var kv in PanelMap)
-    //    {
-    //        var panelKey = Normalize(kv.Key, DefaultPanel);
+        // Get this provider's panel-validity map, if any
+        host.Validity.TryGetValue(ProviderName, out var perPanel);
 
-    //        if (perPanel is not null && perPanel.TryGetValue(panelKey, out var pv))
-    //        {
-    //            _logger.LogDebug(
-    //                "Modal close check: Provider={Provider} Panel={Panel} Valid={Valid} Errors={Errors}",
-    //                ProviderName, panelKey, pv.IsValid, pv.ErrorCount);
+        foreach (var item in items)
+        {
+            if (item is null || string.IsNullOrWhiteSpace(item.Key)) continue;
 
-    //            if (!pv.IsValid)
-    //            {
-    //                canClose = false; // block close if any panel invalid
-    //            }
-    //        }
-    //        else
-    //        {
-    //            _logger.LogDebug(
-    //                "Modal close check: Provider={Provider} Panel={Panel} has no validity entry.",
-    //                ProviderName, panelKey);
+            var panelKey = UrlExtensions.Normalize(item.Key, DefaultPanel);
 
-    //            if (MissingPanelValidityBlocksClose)
-    //            {
-    //                canClose = false;
-    //            }
-    //        }
-    //    }
+            // Safe: only enters when perPanel is not null AND the key exists.
+            if (perPanel?.TryGetValue(panelKey, out var pv) == true && pv is { IsValid: false })
+            {
+                item.ValidationIconName = BitIconName.CriticalErrorSolid;
 
-    //    return Task.FromResult(canClose);
-    //}
+                var msg = pv.ErrorCount == 1
+                    ? "a validation error"
+                    : $"{pv.ErrorCount} validation errors";
 
-    // Optional: if you later want a nav builder that decorates items with validity
-    public virtual Task<List<BitNavItem>> BuildNavItemsWithValidationAsync(NavigationManager nav, CancellationToken ct)
-        => Task.FromResult(BuildNavItems(nav));
+                // Optional a11y/tooltip text
+                item.Title = string.IsNullOrWhiteSpace(item.Title)
+                    ? $"Has {msg}"
+                    : $"{item.Title} has {msg}";
+
+                item.AriaLabel = $"{item.Text} has {msg}";
+            }
+            else
+            {
+                // leave as-is for valid/unknown
+                // If you want to clear or set an "ok" icon, do it here.
+                // item.ValidationIconName = null;
+            }
+        }
+    }
+
+
 }
