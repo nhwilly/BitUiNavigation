@@ -34,12 +34,9 @@ internal sealed class ModalPanelRegistry : IModalPanelRegistry
     }
     public void SetValidity(IModalPanel panel, bool isValid)
     {
-        var panelExists = _live.Contains(panel);
         var type = panel.GetType();
-        _logger.LogDebug("Setting validity for panel {PanelType} to {IsValid}, panel exists: {PanelExists} lastKnownByType", type.Name, isValid, panelExists);
-
         var lastKnown = _lastKnownByType.TryGetValue(type, out bool value) ? value : (bool?)null;
-        _logger.LogDebug("Previous known validity for panel {PanelType} was {LastKnown}", type.Name, lastKnown.HasValue ? lastKnown.Value.ToString() : "null");
+        _logger.LogError("Known validity for panel {PanelType} was {LastKnown} now is {IsValid}", type.Name, lastKnown.HasValue ? lastKnown.Value.ToString() : "null", isValid);
         _lastKnownByType[type] = isValid;
 
     }

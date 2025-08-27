@@ -7,8 +7,6 @@ using TimeWarp.State;
 namespace BitUiNavigation.Client.Pages.Modals;
 public sealed class UserModalProvider : ModalProviderBase
 {
-    private readonly ILogger<UserModalProvider> _logger;
-
     [Parameter, SupplyParameterFromQuery] public Guid AccountId { get; set; }
     [Parameter, SupplyParameterFromQuery] public Guid LocationId { get; set; }
     public override string ProviderName => "User";
@@ -21,7 +19,7 @@ public sealed class UserModalProvider : ModalProviderBase
         IStore store,
         IModalPanelRegistry modalPanelRegistry,
         ILogger<UserModalProvider> logger)
-            : base(store, modalPanelRegistry) { _logger = logger; }
+            : base(store, modalPanelRegistry, logger) { }
 
     protected override Dictionary<string, Type> PanelMap { get; } = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -120,27 +118,27 @@ public sealed class UserModalProvider : ModalProviderBase
         await ModalHostState.SetTitle(State.ProviderTitle, ct);
         await State.SetIsLoading(false, ct);
     }
-    public override async Task<bool> CanCloseAsync(CancellationToken ct)
-    {
-        var canClose = true;
-        var lastKnown = PanelRegistry.LastKnownValidityByType;
-        foreach (var kv in PanelMap) // kv.Value is the component Type
-        {
-            var panelType = kv.Value;
-            var exists = lastKnown.TryGetValue(panelType, out var isValid);
-            _logger.LogDebug("Last known validity state for Panel: {Name} Exists: {Exists} IsValid: {IsValid}", panelType.Name, exists, isValid);
-            if (exists & !isValid)
-            {
-                _logger.LogWarning("Panel {PanelType} is invalid, cannot close modal", panelType.Name);
-                if (!isValid) canClose = false; // block close
-            }
-            else
-            {
-                // If you want to require that the user visits every panel before closing,
-                // uncomment the next line:
-                // return Task.FromResult(false);
-            }
-        }
-        return await Task.FromResult(canClose);
-    }
+    //public override async Task<bool> CanCloseAsync(CancellationToken ct)
+    //{
+    //var canClose = true;
+    //var lastKnown = PanelRegistry.LastKnownValidityByType;
+    //foreach (var kv in PanelMap) // kv.Value is the component Type
+    //{
+    //    var panelType = kv.Value;
+    //    var exists = lastKnown.TryGetValue(panelType, out var isValid);
+    //    _logger.LogDebug("Last known validity state for Panel: {Name} Exists: {Exists} IsValid: {IsValid}", panelType.Name, exists, isValid);
+    //    if (exists & !isValid)
+    //    {
+    //        _logger.LogWarning("Panel {PanelType} is invalid, cannot close modal", panelType.Name);
+    //        if (!isValid) canClose = false; // block close
+    //    }
+    //    else
+    //    {
+    //        // If you want to require that the user visits every panel before closing,
+    //        // uncomment the next line:
+    //        // return Task.FromResult(false);
+    //    }
+    //}
+    //return await Task.FromResult(canClose);
+    //}
 }

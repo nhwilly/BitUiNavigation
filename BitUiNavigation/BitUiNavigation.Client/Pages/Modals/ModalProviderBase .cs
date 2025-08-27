@@ -13,9 +13,11 @@ public abstract class ModalProviderBase : IModalProvider
     public abstract string Width { get; }
     public abstract string Height { get; }
     protected readonly IStore Store;
-    protected ModalProviderBase(IStore store, IModalPanelRegistry registry)
+    protected readonly ILogger _logger;
+    protected ModalProviderBase(IStore store, IModalPanelRegistry registry, ILogger logger)
     {
         Store = store; PanelRegistry = registry;
+        _logger = logger;
     }
 
     protected abstract Dictionary<string, Type> PanelMap { get; }
@@ -68,7 +70,30 @@ public abstract class ModalProviderBase : IModalProvider
     public abstract List<BitNavItem> BuildNavItems(NavigationManager nav);
     public abstract List<CustomNavItem> BuildCustomNavItems(NavigationManager nav);
 
-    public abstract Task<bool> CanCloseAsync(CancellationToken ct);
+    public virtual async Task<bool> CanCloseAsync(CancellationToken ct)
+    {
+        var canClose = true;
+        var lastKnown = PanelRegistry.LastKnownValidityByType;
+        foreach (var kv in PanelMap) // kv.Value is the component Type
+        {
+            var panelType = kv.Value;
+            var exists = lastKnown.TryGetValue(panelType, out var isValid);
+            _logger.LogDebug("Last known validity state for Panel: {Name} Exists: {Exists} IsValid: {IsValid}", panelType.Name, exists, isValid);
+            if (exists & !isValid)
+            {
+                _logger.LogWarning("Panel {PanelType} is invalid, cannot close modal", panelType.Name);
+                if (!isValid) canClose = false; // block close
+            }
+            else
+            {
+                // If you want to require that the user visits every panel before closing,
+                // uncomment the next line:
+                // return Task.FromResult(false);
+            }
+        }
+        return await Task.FromResult(canClose);
+
+    }
 
 
     public Task<List<BitNavItem>> BuildNavItemsWithValidationAsync(NavigationManager nav, CancellationToken ct)

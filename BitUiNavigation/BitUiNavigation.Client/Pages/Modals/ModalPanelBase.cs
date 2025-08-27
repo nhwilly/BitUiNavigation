@@ -51,10 +51,16 @@ public abstract class ModalPanelBase<TModel> :
         }
     }
     private void HandleFieldChanged(object? sender, FieldChangedEventArgs e)
-    => _ = PushValidityFromEditContextAsync(sender as EditContext);
+    {
+        Logger?.LogDebug("FieldChanged: {Field} in {Panel}", e.FieldIdentifier.FieldName, GetType().Name);
+        _ = PushValidityFromEditContextAsync(sender as EditContext);
+    }
 
     private void HandleValidationStateChanged(object? sender, ValidationStateChangedEventArgs e)
-        => _ = PushValidityFromEditContextAsync(sender as EditContext);
+    {
+        Logger?.LogDebug("ValidationStateChanged in {Panel}", GetType().Name);
+        _ = PushValidityFromEditContextAsync(sender as EditContext);
+    }
 
     private void Unsubscribe()
     {
@@ -122,9 +128,6 @@ public abstract class ModalPanelBase<TModel> :
         PanelRegistry?.SetValidity(this, finalValid);
 
         return finalValid;
-        //var result = await Validator.ValidateAsync(Model);
-        //PanelRegistry?.SetValidity(this, result.IsValid); // <— report validity
-        //return result.IsValid;
     }
 
     private async Task<bool> ShowAllValidationErrors()
@@ -135,12 +138,11 @@ public abstract class ModalPanelBase<TModel> :
             Logger?.LogWarning("ShowAllValidationErrors: EditContext is null for {Panel}", GetType().Name);
 
             // No form → treat as valid (or skip touching the registry)
-            //PanelRegistry?.SetValidity(this, true);
             return true;
         }
 
         // Mark all properties as having been interacted with
-        MarkAllFieldsAsModified(editContext);
+        ModalPanelBase<TModel>.MarkAllFieldsAsModified(editContext);
 
         // Validate the form
         var isValid = editContext.Validate();
@@ -148,8 +150,7 @@ public abstract class ModalPanelBase<TModel> :
         if (Validator is not null)
         {
             var fvValid = (await Validator.ValidateAsync(Model)).IsValid;
-            Logger?.LogDebug("ShowAllValidationErrors: EC={ECValid}, FV={FVValid} for {Panel}",
-                                   isValid, fvValid, GetType().Name);
+            Logger?.LogDebug("ShowAllValidationErrors: EC={ECValid}, FV={FVValid} for {Panel}", isValid, fvValid, GetType().Name);
             // Let ValidateModel() compute/push the final combined truth.
         }
         else
@@ -160,7 +161,7 @@ public abstract class ModalPanelBase<TModel> :
 
         return isValid;
     }
-    private void MarkAllFieldsAsModified(EditContext editContext)
+    private static void MarkAllFieldsAsModified(EditContext editContext)
     {
         var properties = editContext.Model.GetType().GetProperties()
             .Where(prop => prop.CanWrite && prop.CanRead);
