@@ -13,13 +13,12 @@ public sealed class UserModalProvider : ModalProviderBase
     public override string DefaultPanel => nameof(UserMembershipsPanel);
     public override string Width => "900px";
     public override string Height => "640px";
-    private UserEditSessionState State => Store.GetState<UserEditSessionState>();
+    private UserModalState State => Store.GetState<UserModalState>();
     private ModalHostState ModalHostState => Store.GetState<ModalHostState>();
     public UserModalProvider(
         IStore store,
-        IModalPanelRegistry modalPanelRegistry,
         ILogger<UserModalProvider> logger)
-            : base(store, modalPanelRegistry, logger) { }
+            : base(store, logger) { }
 
     protected override Dictionary<string, Type> PanelMap { get; } = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -29,7 +28,7 @@ public sealed class UserModalProvider : ModalProviderBase
     private void DecorateWithValidationIndicators(List<BitNavItem> items)
     {
         // Quick local snapshot to avoid multiple property calls
-        var lastKnown = PanelRegistry.LastKnownValidityByType;
+        var lastKnown = State.LastKnownValidityByType;
 
         foreach (var item in items)
         {
@@ -58,7 +57,7 @@ public sealed class UserModalProvider : ModalProviderBase
     private void DecorateCustomNavItemsWithValidationIndicators(List<CustomNavItem> items)
     {
         // Quick local snapshot to avoid multiple property calls
-        var lastKnown = PanelRegistry.LastKnownValidityByType;
+        var lastKnown = State.LastKnownValidityByType;
 
         foreach (var item in items)
         {
@@ -118,27 +117,5 @@ public sealed class UserModalProvider : ModalProviderBase
         await ModalHostState.SetTitle(State.ProviderTitle, ct);
         await State.SetIsLoading(false, ct);
     }
-    //public override async Task<bool> CanCloseAsync(CancellationToken ct)
-    //{
-    //var canClose = true;
-    //var lastKnown = PanelRegistry.LastKnownValidityByType;
-    //foreach (var kv in PanelMap) // kv.Value is the component Type
-    //{
-    //    var panelType = kv.Value;
-    //    var exists = lastKnown.TryGetValue(panelType, out var isValid);
-    //    _logger.LogDebug("Last known validity state for Panel: {Name} Exists: {Exists} IsValid: {IsValid}", panelType.Name, exists, isValid);
-    //    if (exists & !isValid)
-    //    {
-    //        _logger.LogWarning("Panel {PanelType} is invalid, cannot close modal", panelType.Name);
-    //        if (!isValid) canClose = false; // block close
-    //    }
-    //    else
-    //    {
-    //        // If you want to require that the user visits every panel before closing,
-    //        // uncomment the next line:
-    //        // return Task.FromResult(false);
-    //    }
-    //}
-    //return await Task.FromResult(canClose);
-    //}
+
 }

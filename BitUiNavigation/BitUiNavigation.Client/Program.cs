@@ -20,7 +20,7 @@ public class Program
         services.AddTimeWarpState();
         services.AddScoped<IModalProviderSource, DefaultModalProviderSource>();
         services.AddScoped<IModalProvider, UserModalProvider>();
-        services.AddScoped<IModalPanelRegistry, ModalPanelRegistry>();
+        // services.AddScoped<IModalPanelRegistry, ModalPanelRegistry>();
         services.AddValidatorsFromAssemblyContaining<UserProfileModelValidator>();
         services.AddScoped<UserService>();
     }

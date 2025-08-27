@@ -3,28 +3,25 @@
 @inject IModalProviderSource ModalProviderSource
 @inject ILogger<ModalHost> Logger
 @implements IDisposable
-@using System.Web
-@using BitUiNavigation.Client.Layout
-@using Microsoft.AspNetCore.Components.Routing
 @using BitUiNavigation.Client.Services
-@using static BitUiNavigation.Client.Pages.Modals.UrlExtensions
+@using static UrlExtensions
 
 @if (_activeModalProvider is not null)
 {
     <BitModal IsOpen="true"
-              OnOverlayClick="@CloseAsync"
-              OnDismiss="@CloseAsync"
+              OnOverlayClick="@Close"
+              OnDismiss="@Close"
               Classes="@ClassStyles">
 
         <BitStack Horizontal Gap="0rem" Style="height: 100%">
             <BitStack Class="nav-panel" FitWidth Style="border-top-left-radius:20px; border-bottom-left-radius:20px;">
                 <BitButton Style="margin: 1rem 0 0 1rem"
                            Color="BitColor.Tertiary"
-                           OnClick="@CloseAsync"
+                           OnClick="@Close"
                            IconOnly
                            Size="BitSize.Small"
                            IconName="@BitIconName.ChromeClose"
-                           Variant="BitVariant.Text" />
+                           Variant="BitVariant.Text"/>
                 <BitNav IsEnabled="@(!ModalHostState.IsSaving)"
                         Mode="BitNavMode.Automatic"
                         Items="@_activeModalProvider.BuildCustomNavItems(NavManager)"
@@ -32,9 +29,11 @@
                         FitWidth
                         Style="margin:0 1rem"
                         Classes="NavStyles"
-                        NameSelectors="@(new BitNavNameSelectors<CustomNavItem> { 
-                            Text = { Name = nameof(CustomNavItem.Text) }, 
-                            Url = { Name = nameof(CustomNavItem.Url) } })">
+                        NameSelectors="@(new BitNavNameSelectors<CustomNavItem>
+                                       {
+                                           Text = { Name = nameof(CustomNavItem.Text) },
+                                           Url = { Name = nameof(CustomNavItem.Url) }
+                                       })">
                     <ItemTemplate Context="item">
                         <div class="nav-custom-item">
                             <BitIcon IconName="@item.IconName">
@@ -56,19 +55,19 @@
                         <BitText Style="font-weight:600;font-size:16px;">
                             @ModalHostState.Title
                         </BitText>
-                        <ModelStateStatus />
+                        <ModelStateStatus/>
                     </BitStack>
                 </div>
 
-                <BitSeparator Border="BitColorKind.Tertiary" />
+                <BitSeparator Border="BitColorKind.Tertiary"/>
 
                 <div style="flex:1;overflow:hidden;border-bottom-right-radius:20px;position:relative;">
                     <div style="height:100%;overflow-y:auto;">
                         <div style="padding:1rem;">
-                            <CascadingValue TValue="@IModalPanelRegistry" Value="@_activeModalProvider!.PanelRegistry">
+                            <CascadingValue TValue="@ModalContext" Value="@_ctx">
                                 <RouteView @key="_panelName"
                                            RouteData="@_activeModalProvider.BuildRouteData(_panelName)"
-                                           DefaultLayout="@typeof(EmptyLayout)" />
+                                           DefaultLayout="@typeof(EmptyLayout)"/>
                             </CascadingValue>
                         </div>
                     </div>
@@ -102,11 +101,23 @@
     private string? _preOpenUrl;
     private IModalPanel? _panel;
     private bool _needsSessionInit = false;
+    private bool MissingPanelValidityBlocksClose => false; // flip to true if you want stricter policy
 
     private ModalHostState ModalHostState => GetState<ModalHostState>();
 
+    private ModalContext _ctx => new()
+    {
+        ProviderKey = _activeModalProvider?.ProviderName ?? "UnknownProvider",
+        PanelName = _panelName // or nameof(UserProfilePanel) if you map it
+    };
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+        {
+            await ReadFromUri(NavManager.Uri, requestStateHasChanged: true);
+        }
+
         if (_needsSessionInit && _activeModalProvider is not null)
         {
             _needsSessionInit = false;
@@ -117,26 +128,36 @@
         await base.OnAfterRenderAsync(firstRender);
     }
 
+    private bool CanCloseActiveProvider()
+    {
+        if (_activeModalProvider is null) return true;
+
+        var providerKey = _activeModalProvider.ProviderName;
+
+        // Normalize your keys the same way you publish them from ModalPanelBase / ModalContext
+        var expectedPanelKeys = _activeModalProvider.ExpectedPanelKeys; // <-- now public
+
+        return GetState<ModalHostState>()
+            .ArePanelsValid(providerKey, expectedPanelKeys, MissingPanelValidityBlocksClose);
+    }
 
     private void RegisterPanel(IModalPanel panel)
         => _panel = panel;
 
-    protected override void OnInitialized()
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-        NavManager.LocationChanged += OnLocationChanged;
-        ReadFromUri(NavManager.Uri, requestStateHasChanged: false);
+        // fire-and-forget wrapper that calls your async method
+        _ = OnLocationChanged(sender, e);
     }
 
-    protected override void OnAfterRender(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (firstRender)
-        {
-            ReadFromUri(NavManager.Uri, requestStateHasChanged: true);
-        }
+        NavManager.LocationChanged += HandleLocationChanged;
+        await ReadFromUri(NavManager.Uri, requestStateHasChanged: false);
     }
 
-    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-        => ReadFromUri(e.Location, requestStateHasChanged: true);
+    private async Task OnLocationChanged(object? sender, LocationChangedEventArgs e)
+        => await ReadFromUri(e.Location, requestStateHasChanged: true);
 
     /// <summary>
     /// Inspects the provided URI and determines if it matches any of the model providers
@@ -146,7 +167,7 @@
     /// </summary>
     /// <param name="fullUri"></param>
     /// <param name="requestStateHasChanged"></param>
-    private async void ReadFromUri(string fullUri, bool requestStateHasChanged)
+    private async Task ReadFromUri(string fullUri, bool requestStateHasChanged)
     {
         var uri = new Uri(fullUri);
         var qs = HttpUtility.ParseQueryString(uri.Query);
@@ -192,17 +213,12 @@
             StateHasChanged();
     }
 
-    private async void CloseAsync()
+    private void Close()
     {
-        if (_activeModalProvider is not null)
+        if (!CanCloseActiveProvider())
         {
-            var canClose = await _activeModalProvider.CanCloseAsync(CancellationToken);
-            Console.WriteLine($"Modal host canClose: {canClose}");
-            if (!canClose)
-            {
-                // show your prompt here
-                return;
-            }
+            // show a toast/snackbar/banner as you like
+            return;
         }
 
         // proceed with existing close logic...
@@ -223,41 +239,13 @@
         _panel = null;
     }
 
-    // private async Task CloseAsync()
-    // {
-    //     Check with current panel guard before closing
-    //     if (_panel is not null)
-    //     {
-    //         var canClose = await _panel.CanCloseModalAsync();
-    //         if (!canClose)
-    //             return;
-    //     }
-
-    //     Navigate to the original URL
-    //     if (!string.IsNullOrEmpty(_preOpenUrl))
-    //     {
-    //         NavManager.NavigateTo(_preOpenUrl!, replace: true);
-    //     }
-    //     the preOpenUrl was empty, let's just deduce it from our current location.
-    //     else if (_activeModalProvider is not null)
-    //     {
-    //         var stripped = NavManager.GetUriWithQueryParameter(_activeModalProvider.ProviderName, (string?)null);
-    //         NavManager.NavigateTo(stripped, replace: true);
-    //     }
-
-    //     _preOpenUrl = null;
-    //     _activeModalProvider = null;
-    //     _panelName = string.Empty;
-    //     _panel = null;
-    // }
-
     public override void Dispose()
     {
-        NavManager.LocationChanged -= OnLocationChanged;
+        NavManager.LocationChanged -= HandleLocationChanged;
         base.Dispose();
     }
 
-    private static string ModalContainerClass = "modal-container";
+    private static readonly string ModalContainerClass = "modal-container";
 
     private string CreateContainerCss()
     {
@@ -269,11 +257,13 @@
             border-radius:20px;
         }}";
     }
-    BitModalClassStyles ClassStyles = new()
+
+    readonly BitModalClassStyles ClassStyles = new()
     {
         Content = ModalContainerClass,
     };
-    BitNavClassStyles NavStyles => new()
+
+    static BitNavClassStyles NavStyles => new()
     {
         SelectedItemContainer = "nav-selected-item-container",
         ItemContainer = "nav-item-container",

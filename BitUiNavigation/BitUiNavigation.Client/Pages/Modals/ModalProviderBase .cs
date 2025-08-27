@@ -1,51 +1,59 @@
 ﻿using Bit.BlazorUI;
 using BitUiNavigation.Client.Pages.UserProfile;
+using BitUiNavigation.Client.Services;
 using Microsoft.AspNetCore.Components;
 using TimeWarp.State;
 using static BitUiNavigation.Client.Pages.Modals.UrlExtensions;
 
 namespace BitUiNavigation.Client.Pages.Modals;
+
 public abstract class ModalProviderBase : IModalProvider
 {
     public abstract string ProviderName { get; }
-
     public abstract string DefaultPanel { get; }
     public abstract string Width { get; }
     public abstract string Height { get; }
+
     protected readonly IStore Store;
     protected readonly ILogger _logger;
-    protected ModalProviderBase(IStore store, IModalPanelRegistry registry, ILogger logger)
+
+    protected ModalProviderBase(IStore store, ILogger logger)
     {
-        Store = store; PanelRegistry = registry;
+        Store = store;
         _logger = logger;
     }
 
-    protected abstract Dictionary<string, Type> PanelMap { get; }
+    // Access central modal state
+    protected ModalHostState HostState => Store.GetState<ModalHostState>();
 
-    public IModalPanelRegistry PanelRegistry { get; }// = new ModalPanelRegistry();
-
+    // Map from normalized panel key -> component type
+    protected abstract Dictionary<string, Type> PanelMap { get;  }
     /// <summary>
-    /// Optional override to handle logic after the modal is opened.
+    /// Public, normalized keys that ModalHost can use.
+    /// Normalization must match what you publish in ModalPanelBase / ModalContext.
     /// </summary>
-    /// <param name="ct"></param>
-    /// <returns></returns>
-    /// 
+    public virtual IReadOnlyList<string> ExpectedPanelKeys =>
+        [.. PanelMap.Keys.Select(k => Normalize(k, DefaultPanel))];
+    /// <summary>
+    /// Optional hook after the modal is opened.
+    /// </summary>
     public virtual Task OnModalOpenedAsync(CancellationToken ct) => Task.CompletedTask;
 
     /// <summary>
-    /// Optional override to handle logic before the modal is opened.
+    /// Optional hook before the modal is opened.
     /// </summary>
-    /// <param name="ct"></param>
-    /// <returns></returns>
     public virtual Task OnModalOpeningAsync(CancellationToken ct) => Task.CompletedTask;
 
     /// <summary>
-    /// Creates a panel url that can be used by NavigationManager to 
-    /// navigate to a specific panel in the modal.
+    /// Build nav items for this provider.
     /// </summary>
-    /// <param name="nav"></param>
-    /// <param name="panelName"></param>
-    /// <returns></returns>
+    public abstract List<BitNavItem> BuildNavItems(NavigationManager nav);
+
+    public abstract List<CustomNavItem> BuildCustomNavItems(NavigationManager nav);
+
+    /// <summary>
+    /// Create a URL for a specific panel within this modal.
+    /// </summary>
     protected string BuildPanelUrl(NavigationManager nav, string panelName)
     {
         var currentPath = "/" + nav.ToBaseRelativePath(nav.Uri).Split('?')[0];
@@ -62,42 +70,50 @@ public abstract class ModalProviderBase : IModalProvider
     }
 
     /// <summary>
-    /// Requires that all modal providers implement this method to build the navigation items.
+    /// If true, panels that have never published validity will block closing.
+    /// Default is false (missing = treated as valid).
     /// </summary>
-    /// <param name="nav"></param>
-    /// <param name="panelName"></param>
-    /// <returns></returns>
-    public abstract List<BitNavItem> BuildNavItems(NavigationManager nav);
-    public abstract List<CustomNavItem> BuildCustomNavItems(NavigationManager nav);
+    protected virtual bool MissingPanelValidityBlocksClose => false;
 
-    public virtual async Task<bool> CanCloseAsync(CancellationToken ct)
+    public virtual Task<bool> CanCloseAsync(CancellationToken ct)
     {
         var canClose = true;
-        var lastKnown = PanelRegistry.LastKnownValidityByType;
-        foreach (var kv in PanelMap) // kv.Value is the component Type
+
+        // Provider -> (Panel -> Validity)
+        HostState.Validity.TryGetValue(ProviderName, out var perPanel);
+
+        foreach (var kv in PanelMap)
         {
-            var panelType = kv.Value;
-            var exists = lastKnown.TryGetValue(panelType, out var isValid);
-            _logger.LogDebug("Last known validity state for Panel: {Name} Exists: {Exists} IsValid: {IsValid}", panelType.Name, exists, isValid);
-            if (exists & !isValid)
+            var panelKey = Normalize(kv.Key, DefaultPanel);
+
+            if (perPanel is not null && perPanel.TryGetValue(panelKey, out var pv))
             {
-                _logger.LogWarning("Panel {PanelType} is invalid, cannot close modal", panelType.Name);
-                if (!isValid) canClose = false; // block close
+                _logger.LogDebug(
+                    "Modal close check: Provider={Provider} Panel={Panel} Valid={Valid} Errors={Errors}",
+                    ProviderName, panelKey, pv.IsValid, pv.ErrorCount);
+
+                if (!pv.IsValid)
+                {
+                    canClose = false; // block close if any panel invalid
+                }
             }
             else
             {
-                // If you want to require that the user visits every panel before closing,
-                // uncomment the next line:
-                // return Task.FromResult(false);
+                _logger.LogDebug(
+                    "Modal close check: Provider={Provider} Panel={Panel} has no validity entry.",
+                    ProviderName, panelKey);
+
+                if (MissingPanelValidityBlocksClose)
+                {
+                    canClose = false;
+                }
             }
         }
-        return await Task.FromResult(canClose);
 
+        return Task.FromResult(canClose);
     }
 
-
-    public Task<List<BitNavItem>> BuildNavItemsWithValidationAsync(NavigationManager nav, CancellationToken ct)
-    {
-        throw new NotImplementedException();
-    }
+    // Optional: if you later want a nav builder that decorates items with validity
+    public virtual Task<List<BitNavItem>> BuildNavItemsWithValidationAsync(NavigationManager nav, CancellationToken ct)
+        => Task.FromResult(BuildNavItems(nav));
 }

@@ -9,11 +9,12 @@ public interface IModalProvider
     string ProviderName { get; }
     /// <summary>The section used when the key exists but has no value.</summary>
     string DefaultPanel { get; }
+    IReadOnlyList<string> ExpectedPanelKeys { get; }
 
     /// <summary>Host BitModal width/height (CSS values).</summary>
     string Width { get; }
     string Height { get; }
-    public IModalPanelRegistry? PanelRegistry { get; }
+    //public IModalPanelRegistry? PanelRegistry { get; }
     /// <summary>Builds the BitNav items for this modal. Each item’s Url should include the query param.</summary>
     List<BitNavItem> BuildNavItems(NavigationManager nav);
     List<CustomNavItem> BuildCustomNavItems(NavigationManager nav);

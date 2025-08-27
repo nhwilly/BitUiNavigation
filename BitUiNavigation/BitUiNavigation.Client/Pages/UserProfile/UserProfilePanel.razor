@@ -1,10 +1,9 @@
 ﻿@inherits ModalPanelBase<UserProfileViewModel>
-@* @inject ILogger<UserProfileViewModel> Logger *@
 @using BitUiNavigation.Client.Services
 @using Blazored.FluentValidation
 @using BitUiNavigation.Client.Pages.Modals
 
-<SkeletonWhileBusy IsBusy="@(UserEditSessionState.IsLoading)">
+<SkeletonWhileBusy IsBusy="@(UserModalState.IsLoading)">
     <EditForm @ref="editForm" Model="@Model">
         <FluentValidationValidator />
         <BitGrid Columns="2" HorizontalSpacing="1rem" VerticalSpacing="0.5rem" Style="grid-template-columns:150px 1fr;">
@@ -27,6 +26,6 @@
     </EditForm>
 </SkeletonWhileBusy>
 @code {
-    private UserEditSessionState UserEditSessionState => GetState<UserEditSessionState>();
-    protected override UserProfileViewModel Model => UserEditSessionState.ProfileVm;
+    private UserModalState UserModalState => GetState<UserModalState>();
+    protected override UserProfileViewModel Model => UserModalState.ProfileVm;
 }

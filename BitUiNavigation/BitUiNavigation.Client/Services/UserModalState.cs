@@ -2,93 +2,228 @@
 using TimeWarp.State;
 
 namespace BitUiNavigation.Client.Services;
-
 public sealed partial class UserModalState : State<UserModalState>
 {
-    public override void Initialize()
-    {
-        UserDto = new UserDto { FirstName = "", LastName = "", Name="" };
-        UserProfileViewModel = new UserProfileViewModel { FirstName = "", LastName = "" };
-    }
-    private UserDto UserDto { get; set; } = default!;
-    public UserProfileViewModel UserProfileViewModel { get; private set; } = default!;
+    public UserDto? Entity { get; private set; }
+    public UserDto? OriginalEntity { get; private set; }
 
+    public UserProfileViewModel ProfileVm { get; private set; } = new();
+    public UserMembershipsViewModel MembershipsVm { get; private set; } = new();
+
+    private readonly Dictionary<Type, bool> _lastKnownByType = [];
+    public IReadOnlyDictionary<Type, bool> LastKnownValidityByType => _lastKnownByType;
+
+    // todo: originals for all views so we can see if they changed.
+    // this also allows us to reset the view models to the original state.
+    // then isDirty checks all view models to see if any have changed.
+
+    public override void Initialize() { }
+
+    public bool IsLoading { get; private set; }
+
+    public bool IsDirty => Entity is not null &&
+                           OriginalEntity is not null &&
+                           Entity != OriginalEntity;
+
+    public string ProviderTitle => Entity is null ? "User" : $"User: {Entity.FirstName} {Entity.LastName}";
     private void MapDtoToViewModel()
     {
-        UserProfileViewModel.FirstName = UserDto?.FirstName ?? "";
-        UserProfileViewModel.LastName = UserDto?.LastName ?? "";
+        if (Entity is null) return;
+
+        ProfileVm = new UserProfileViewModel
+        {
+            FirstName = Entity.FirstName,
+            LastName = Entity.LastName,
+            UpdatedAt = Entity.UpdatedAt.ToString("O")
+        };
+
+        MembershipsVm = new UserMembershipsViewModel { Name = Entity.Name };
+        // TODO: Map other panel VMs from Entity as needed
     }
+
     private void MapViewModelToDto()
     {
-        UserDto.FirstName = UserProfileViewModel.FirstName;
-        UserDto.LastName = UserProfileViewModel.LastName;
+        if (Entity is null) return;
+
+        Entity = Entity with
+        {
+            FirstName = ProfileVm.FirstName,
+            LastName = ProfileVm.LastName,
+            Name = MembershipsVm.Name,
+        };
+
+        // TODO: include additional view model → entity mappings
     }
-    public static class GetUserActionSet
+
+    private void Commit(UserDto dto)
+    {
+        Entity = dto;
+        OriginalEntity = dto with { };
+    }
+
+    public static class SetValidityActionSet
     {
         public sealed class Action : IAction
         {
-            public string UserId { get; }
-            public Action(string userId)
+            public Type PanelType { get; }
+            public bool IsValid { get; }
+            public Action(Type panelType, bool isValid)
             {
-                UserId = userId;
+                PanelType = panelType;
+                IsValid = isValid;
             }
         }
         public sealed class Handler : ActionHandler<Action>
         {
             private readonly ILogger<UserModalState> _logger;
-            private UserModalState UserModalState => Store.GetState<UserModalState>();
+            private UserModalState State => Store.GetState<UserModalState>();
+            public Handler(
+                IStore store,
+                ILogger<UserModalState> logger)
+                : base(store)
+            {
+                _logger = logger;
+            }
+            public override async Task Handle(Action action, CancellationToken cancellationToken)
+            {
+                State.LastKnownValidityByType.TryGetValue(action.PanelType, out var existing);
+                if (existing != action.IsValid)
+                {
+                    State._lastKnownByType[action.PanelType] = action.IsValid;
+                    _logger.LogDebug("Set validity for {PanelType} to {IsValid}", action.PanelType.Name, action.IsValid);
+                }
+                await Task.CompletedTask; // Simulate async operation if needed
+            }
+        }
+    }
+    public static class BeginUserEditSessionActionSet
+    {
+        public sealed class Action : IAction
+        {
+            public Guid AccountId { get; }
+            public Guid LocationId { get; }
+
+            public Action(Guid accountId, Guid locationId)
+            {
+                AccountId = accountId;
+                LocationId = locationId;
+            }
+        }
+
+        public sealed class Handler : ActionHandler<Action>
+        {
             private readonly UserService _userService;
-            public Handler(IStore store, ILogger<UserModalState> logger, UserService userService) : base(store)
+            private readonly ILogger<UserModalState> _logger;
+            private UserModalState State => Store.GetState<UserModalState>();
+            public Handler(
+                IStore store,
+                ILogger<UserModalState> logger,
+                UserService userService)
+                : base(store)
             {
                 _logger = logger;
                 _userService = userService;
             }
+
             public override async Task Handle(Action action, CancellationToken cancellationToken)
             {
-                _logger.LogDebug("Fetching user with ID: {UserId}", action.UserId);
+                try
+                {
+                    _logger.LogDebug("Initializing UserEditSession for AccountId={AccountId}, LocationId={LocationId}",
+                        action.AccountId, action.LocationId);
+                    //await State.SetIsLoading(true);
+                    // Load DTO
+                    var dto = await _userService.GetUserAsync(action.AccountId.ToString());
 
-                // fetch from source
-                UserModalState.UserDto = await _userService.GetUserAsync(action.UserId);
+                    // Initialize state
+                    State.Commit(dto);
+                    State.MapDtoToViewModel();
 
-                // update view model(s)
-                UserModalState.MapDtoToViewModel();
-                await Task.CompletedTask;
+                }
+                catch (Exception ex)
+                {
+                    // put up toast here...
+                    _logger.LogError("Exception: {Message}", ex.Message);
+                }
+                finally
+                {
+                    //await State.SetIsLoading(false);
+                }
+            }
+        }
+    }
+
+    public static class SetIsLoadingActionSet
+    {
+        public sealed class Action : IAction
+        {
+            public bool IsLoading { get; private set; }
+            public Action(bool isLoading)
+            {
+                IsLoading = isLoading;
+            }
+        }
+
+        public sealed class Handler : ActionHandler<Action>
+        {
+            private readonly ILogger<UserModalState> _logger;
+            private UserModalState State => Store.GetState<UserModalState>();
+
+            public Handler(
+                IStore store,
+                ILogger<UserModalState> logger)
+                : base(store)
+            {
+                _logger = logger;
+            }
+
+            public override async Task Handle(Action action, CancellationToken cancellationToken)
+            {
+                State.IsLoading = action.IsLoading;
+                _logger.LogDebug("Set IsLoading to {IsLoading}", action.IsLoading);
+                await Task.CompletedTask; // Simulate async operation if needed
             }
         }
     }
     public static class SaveUserActionSet
     {
-        public sealed class Action : IAction
-        {
-            public Action() { }
-        }
+        public sealed class Action : IAction { }
+
         public sealed class Handler : ActionHandler<Action>
         {
-            private readonly ILogger<UserModalState> _logger;
-            private UserModalState UserModalState => Store.GetState<UserModalState>();
             private readonly UserService _userService;
-            public Handler(IStore store, ILogger<UserModalState> logger, UserService userService) : base(store)
+            private readonly ILogger<UserModalState> _logger;
+            private UserModalState State => Store.GetState<UserModalState>();
+
+            public Handler(
+                IStore store,
+                ILogger<UserModalState> logger,
+                UserService userService)
+                : base(store)
             {
                 _logger = logger;
                 _userService = userService;
             }
+
             public override async Task Handle(Action action, CancellationToken cancellationToken)
             {
-                _logger.LogDebug("Saving user with ID: {UserId}", UserModalState.UserDto?.LastName);
-                if (UserModalState.UserDto is null)
+                if (State.Entity is null)
                 {
-                    _logger.LogWarning("UserDto is null, cannot save user.");
+                    _logger.LogWarning("Entity is null – save aborted.");
                     return;
                 }
-                // create new dto from view model(s)
-                UserModalState.MapViewModelToDto();
-                // refresh dto and view model(s)
-                var dto = await _userService.SaveUserAsync(UserModalState.UserDto);
-                UserModalState.UserDto = dto;
-                UserModalState.MapDtoToViewModel();
-                await Task.CompletedTask;
+
+                _logger.LogDebug("Saving user {LastName}", State.Entity.LastName);
+
+                // Map VMs → Entity, then save
+                State.MapViewModelToDto();
+
+                var saved = await _userService.SaveUserAsync(State.Entity);
+
+                // Update state (Entity + Original + VM)
+                State.Commit(saved);
+                State.MapDtoToViewModel();
             }
         }
     }
 }
-

@@ -3,7 +3,7 @@
 @using BitUiNavigation.Client.Services
 @using Blazored.FluentValidation
 
-<SkeletonWhileBusy IsBusy="@(UserEditSessionState.IsLoading)">
+<SkeletonWhileBusy IsBusy="@(UserModalState.IsLoading)">
     <EditForm @ref="editForm" Model="@Model">
         <FluentValidationValidator />
         <BitTextField @bind-Value="Model.Name"
@@ -24,7 +24,7 @@
 </div>
 
 @code {
-    private UserEditSessionState UserEditSessionState => GetState<UserEditSessionState>();
-    protected override UserMembershipsViewModel Model => UserEditSessionState.MembershipsVm;
+    private UserModalState UserModalState => GetState<UserModalState>();
+    protected override UserMembershipsViewModel Model => UserModalState.MembershipsVm;
 
 }
