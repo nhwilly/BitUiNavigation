@@ -22,7 +22,57 @@
                            Size="BitSize.Small"
                            IconName="@BitIconName.ChromeClose"
                            Variant="BitVariant.Text" />
-                <BitNav IsEnabled="@(!ModalHostState.IsSaving)"
+                @foreach (var section in _activeModalProvider.BuildCustomNavSections(NavManager))
+                {
+                    <NavSection NavSectionDetail="@(section)">
+
+                    </NavSection>
+                @*     <BitText Typography="@BitTypography.Subtitle1">@(section.Title.ToUpper())</BitText>
+                    <BitNav IsEnabled="@(!ModalHostState.IsSaving)"
+                            Mode="BitNavMode.Automatic"
+                            Items="@(section.CustomNavItems)"
+                            Match="BitNavMatch.Wildcard"
+                            FitWidth
+                            Style="margin:0 1rem"
+                            Classes="NavStyles"
+                            NameSelectors="@(new BitNavNameSelectors<CustomNavItem>
+                            {
+                                Text = { Name = nameof(CustomNavItem.Text) },
+                                Url = { Name = nameof(CustomNavItem.Url) }
+                            })">
+                <ItemTemplate Context="item">
+                    <div class="nav-custom-item">
+                        <BitStack Horizontal VerticalAlign="BitAlignment.Center" Style="width:100%; gap:.5rem;">
+                            <!-- Left group -->
+                            <BitStack Horizontal VerticalAlign="BitAlignment.Center"
+                                      Style="flex:1 1 auto; min-width:0; gap:.5rem;">
+                                <BitIcon IconName="@item.IconName" />
+                                <BitText Style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    @item.Text
+                                </BitText>
+                            </BitStack>
+
+                                    <!-- Right endcap: fixed width to prevent width changes -->
+                                    <div style="width:20px; display:flex; justify-content:flex-end;">
+                                @if (!string.IsNullOrEmpty(item.ValidationIconName))
+                                        {
+                                            <BitIcon IconName="@item.ValidationIconName" Color="@BitColor.Error" />
+                                        }
+                                        else
+                                        {
+                                            <!-- invisible placeholder keeps width stable -->
+                                            <span style="width:16px; height:16px; display:inline-block; opacity:0;"></span>
+                                        }
+                                    </div>
+                                </BitStack>
+                            </div>
+                        </ItemTemplate>
+
+                    </BitNav> *@
+
+                }
+
+                @*             <BitNav IsEnabled="@(!ModalHostState.IsSaving)"
                         Mode="BitNavMode.Automatic"
                         Items="@_activeModalProvider.BuildCustomNavItems(NavManager)"
                         Match="BitNavMatch.Wildcard"
@@ -60,9 +110,9 @@
                                 </div>
                             </BitStack>
                         </div>
-                </ItemTemplate>
+                    </ItemTemplate>
 
-                </BitNav>
+                </BitNav> *@
             </BitStack>
 
             <div style="flex:1;display:flex;flex-direction:column;height:100%">

@@ -16,6 +16,7 @@ public interface IModalProvider
     string Height { get; }
     string MinWidth { get; }
     List<CustomNavItem> BuildCustomNavItems(NavigationManager nav);
+    List<NavSectionDetail> BuildCustomNavSections(NavigationManager nav);
 
     /// <summary>
     /// Maps the current panel key to a RouteData (component type + parameters) for the right panel.

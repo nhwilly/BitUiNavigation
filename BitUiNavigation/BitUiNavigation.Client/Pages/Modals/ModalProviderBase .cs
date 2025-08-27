@@ -51,6 +51,7 @@ public abstract class ModalProviderBase : IModalProvider
     //public abstract List<BitNavItem> BuildNavItems(NavigationManager nav);
 
     public abstract List<CustomNavItem> BuildCustomNavItems(NavigationManager nav);
+    public abstract List<NavSectionDetail> BuildCustomNavSections(NavigationManager nav);
 
     /// <summary>
     /// Create a URL for a specific panel within this modal.

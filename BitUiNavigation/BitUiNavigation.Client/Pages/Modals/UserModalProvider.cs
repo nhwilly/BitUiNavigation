@@ -26,6 +26,27 @@ public sealed class UserModalProvider : ModalProviderBase
         [nameof(UserProfilePanel)] = typeof(UserProfilePanel)
     };
 
+    public override List<NavSectionDetail> BuildCustomNavSections(NavigationManager nav)
+    {
+        var sections = new List<NavSectionDetail>();
+        sections.Add(new NavSectionDetail()
+        {
+            Title = "Settings",
+            IconName = BitIconName.Settings,
+            CustomNavItems =
+                [
+                    new() { Key = nameof(UserMembershipsPanel), Text = "Memberships", IconName = BitIconName.UserEvent, Url = BuildPanelUrl(nav, nameof(UserMembershipsPanel)) },
+                    new() { Key = nameof(UserProfilePanel), Text = "Profile", IconName = BitIconName.Contact, Url = BuildPanelUrl(nav, nameof(UserProfilePanel)) }
+                ]
+        });
+
+        foreach (var section in sections)
+        {
+            DecorateCustomNavItemsWithValidationIndicators(section.CustomNavItems);
+        }
+        return sections;
+    }
+
     public override List<CustomNavItem> BuildCustomNavItems(NavigationManager nav)
     {
         var items = new List<CustomNavItem>
