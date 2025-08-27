@@ -48,5 +48,4 @@ public sealed class UserModalProvider : ModalProviderBase
         await ModalHostState.SetTitle(State.ProviderTitle, ct);
         await State.SetIsLoading(false, ct);
     }
-
 }
