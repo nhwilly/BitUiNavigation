@@ -56,21 +56,24 @@ public sealed class UserModalProvider : ModalProviderBase
     }
     private void DecorateCustomNavItemsWithValidationIndicators(List<CustomNavItem> items)
     {
-        // Quick local snapshot to avoid multiple property calls
-        var lastKnown = State.LastKnownValidityByType;
+        // Snapshot to avoid repeated state reads
+        var host = Store.GetState<ModalHostState>();
+
+        // Get this provider's panel-validity map, if any
+        host.Validity.TryGetValue(ProviderName, out var perPanel);
 
         foreach (var item in items)
         {
-            var key = item?.Key ?? "";
-            if (item is null || string.IsNullOrWhiteSpace(key) || !PanelMap.TryGetValue(key, out var panelType))
-                continue;
+            if (item is null || string.IsNullOrWhiteSpace(item.Key)) continue;
 
-            if (lastKnown.TryGetValue(panelType, out var isValid) && isValid == false)
+            var panelKey = UrlExtensions.Normalize(item.Key, DefaultPanel);
+
+            // Safe: only enters when perPanel is not null AND the key exists.
+            if (perPanel?.TryGetValue(panelKey, out var pv) == true && pv is { IsValid: false })
             {
-                // Use a clear error/status icon; pick whatever Bit icon suits your design
-                item.ValidationIconName = BitIconName.StatusErrorFull;
+                item.ValidationIconName = BitIconName.CriticalErrorSolid;
 
-                // Accessibility / hinting (optional)
+                // Optional a11y/tooltip text
                 item.Title = string.IsNullOrWhiteSpace(item.Title)
                     ? "Has validation errors"
                     : $"{item.Title} (has errors)";
@@ -78,8 +81,9 @@ public sealed class UserModalProvider : ModalProviderBase
             }
             else
             {
-                // Leave the normal icon alone for valid/unknown
-                // (If you want unknown to show a warning, you can add a branch here.)
+                // leave as-is for valid/unknown
+                // If you want to clear or set an "ok" icon, do it here.
+                // item.ValidationIconName = null;
             }
         }
     }

@@ -9,19 +9,19 @@
 @if (_activeModalProvider is not null)
 {
     <BitModal IsOpen="true"
-              OnOverlayClick="@Close"
-              OnDismiss="@Close"
+              OnOverlayClick="@TryCloseAsync"
+              OnDismiss="@TryCloseAsync"
               Classes="@ClassStyles">
 
         <BitStack Horizontal Gap="0rem" Style="height: 100%">
             <BitStack Class="nav-panel" FitWidth Style="border-top-left-radius:20px; border-bottom-left-radius:20px;">
                 <BitButton Style="margin: 1rem 0 0 1rem"
                            Color="BitColor.Tertiary"
-                           OnClick="@Close"
+                           OnClick="@TryCloseAsync"
                            IconOnly
                            Size="BitSize.Small"
                            IconName="@BitIconName.ChromeClose"
-                           Variant="BitVariant.Text"/>
+                           Variant="BitVariant.Text" />
                 <BitNav IsEnabled="@(!ModalHostState.IsSaving)"
                         Mode="BitNavMode.Automatic"
                         Items="@_activeModalProvider.BuildCustomNavItems(NavManager)"
@@ -30,18 +30,37 @@
                         Style="margin:0 1rem"
                         Classes="NavStyles"
                         NameSelectors="@(new BitNavNameSelectors<CustomNavItem>
-                                       {
-                                           Text = { Name = nameof(CustomNavItem.Text) },
-                                           Url = { Name = nameof(CustomNavItem.Url) }
-                                       })">
-                    <ItemTemplate Context="item">
-                        <div class="nav-custom-item">
-                            <BitIcon IconName="@item.IconName">
-                            </BitIcon>
-                            <BitText>@item.Text</BitText>
-                            <BitIcon IconName="@item.ValidationIconName"></BitIcon>
+                        {
+                            Text = { Name = nameof(CustomNavItem.Text) },
+                            Url = { Name = nameof(CustomNavItem.Url) }
+                        })">
+                <ItemTemplate Context="item">
+                    <div class="nav-custom-item">
+                        <BitStack Horizontal VerticalAlign="BitAlignment.Center" Style="width:100%; gap:.5rem;">
+                            <!-- Left group -->
+                            <BitStack Horizontal VerticalAlign="BitAlignment.Center"
+                                      Style="flex:1 1 auto; min-width:0; gap:.5rem;">
+                                <BitIcon IconName="@item.IconName" />
+                                <BitText Style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    @item.Text
+                                </BitText>
+                            </BitStack>
+
+                                <!-- Right endcap: fixed width to prevent width changes -->
+                                <div style="width:20px; display:flex; justify-content:flex-end;">
+                                @if (!string.IsNullOrEmpty(item.ValidationIconName))
+                                    {
+                                        <BitIcon IconName="@item.ValidationIconName" Color="@BitColor.Error" />
+                                    }
+                                    else
+                                    {
+                                        <!-- invisible placeholder keeps width stable -->
+                                        <span style="width:16px; height:16px; display:inline-block; opacity:0;"></span>
+                                    }
+                                </div>
+                            </BitStack>
                         </div>
-                    </ItemTemplate>
+                </ItemTemplate>
 
                 </BitNav>
             </BitStack>
@@ -55,11 +74,11 @@
                         <BitText Style="font-weight:600;font-size:16px;">
                             @ModalHostState.Title
                         </BitText>
-                        <ModelStateStatus/>
+                        <ModelStateStatus />
                     </BitStack>
                 </div>
 
-                <BitSeparator Border="BitColorKind.Tertiary"/>
+                <BitSeparator Border="BitColorKind.Tertiary" />
 
                 <div style="flex:1;overflow:hidden;border-bottom-right-radius:20px;position:relative;">
                     <div style="height:100%;overflow-y:auto;">
@@ -67,7 +86,7 @@
                             <CascadingValue TValue="@ModalContext" Value="@_ctx">
                                 <RouteView @key="_panelName"
                                            RouteData="@_activeModalProvider.BuildRouteData(_panelName)"
-                                           DefaultLayout="@typeof(EmptyLayout)"/>
+                                           DefaultLayout="@typeof(EmptyLayout)" />
                             </CascadingValue>
                         </div>
                     </div>
@@ -213,14 +232,19 @@
             StateHasChanged();
     }
 
-    private void Close()
+    private async Task TryCloseAsync()
     {
         if (!CanCloseActiveProvider())
         {
-            // show a toast/snackbar/banner as you like
+            // show a toast/snack bar/banner as you like
             return;
         }
-
+        // Optional provider-specific hook (non-blocking if you don't need it)
+        if (_activeModalProvider is IBeforeCloseHook hook)
+        {
+            var ok = await hook.OnBeforeCloseAsync(CancellationToken);
+            if (!ok) return;
+        }
         // proceed with existing close logic...
         if (!string.IsNullOrEmpty(_preOpenUrl))
         {

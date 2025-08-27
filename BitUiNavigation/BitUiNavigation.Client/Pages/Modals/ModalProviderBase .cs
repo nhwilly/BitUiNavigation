@@ -75,43 +75,43 @@ public abstract class ModalProviderBase : IModalProvider
     /// </summary>
     protected virtual bool MissingPanelValidityBlocksClose => false;
 
-    public virtual Task<bool> CanCloseAsync(CancellationToken ct)
-    {
-        var canClose = true;
+    public virtual  Task<bool> CanCloseAsync(CancellationToken ct)=> Task.FromResult(true);  
+    //{
+    //    var canClose = true;
 
-        // Provider -> (Panel -> Validity)
-        HostState.Validity.TryGetValue(ProviderName, out var perPanel);
+    //    // Provider -> (Panel -> Validity)
+    //    HostState.Validity.TryGetValue(ProviderName, out var perPanel);
 
-        foreach (var kv in PanelMap)
-        {
-            var panelKey = Normalize(kv.Key, DefaultPanel);
+    //    foreach (var kv in PanelMap)
+    //    {
+    //        var panelKey = Normalize(kv.Key, DefaultPanel);
 
-            if (perPanel is not null && perPanel.TryGetValue(panelKey, out var pv))
-            {
-                _logger.LogDebug(
-                    "Modal close check: Provider={Provider} Panel={Panel} Valid={Valid} Errors={Errors}",
-                    ProviderName, panelKey, pv.IsValid, pv.ErrorCount);
+    //        if (perPanel is not null && perPanel.TryGetValue(panelKey, out var pv))
+    //        {
+    //            _logger.LogDebug(
+    //                "Modal close check: Provider={Provider} Panel={Panel} Valid={Valid} Errors={Errors}",
+    //                ProviderName, panelKey, pv.IsValid, pv.ErrorCount);
 
-                if (!pv.IsValid)
-                {
-                    canClose = false; // block close if any panel invalid
-                }
-            }
-            else
-            {
-                _logger.LogDebug(
-                    "Modal close check: Provider={Provider} Panel={Panel} has no validity entry.",
-                    ProviderName, panelKey);
+    //            if (!pv.IsValid)
+    //            {
+    //                canClose = false; // block close if any panel invalid
+    //            }
+    //        }
+    //        else
+    //        {
+    //            _logger.LogDebug(
+    //                "Modal close check: Provider={Provider} Panel={Panel} has no validity entry.",
+    //                ProviderName, panelKey);
 
-                if (MissingPanelValidityBlocksClose)
-                {
-                    canClose = false;
-                }
-            }
-        }
+    //            if (MissingPanelValidityBlocksClose)
+    //            {
+    //                canClose = false;
+    //            }
+    //        }
+    //    }
 
-        return Task.FromResult(canClose);
-    }
+    //    return Task.FromResult(canClose);
+    //}
 
     // Optional: if you later want a nav builder that decorates items with validity
     public virtual Task<List<BitNavItem>> BuildNavItemsWithValidationAsync(NavigationManager nav, CancellationToken ct)
