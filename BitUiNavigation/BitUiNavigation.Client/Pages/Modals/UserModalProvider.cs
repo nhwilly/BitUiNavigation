@@ -77,17 +77,6 @@ public sealed class UserModalProvider : ModalProviderBase
         return sections;
     }
 
-    public override List<CustomNavItem> BuildCustomNavItems(NavigationManager nav)
-    {
-        var items = new List<CustomNavItem>
-        {
-            new() { Key = nameof(UserMembershipsPanel), Text = "Memberships", IconName = BitIconName.UserEvent, Url = BuildPanelUrl(nav, nameof(UserMembershipsPanel)) },
-            new() { Key = nameof(UserProfilePanel), Text = "Profile", IconName = BitIconName.Contact, Url = BuildPanelUrl(nav, nameof(UserProfilePanel)) }
-        };
-        DecorateCustomNavItemsWithValidationIndicators(items);
-        return items;
-    }
-
     public override async Task OnModalOpeningAsync(CancellationToken ct)
     {
         await State.SetIsLoading(true, ct);
@@ -100,8 +89,3 @@ public sealed class UserModalProvider : ModalProviderBase
         await State.SetIsLoading(false, ct);
     }
 }
-public sealed record UserProviderAggregate(
-Guid AccountId,
-Guid LocationId
-// add any other cross-panel facts you need here
-);

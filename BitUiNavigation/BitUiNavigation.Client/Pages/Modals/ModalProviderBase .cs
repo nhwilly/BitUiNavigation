@@ -47,12 +47,6 @@ public abstract class ModalProviderBase : IModalProvider
     /// </summary>
     public virtual Task OnModalOpeningAsync(CancellationToken ct) => Task.CompletedTask;
 
-    /// <summary>
-    /// Build nav items for this provider.
-    /// </summary>
-    //public abstract List<BitNavItem> BuildNavItems(NavigationManager nav);
-
-    public abstract List<CustomNavItem> BuildCustomNavItems(NavigationManager nav);
     public abstract List<NavSectionDetail> BuildCustomNavSections(NavigationManager nav);
 
     /// <summary>

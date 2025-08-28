@@ -15,7 +15,7 @@ public interface IModalProvider
     string Width { get; }
     string Height { get; }
     string MinWidth { get; }
-    List<CustomNavItem> BuildCustomNavItems(NavigationManager nav);
+
     List<NavSectionDetail> BuildCustomNavSections(NavigationManager nav);
 
     /// <summary>
