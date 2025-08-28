@@ -22,7 +22,7 @@
                            Size="BitSize.Small"
                            IconName="@BitIconName.ChromeClose"
                            Variant="BitVariant.Text" />
-                <NavSections NavSectionDetails="@(_activeModalProvider.BuildCustomNavSections(NavManager))"/>
+                <NavSections NavSectionDetails="@(_activeModalProvider.BuildCustomNavSections(NavManager))" />
             </BitStack>
 
             <div style="flex:1;display:flex;flex-direction:column;height:100%">
@@ -39,6 +39,21 @@
                 </div>
 
                 <BitSeparator Border="BitColorKind.Tertiary" />
+
+                @if (_providerValidationMessages?.Count > 0)
+                {
+                    <BitText Style="padding:0 1rem; font-weight:600;" Color="@BitColor.Info">
+                        Please resolve these issues:
+                    </BitText>
+                    <BitMessage Multiline Style="width: auto; margin: 0rem 1rem;" Color="@BitColor.Error">
+                        <ul style="margin:0; padding-left:1rem;">
+                            @foreach (var msg in _providerValidationMessages)
+                            {
+                                <li>@msg</li>
+                            }
+                        </ul>
+                    </BitMessage>
+                }
 
                 <div style="flex:1;overflow:hidden;border-bottom-right-radius:20px;position:relative;">
                     <div style="height:100%;overflow-y:auto;">
@@ -81,7 +96,7 @@
     private IModalPanel? _panel;
     private bool _needsSessionInit = false;
     private bool MissingPanelValidityBlocksClose => false; // flip to true if you want stricter policy
-
+    private List<string>? _providerValidationMessages;
     private ModalHostState ModalHostState => GetState<ModalHostState>();
 
     private ModalContext _ctx => new()
@@ -205,6 +220,22 @@
             var ok = await hook.OnBeforeCloseAsync(CancellationToken);
             if (!ok) return;
         }
+
+        if (_activeModalProvider is not null)
+        {
+            var (isValid, messages) = await _activeModalProvider.ValidateProviderAsync(CancellationToken);
+            if (!isValid)
+            {
+                // cache messages for UI and block close
+                _providerValidationMessages = messages?.ToList() ?? [];
+                StateHasChanged();
+                return;
+            }
+
+            // clear any prior provider errors
+            _providerValidationMessages = null;
+        }
+
         // proceed with existing close logic...
         if (!string.IsNullOrEmpty(_preOpenUrl))
         {

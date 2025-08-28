@@ -27,4 +27,6 @@ public interface IModalProvider
 
     Task<bool> CanCloseAsync(CancellationToken ct);
 
+    Task<(bool IsValid, IReadOnlyList<string> Messages)> ValidateProviderAsync(CancellationToken ct);
+
 }

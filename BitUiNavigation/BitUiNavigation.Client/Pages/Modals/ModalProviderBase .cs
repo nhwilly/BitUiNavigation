@@ -17,6 +17,8 @@ public abstract class ModalProviderBase : IModalProvider
 
     protected readonly IStore Store;
     protected readonly ILogger _logger;
+    public virtual Task<(bool, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
+    => Task.FromResult<(bool, IReadOnlyList<string>)>((true, Array.Empty<string>()));
 
     protected ModalProviderBase(IStore store, ILogger logger)
     {
