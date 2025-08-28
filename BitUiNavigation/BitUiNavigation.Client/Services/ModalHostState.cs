@@ -1,4 +1,5 @@
-﻿using TimeWarp.State;
+﻿using BitUiNavigation.Client.Pages.Modals;
+using TimeWarp.State;
 
 namespace BitUiNavigation.Client.Services;
 
@@ -13,6 +14,8 @@ public sealed partial class ModalHostState : State<ModalHostState>
     public bool IsSaved { get; private set; }
     public bool IsFetching { get; private set; }
     public bool IsReady { get; private set; }
+
+    public bool CanSave { get; private set; }
     public string Title { get; private set; } = string.Empty;
     /// <summary>
     /// True if every expected panel for the provider is valid.
@@ -35,6 +38,36 @@ public sealed partial class ModalHostState : State<ModalHostState>
             if (!pv.IsValid) return false;
         }
         return true;
+    }
+    public record HeaderProjection(
+       bool CanSave,
+       bool CanReset,
+       bool IsDirty,
+       bool IsBusy // saving or resetting
+   );
+
+    public HeaderProjection Header { get; private set; } = new(false, false, false, false);
+
+    // NEW: Reducers to update the header snapshot.
+    public void SetHeaderProjection(HeaderProjection projection)
+    {
+        Header = projection;
+    }
+
+    // Optional helper: convenience setter
+    public void UpdateHeader(IModalSaveReset? src)
+    {
+        if (src is null)
+        {
+            Header = new(false, false, false, false);
+            return;
+        }
+        Header = new(
+            CanSave: src.CanSave,
+            CanReset: src.CanReset,
+            IsDirty: src.IsDirty,
+            IsBusy: src.IsSaving || src.IsResetting
+        );
     }
 
     public static class SetValidityActionSet
@@ -75,6 +108,33 @@ public sealed partial class ModalHostState : State<ModalHostState>
             }
         }
     }
+    public static class SetCanSaveActionSet
+    {
+        public sealed class Action : IAction
+        {
+            public bool CanSave { get; }
+            public Action(bool canSave)
+            {
+                CanSave = canSave;
+            }
+        }
+        public sealed class Handler : ActionHandler<Action>
+        {
+            private readonly ILogger<ModalHostState> _logger;
+            private ModalHostState ModalHostState => Store.GetState<ModalHostState>();
+            public Handler(IStore store, ILogger<ModalHostState> logger) : base(store)
+            {
+                _logger = logger;
+            }
+            public override async Task Handle(Action action, CancellationToken cancellationToken)
+            {
+                _logger.LogDebug("SetCanSave CanSave={CanSave}", action.CanSave);
+                ModalHostState.Header = ModalHostState.Header with { CanSave = action.CanSave };
+                await Task.CompletedTask;
+            }
+        }
+    }
+
     public static class SetTitleActionSet
     {
         public sealed class Action : IAction

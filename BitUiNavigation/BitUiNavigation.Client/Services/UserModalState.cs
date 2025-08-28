@@ -9,23 +9,33 @@ public sealed partial class UserModalState : State<UserModalState>
 
     public UserProfileViewModel ProfileVm { get; private set; } = new();
     public UserMembershipsViewModel MembershipsVm { get; private set; } = new();
+    private UserProfileViewModel ProfileVmOriginal { get; set; } = new();
+    private UserMembershipsViewModel MembershipsVmOriginal { get; set; } = new();
 
     private readonly Dictionary<Type, bool> _lastKnownByType = [];
     public IReadOnlyDictionary<Type, bool> LastKnownValidityByType => _lastKnownByType;
 
-    // todo: originals for all views so we can see if they changed.
-    // this also allows us to reset the view models to the original state.
-    // then isDirty checks all view models to see if any have changed.
-
+    public string ProviderTitle => Entity is null ? "User" : $"User: {Entity.FirstName} {Entity.LastName}";
     public override void Initialize() { }
+
+    public bool CanSave => IsDirty;
+    public bool CanReset => IsDirty;
+    public bool IsSaving => true;
+    public bool IsResetting => true;
+    public bool SaveOnCloseEnabled => true;
 
     public bool IsLoading { get; private set; }
 
-    public bool IsDirty => Entity is not null &&
-                           OriginalEntity is not null &&
-                           Entity != OriginalEntity;
+    public bool IsDirty
+    {
+        get
+        {
+            return
+                ProfileVm != ProfileVmOriginal || 
+                MembershipsVm != MembershipsVmOriginal;
+        }
+    }
 
-    public string ProviderTitle => Entity is null ? "User" : $"User: {Entity.FirstName} {Entity.LastName}";
     private void MapDtoToViewModel()
     {
         if (Entity is null) return;

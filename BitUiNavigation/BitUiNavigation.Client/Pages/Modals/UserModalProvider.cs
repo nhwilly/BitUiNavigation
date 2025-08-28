@@ -6,20 +6,24 @@ using Microsoft.AspNetCore.Components;
 using TimeWarp.State;
 
 namespace BitUiNavigation.Client.Pages.Modals;
-public sealed class UserModalProvider : ModalProviderBase
+public sealed class UserModalProvider : ModalProviderBase, IModalSaveReset
 {
     private readonly IValidator<UserProviderAggregate> _providerValidator;
 
     [Parameter, SupplyParameterFromQuery] public Guid AccountId { get; set; }
     [Parameter, SupplyParameterFromQuery] public Guid LocationId { get; set; }
+
     public override string ProviderName => "User";
     public override string DefaultPanel => nameof(UserMembershipsPanel);
-    public override string Width => "900px";
-    public override string Height => "640px";
     private UserModalState State => Store.GetState<UserModalState>();
     private ModalHostState ModalHostState => Store.GetState<ModalHostState>();
 
-    // This is for testing an aggregate of cross-panel facts.
+    public bool CanSave => State.CanSave;
+    public bool CanReset => State.CanReset;
+    public bool IsDirty => State.IsDirty;
+    public bool IsSaving => State.IsSaving;
+    public bool IsResetting => State.IsResetting;
+    public bool SaveOnCloseEnabled => State.SaveOnCloseEnabled;
 
     public UserModalProvider(
         IStore store,
@@ -28,27 +32,6 @@ public sealed class UserModalProvider : ModalProviderBase
             : base(store, logger)
     {
         _providerValidator = providerValidator;
-    }
-    public override async Task<(bool, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
-    {
-        // 1) Build the aggregate snapshot from your current state
-        var agg = new UserProviderAggregate(
-            AccountId: AccountId,
-            LocationId: LocationId
-        );
-
-        // 2) Run FluentValidation
-        var result = await _providerValidator.ValidateAsync(agg, ct);
-
-        // 3) Return (bool, messages)
-        if (result.IsValid) return (true, Array.Empty<string>());
-
-        var messages = result.Errors
-            .Select(e => e.ErrorMessage)
-            .Where(m => !string.IsNullOrWhiteSpace(m))
-            .ToArray();
-
-        return (false, messages);
     }
     protected override Dictionary<string, Type> PanelMap { get; } = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -88,4 +71,51 @@ public sealed class UserModalProvider : ModalProviderBase
         await ModalHostState.SetTitle(State.ProviderTitle, ct);
         await State.SetIsLoading(false, ct);
     }
+    public async Task<bool> SaveAsync(CancellationToken ct)
+    {
+        await State.SetIsLoading(true, ct);
+        await State.SaveUser(ct);
+        await State.SetIsLoading(false, ct);
+        return true;
+    }
+
+    public async Task ResetAsync(CancellationToken ct)
+    {
+
+        // (A) Method on state:
+        // await Session.ResetAsync(ct);
+
+        // (B) Dispatch an action:
+        // await Store.DispatchAsync(new UserEditSessionState.ResetAction(), ct);
+
+        await Task.Yield();
+    }
+
+    public override async Task<(bool, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
+    {
+        // 1) Build the aggregate snapshot from your current state
+        var agg = new UserProviderAggregate(
+            AccountId: AccountId,
+            LocationId: LocationId
+        );
+
+        // 2) Run FluentValidation
+        var result = await _providerValidator.ValidateAsync(agg, ct);
+
+        // 3) Return (bool, messages)
+        if (result.IsValid) return (true, Array.Empty<string>());
+
+        var messages = result.Errors
+            .Select(e => e.ErrorMessage)
+            .Where(m => !string.IsNullOrWhiteSpace(m))
+            .ToArray();
+
+        return (false, messages);
+    }
+
+    Task IModalSaveReset.SaveAsync(CancellationToken ct)
+    {
+        return SaveAsync(ct);
+    }
 }
+
