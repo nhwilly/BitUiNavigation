@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Components;
 using TimeWarp.State;
 
 namespace BitUiNavigation.Client.Pages.Modals;
-public sealed class UserModalProvider : ModalProviderBase, IModalSaveReset
+public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset
 {
     private readonly IValidator<UserProviderAggregate> _providerValidator;
 
@@ -15,15 +15,17 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSaveReset
 
     public override string ProviderName => "User";
     public override string DefaultPanel => nameof(UserMembershipsPanel);
-    private UserModalState State => Store.GetState<UserModalState>();
-    private ModalHostState ModalHostState => Store.GetState<ModalHostState>();
+    private UserModalState UserState => Store.GetState<UserModalState>();
+    private ModalHostState ModalState => Store.GetState<ModalHostState>();
+    public override bool AutoSaveOnNavigate => true; // return user preference or override it.
+    public bool CanSave => UserState.CanSave;
+    public bool CanReset => UserState.CanReset;
+    public bool IsResetting => UserState.IsResetting;
+    public bool IsInitializing => UserState.IsLoading;
+    public bool HasChanged => UserState.HasChanged;
+    public bool ShowResultDialog => ModalState.ShowResult;
 
-    public bool CanSave => State.CanSave;
-    public bool CanReset => State.CanReset;
-    public bool IsDirty => State.IsDirty;
-    public bool IsSaving => State.IsSaving;
-    public bool IsResetting => State.IsResetting;
-    public bool SaveOnCloseEnabled => State.SaveOnCloseEnabled;
+    public bool SaveOnCloseEnabled => UserState.SaveOnCloseEnabled;
 
     public UserModalProvider(
         IStore store,
@@ -38,6 +40,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSaveReset
         [nameof(UserMembershipsPanel)] = typeof(UserMembershipsPanel),
         [nameof(UserProfilePanel)] = typeof(UserProfilePanel)
     };
+
 
     public override List<NavSectionDetail> BuildCustomNavSections(NavigationManager nav)
     {
@@ -62,21 +65,15 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSaveReset
 
     public override async Task OnModalOpeningAsync(CancellationToken ct)
     {
-        await State.SetIsLoading(true, ct);
+        await UserState.SetIsLoading(true, ct);
         await Task.CompletedTask;
     }
     public override async Task OnModalOpenedAsync(CancellationToken ct)
     {
-        await State.BeginUserEditSession(AccountId, LocationId, ct);
-        await ModalHostState.SetTitle(State.ProviderTitle, ct);
-        await State.SetIsLoading(false, ct);
+        await UserState.BeginUserEditSession(AccountId, LocationId, ct);
+        await ModalState.SetTitle(UserState.ProviderTitle, ct);
+        await UserState.SetIsLoading(false, ct);
     }
-    public async Task<bool> SaveAsync(CancellationToken ct)
-    {
-        await State.SetIsLoading(true, ct);
-        await State.SaveUser(ct);
-        await State.SetIsLoading(false, ct);
-        return true;
     }
 
     public async Task ResetAsync(CancellationToken ct)
@@ -113,9 +110,13 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSaveReset
         return (false, messages);
     }
 
-    Task IModalSaveReset.SaveAsync(CancellationToken ct)
+    public async Task SaveAsync(CancellationToken ct)
     {
-        return SaveAsync(ct);
+        await UserState.SetIsLoading(true, ct);
+        await UserState.SaveUser(ct);
+        await UserState.SetIsLoading(false, ct);
+        if (ShowResultDialog)
+            await ModalState.ShowResultModal(true, "title", "message", ct);
     }
 }
 

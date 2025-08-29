@@ -3,11 +3,16 @@
 @inject IModalProviderSource ModalProviderSource
 @inject ILogger<ModalHost> Logger
 @implements IDisposable
-@using BitUiNavigation.Client.Services
-@using static UrlExtensions
 
 @if (_activeModalProvider is not null)
 {
+    <BitDialog IsBlocking  IsOpen="@(_state.ShowResult)">
+        <ChildContent>
+            <div>
+                shit
+            </div>
+        </ChildContent>
+    </BitDialog>
     <BitModal IsOpen="true"
               OnOverlayClick="@TryCloseAsync"
               OnDismiss="@TryCloseAsync"
@@ -120,8 +125,6 @@
     private bool MissingPanelValidityBlocksClose => false; // flip to true if you want stricter policy
     private List<string>? _providerValidationMessages;
     private ModalHostState _state => GetState<ModalHostState>();
-    private IModalSaveReset? _saveReset;
-    // private ModalProviderBase? _activeProviderBase;  NEW
 
     private ModalContext _ctx => new()
     {
@@ -138,16 +141,12 @@
     private bool _showDialogSecondary;
     private EventCallback _onDialogPrimary;
     private EventCallback _onDialogSecondary;
-    // CHANGED: Hook into your existing navigation/provider activation path to call SetActiveProvider(...)
-    // e.g., after you determine which provider is active from the query string.
 
-    // NEW: Save click handler
     private async Task OnSaveClicked()
     {
-        if (_activeModalProvider is null || _saveReset is null) return;
-        if (!_saveReset.IsDirty) return;
+        if (_activeModalProvider is not IModalSave modalSave) return;
 
-        var (isValid, _) = await _activeProviderBase.ValidateProviderAsync(CancellationToken);
+        var (isValid, _) = await _activeModalProvider.ValidateProviderAsync(CancellationToken);
         if (!isValid)
         {
             ShowInfoDialog(
@@ -158,43 +157,40 @@
             return;
         }
 
-        var ok = await _saveReset.SaveAsync(CancellationToken);
-        if (!ok)
-        {
-            ShowInfoDialog(
-                title: "Unable to save",
-                body: "There was a problem saving your changes. Please try again.",
-                primaryText: "OK"
-            );
-        }
+        await modalSave.SaveAsync(CancellationToken);
+        // if (!ok)
+        // {
+        //     ShowInfoDialog(
+        //         title: "Unable to save",
+        //         body: "There was a problem saving your changes. Please try again.",
+        //         primaryText: "OK"
+        //     );
+        // }
         // No header projection to update here; buttons hide automatically when IsDirty flips in provider state.
     }
 
     private async Task OnResetClicked()
     {
-        if (_saveReset is null) return;
-        await _saveReset.ResetAsync(CancellationToken);
-        // After reset, provider state should emit IsDirty=false via its TimeWarp.State; header will hide the buttons.
-        StateHasChanged();
+        if (_activeModalProvider is not IModalReset modalReset) return;
+        await modalReset.ResetAsync(CancellationToken);
     }
 
     private async Task DiscardAndCloseAsync()
     {
-        if (_saveReset is not null)
-            await _saveReset.ResetAsync(CancellationToken);
+        // if (_saveReset is not null)
+        //     await _saveReset.ResetAsync(CancellationToken);
 
         if (!string.IsNullOrEmpty(_preOpenUrl))
             NavManager.NavigateTo(_preOpenUrl!, replace: true);
+
         else if (_activeModalProvider is not null)
             NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(_activeModalProvider.ProviderName, (string?)null), replace: true);
 
         _preOpenUrl = null;
         _activeModalProvider = null;
-        _activeProviderBase = null;   // NEW
-        _saveReset = null;             // NEW
-
         _isDialogOpen = false;
         StateHasChanged();
+        await Task.CompletedTask;
     }
 
 
@@ -236,13 +232,11 @@
         StateHasChanged();
     }
 
-    private void SetActiveProvider(IModalProvider? provider)
-    {
-        _activeModalProvider = provider;
-        // _activeProviderBase = provider as ModalProviderBase; NEW
-        _saveReset = provider as IModalSaveReset;   // NEW
-        StateHasChanged();
-    }
+    // private void SetActiveProvider(IModalProvider? provider)
+    // {
+    //     _activeModalProvider = provider;
+    //     StateHasChanged();
+    // }
 
 
 
@@ -276,8 +270,7 @@
             .ArePanelsValid(providerKey, expectedPanelKeys, MissingPanelValidityBlocksClose);
     }
 
-    private void RegisterPanel(IModalPanel panel)
-        => _panel = panel;
+    private void RegisterPanel(IModalPanel panel) => _panel = panel;
 
     private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
     {
@@ -350,6 +343,8 @@
 
     private async Task TryCloseAsync()
     {
+        if (_activeModalProvider is not IModalSave modalSave) return;
+
         if (!CanCloseActiveProvider())
         {
             // show a toast/snack bar/banner as you like
@@ -386,23 +381,23 @@
         // }
 
         // NEW: Save-or-discard flow
-        if (_saveReset?.IsDirty == true)
+        if (modalSave.HasChanged)
         {
-            if (_saveReset.SaveOnCloseEnabled)
+            if (_activeModalProvider is not ISupportsSaveOnNavigate modalSaveOnNavigate)
             {
                 var (valid, _) = await _activeModalProvider!.ValidateProviderAsync(CancellationToken);
                 if (valid)
                 {
-                    var saved = await _saveReset.SaveAsync(CancellationToken);
-                    if (!saved)
-                    {
-                        ShowInfoDialog(
-                            title: "Unable to save before closing",
-                            body: "There was a problem saving your changes. Please try again.",
-                            primaryText: "OK"
-                        );
-                        return; // keep modal open
-                    }
+                    await modalSave.SaveAsync(CancellationToken);
+                    // if (!saved)
+                    // {
+                    //     ShowInfoDialog(
+                    //         title: "Unable to save before closing",
+                    //         body: "There was a problem saving your changes. Please try again.",
+                    //         primaryText: "OK"
+                    //     );
+                    //     return; keep modal open
+                    // }
                 }
                 else
                 {
@@ -449,8 +444,8 @@
         _activeModalProvider = null;
         _panelName = string.Empty;
         _panel = null;
-        _activeProviderBase = null;   // NEW
-        _saveReset = null;             // NEW
+        // _activeProviderBase = null;   NEW
+        // _saveReset = null;             NEW
 
     }
 

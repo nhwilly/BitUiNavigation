@@ -7,10 +7,12 @@ public interface IModalProvider
 {
     string ProviderName { get; }
     string DefaultPanel { get; }
-    IReadOnlyList<string> ExpectedPanelKeys { get; }
     string Width { get; }
     string Height { get; }
     string MinWidth { get; }
+    string MaxWidth { get; }
+
+    IReadOnlyList<string> ExpectedPanelKeys { get; }
 
     List<NavSectionDetail> BuildCustomNavSections(NavigationManager nav);
 

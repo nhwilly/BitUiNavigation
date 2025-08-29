@@ -15,7 +15,7 @@
         ModalHostState.IsSaving ? "Saving..."
         : ModalHostState.IsSaved ? "Saved"
         : ModalHostState.IsChanged ? "Unsaved changes"
-        : ModalHostState.IsFetching ? "Fetching..."
+        : ModalHostState.IsInitializing ? "Fetching..."
         : string.Empty;
 
     private RenderFragment? StatusIcon => ModalHostState switch
@@ -23,7 +23,7 @@
         { IsSaving: true } => @<BitIcon IconName="Sync" />,
         { IsSaved: true } => @<BitIcon IconName="CheckMark" />,
         { IsChanged: true } => @<BitIcon IconName="Edit" />,
-        { IsFetching: true } => @<BitIcon Style="margin: 0px; padding:0px;" IconName="@BitIconName.Process" />,
+        { IsInitializing: true } => @<BitIcon Style="margin: 0px; padding:0px;" IconName="@BitIconName.Process" />,
     _ => @<BitIcon/>
     };
     /*

@@ -1,9 +1,7 @@
 ﻿using Bit.BlazorUI;
 using BitUiNavigation.Client.Pages.UserProfile;
-using BitUiNavigation.Client.Services;
 using Microsoft.AspNetCore.Components;
 using TimeWarp.State;
-using static BitUiNavigation.Client.Pages.Modals.UrlExtensions;
 
 namespace BitUiNavigation.Client.Pages.Modals;
 
@@ -12,14 +10,12 @@ public abstract class ModalProviderBase : IModalProvider
     public abstract string ProviderName { get; }
     public abstract string DefaultPanel { get; }
     public virtual string Width => "900px";
-    public virtual string Height => "640px";
     public virtual string MinWidth => "350px";
-
+    public virtual string MaxWidth => "1200px";
+    public virtual string Height => "640px";
+    public virtual bool AutoSaveOnNavigate => false;
     protected readonly IStore Store;
     protected readonly ILogger _logger;
-
-    public virtual Task<(bool, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
-    => Task.FromResult<(bool, IReadOnlyList<string>)>((true, Array.Empty<string>()));
 
     protected ModalProviderBase(IStore store, ILogger logger)
     {
@@ -96,6 +92,8 @@ public abstract class ModalProviderBase : IModalProvider
             }
         }
     }
-
-
+    
+    public virtual Task<(bool, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
+=> Task.FromResult<(bool, IReadOnlyList<string>)>((true, Array.Empty<string>()));
 }
+

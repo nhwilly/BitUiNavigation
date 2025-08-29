@@ -18,15 +18,15 @@ public sealed partial class UserModalState : State<UserModalState>
     public string ProviderTitle => Entity is null ? "User" : $"User: {Entity.FirstName} {Entity.LastName}";
     public override void Initialize() { }
 
-    public bool CanSave => IsDirty;
-    public bool CanReset => IsDirty;
+    public bool CanSave => HasChanged;
+    public bool CanReset => HasChanged;
     public bool IsSaving => true;
     public bool IsResetting => true;
     public bool SaveOnCloseEnabled => true;
 
     public bool IsLoading { get; private set; }
 
-    public bool IsDirty
+    public bool HasChanged
     {
         get
         {
@@ -71,41 +71,41 @@ public sealed partial class UserModalState : State<UserModalState>
         OriginalEntity = dto with { };
     }
 
-    public static class SetValidityActionSet
-    {
-        public sealed class Action : IAction
-        {
-            public Type PanelType { get; }
-            public bool IsValid { get; }
-            public Action(Type panelType, bool isValid)
-            {
-                PanelType = panelType;
-                IsValid = isValid;
-            }
-        }
-        public sealed class Handler : ActionHandler<Action>
-        {
-            private readonly ILogger<UserModalState> _logger;
-            private UserModalState State => Store.GetState<UserModalState>();
-            public Handler(
-                IStore store,
-                ILogger<UserModalState> logger)
-                : base(store)
-            {
-                _logger = logger;
-            }
-            public override async Task Handle(Action action, CancellationToken cancellationToken)
-            {
-                State.LastKnownValidityByType.TryGetValue(action.PanelType, out var existing);
-                if (existing != action.IsValid)
-                {
-                    State._lastKnownByType[action.PanelType] = action.IsValid;
-                    _logger.LogDebug("Set validity for {PanelType} to {IsValid}", action.PanelType.Name, action.IsValid);
-                }
-                await Task.CompletedTask; // Simulate async operation if needed
-            }
-        }
-    }
+    //public static class SetValidityActionSet
+    //{
+    //    public sealed class Action : IAction
+    //    {
+    //        public Type PanelType { get; }
+    //        public bool IsValid { get; }
+    //        public Action(Type panelType, bool isValid)
+    //        {
+    //            PanelType = panelType;
+    //            IsValid = isValid;
+    //        }
+    //    }
+    //    public sealed class Handler : ActionHandler<Action>
+    //    {
+    //        private readonly ILogger<UserModalState> _logger;
+    //        private UserModalState State => Store.GetState<UserModalState>();
+    //        public Handler(
+    //            IStore store,
+    //            ILogger<UserModalState> logger)
+    //            : base(store)
+    //        {
+    //            _logger = logger;
+    //        }
+    //        public override async Task Handle(Action action, CancellationToken cancellationToken)
+    //        {
+    //            State.LastKnownValidityByType.TryGetValue(action.PanelType, out var existing);
+    //            if (existing != action.IsValid)
+    //            {
+    //                State._lastKnownByType[action.PanelType] = action.IsValid;
+    //                _logger.LogDebug("Set validity for {PanelType} to {IsValid}", action.PanelType.Name, action.IsValid);
+    //            }
+    //            await Task.CompletedTask; // Simulate async operation if needed
+    //        }
+    //    }
+    //}
     public static class BeginUserEditSessionActionSet
     {
         public sealed class Action : IAction
