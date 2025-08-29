@@ -21,7 +21,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     public bool CanSave => UserState.CanSave;
     public bool CanReset => UserState.CanReset;
     public bool IsResetting => UserState.IsResetting;
-    public bool IsInitializing => UserState.IsLoading;
+    public bool IsInitializing => UserState.IsInitializing;
     public bool HasChanged => UserState.HasChanged;
     public bool ShowResultDialog => ModalState.ShowResult;
 
@@ -66,11 +66,12 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     public override async Task OnModalOpeningAsync(CancellationToken ct)
     {
         await UserState.SetIsLoading(true, ct);
+        await UserState.Initialize(AccountId, LocationId, ct);
         await Task.CompletedTask;
+        await UserState.SetIsLoading(false, ct);
     }
     public override async Task OnModalOpenedAsync(CancellationToken ct)
     {
-        await UserState.BeginUserEditSession(AccountId, LocationId, ct);
         await ModalState.SetTitle(UserState.ProviderTitle, ct);
         await UserState.SetIsLoading(false, ct);
     }
