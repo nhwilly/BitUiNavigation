@@ -33,10 +33,10 @@
 
                         @if (_saveReset?.IsDirty == true)
                         {
-                            var isBusy = _saveReset.IsSaving || _saveReset.IsResetting;
+                            var isBusy = _state.IsSaving || _state.IsResetting;
 
                             <BitStack Horizontal Gap="0.5rem">
-                                @if (_saveReset.CanReset)
+                                @if (_ac.CanReset)
                                 {
                                     <BitButton OnClick="@OnResetClicked"
                                                IsEnabled="@(!isBusy)"
@@ -119,9 +119,9 @@
     private bool _needsSessionInit = false;
     private bool MissingPanelValidityBlocksClose => false; // flip to true if you want stricter policy
     private List<string>? _providerValidationMessages;
-    private ModalHostState _hostState => GetState<ModalHostState>();
+    private ModalHostState _state => GetState<ModalHostState>();
     private IModalSaveReset? _saveReset;
-    private ModalProviderBase? _activeProviderBase;  // NEW
+    // private ModalProviderBase? _activeProviderBase;  NEW
 
     private ModalContext _ctx => new()
     {
@@ -144,7 +144,7 @@
     // NEW: Save click handler
     private async Task OnSaveClicked()
     {
-        if (_activeProviderBase is null || _saveReset is null) return;
+        if (_activeModalProvider is null || _saveReset is null) return;
         if (!_saveReset.IsDirty) return;
 
         var (isValid, _) = await _activeProviderBase.ValidateProviderAsync(CancellationToken);
@@ -239,7 +239,7 @@
     private void SetActiveProvider(IModalProvider? provider)
     {
         _activeModalProvider = provider;
-        _activeProviderBase = provider as ModalProviderBase; // NEW
+        // _activeProviderBase = provider as ModalProviderBase; NEW
         _saveReset = provider as IModalSaveReset;   // NEW
         StateHasChanged();
     }
@@ -390,7 +390,7 @@
         {
             if (_saveReset.SaveOnCloseEnabled)
             {
-                var (valid, _) = await _activeProviderBase!.ValidateProviderAsync(CancellationToken);
+                var (valid, _) = await _activeModalProvider!.ValidateProviderAsync(CancellationToken);
                 if (valid)
                 {
                     var saved = await _saveReset.SaveAsync(CancellationToken);
