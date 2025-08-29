@@ -74,18 +74,11 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         await ModalState.SetTitle(UserState.ProviderTitle, ct);
         await UserState.SetIsLoading(false, ct);
     }
-    }
 
     public async Task ResetAsync(CancellationToken ct)
     {
 
-        // (A) Method on state:
-        // await Session.ResetAsync(ct);
-
-        // (B) Dispatch an action:
-        // await Store.DispatchAsync(new UserEditSessionState.ResetAction(), ct);
-
-        await Task.Yield();
+        await Task.CompletedTask;
     }
 
     public override async Task<(bool, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
