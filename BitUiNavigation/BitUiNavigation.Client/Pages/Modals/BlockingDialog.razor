@@ -1,0 +1,30 @@
+﻿@* NEW: Generic blocking dialog used for "Fix issues" and "Discard & Close" flows *@
+@using Bit.BlazorUI
+
+<BitDialog IsOpen="IsOpen"
+           Title="@Title"
+           IsModal="true"
+           Class="max-w-[520px]">
+    <div style="padding: 0.5rem 0 1rem 0;">
+        @Body
+    </div>
+
+    @if (ShowSecondary)
+    {
+        <BitButton OnClick="OnSecondaryClicked" Color="BitColor.Warning">@SecondaryText</BitButton>
+    }
+    <BitButton OnClick="OnPrimaryClicked" Color="BitColor.Primary">@PrimaryText</BitButton>
+</BitDialog>
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public string Title { get; set; } = string.Empty;
+    [Parameter] public string Body { get; set; } = string.Empty;
+
+    [Parameter] public string PrimaryText { get; set; } = "OK";
+    [Parameter] public string SecondaryText { get; set; } = "Cancel";
+    [Parameter] public bool ShowSecondary { get; set; }
+
+    [Parameter] public EventCallback OnPrimaryClicked { get; set; }
+    [Parameter] public EventCallback OnSecondaryClicked { get; set; }
+}

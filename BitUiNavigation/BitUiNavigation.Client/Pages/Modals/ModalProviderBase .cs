@@ -1,9 +1,7 @@
 ﻿using Bit.BlazorUI;
 using BitUiNavigation.Client.Pages.UserProfile;
-using BitUiNavigation.Client.Services;
 using Microsoft.AspNetCore.Components;
 using TimeWarp.State;
-using static BitUiNavigation.Client.Pages.Modals.UrlExtensions;
 
 namespace BitUiNavigation.Client.Pages.Modals;
 
@@ -11,14 +9,13 @@ public abstract class ModalProviderBase : IModalProvider
 {
     public abstract string ProviderName { get; }
     public abstract string DefaultPanel { get; }
-    public abstract string Width { get; }
+    public virtual string Width => "900px";
     public virtual string MinWidth => "350px";
-    public abstract string Height { get; }
-
+    public virtual string MaxWidth => "1200px";
+    public virtual string Height => "640px";
+    public virtual bool AutoSaveOnNavigate => false;
     protected readonly IStore Store;
     protected readonly ILogger _logger;
-    public virtual Task<(bool, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
-    => Task.FromResult<(bool, IReadOnlyList<string>)>((true, Array.Empty<string>()));
 
     protected ModalProviderBase(IStore store, ILogger logger)
     {
@@ -26,32 +23,18 @@ public abstract class ModalProviderBase : IModalProvider
         _logger = logger;
     }
 
-    // Access central modal state
     protected ModalHostState HostState => Store.GetState<ModalHostState>();
 
-    // Map from normalized panel key -> component type
     protected abstract Dictionary<string, Type> PanelMap { get; }
-    /// <summary>
-    /// Public, normalized keys that ModalHost can use.
-    /// Normalization must match what you publish in ModalPanelBase / ModalContext.
-    /// </summary>
-    public virtual IReadOnlyList<string> ExpectedPanelKeys =>
-        [.. PanelMap.Keys.Select(k => Normalize(k, DefaultPanel))];
-    /// <summary>
-    /// Optional hook after the modal is opened.
-    /// </summary>
+
+    public virtual IReadOnlyList<string> ExpectedPanelKeys => [.. PanelMap.Keys.Select(k => Normalize(k, DefaultPanel))];
+
     public virtual Task OnModalOpenedAsync(CancellationToken ct) => Task.CompletedTask;
 
-    /// <summary>
-    /// Optional hook before the modal is opened.
-    /// </summary>
     public virtual Task OnModalOpeningAsync(CancellationToken ct) => Task.CompletedTask;
 
     public abstract List<NavSectionDetail> BuildCustomNavSections(NavigationManager nav);
 
-    /// <summary>
-    /// Create a URL for a specific panel within this modal.
-    /// </summary>
     protected string BuildPanelUrl(NavigationManager nav, string panelName)
     {
         var currentPath = "/" + nav.ToBaseRelativePath(nav.Uri).Split('?')[0];
@@ -67,10 +50,6 @@ public abstract class ModalProviderBase : IModalProvider
         return new RouteData(type, new Dictionary<string, object?>());
     }
 
-    /// <summary>
-    /// If true, panels that have never published validity will block closing.
-    /// Default is false (missing = treated as valid).
-    /// </summary>
     protected virtual bool MissingPanelValidityBlocksClose => false;
 
     public virtual Task<bool> CanCloseAsync(CancellationToken ct) => Task.FromResult(true);
@@ -113,6 +92,8 @@ public abstract class ModalProviderBase : IModalProvider
             }
         }
     }
-
-
+    
+    public virtual Task<(bool, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
+        => Task.FromResult<(bool, IReadOnlyList<string>)>((true, Array.Empty<string>()));
 }
+

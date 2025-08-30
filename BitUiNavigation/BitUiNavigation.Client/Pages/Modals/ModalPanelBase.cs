@@ -9,8 +9,7 @@ namespace BitUiNavigation.Client.Pages.Modals;
 
 public abstract class ModalPanelBase<TModel> :
     TimeWarpStateComponent,
-    IModalPanel,
-    ISupportsSaveOnNavigate
+    IModalPanel
     where TModel : BaseRecord
 {
     [Inject] public ILogger<TModel>? Logger { get; set; }
@@ -27,8 +26,8 @@ public abstract class ModalPanelBase<TModel> :
 
     // If the form lives in the derived .razor, set @ref="editForm" there.
     protected EditForm? editForm;
-
     private EditContext? _ctx; // the subscribed context
+
     private ModalHostState ModalHostState => GetState<ModalHostState>();
 
     // ---------------- lifecycle ----------------

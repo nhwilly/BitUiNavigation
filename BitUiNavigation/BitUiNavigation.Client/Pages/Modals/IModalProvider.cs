@@ -5,16 +5,14 @@ namespace BitUiNavigation.Client.Pages.Modals;
 
 public interface IModalProvider
 {
-    /// <summary>The query-string key that activates this modal (e.g., "modal", "help").</summary>
     string ProviderName { get; }
-    /// <summary>The section used when the key exists but has no value.</summary>
     string DefaultPanel { get; }
-    IReadOnlyList<string> ExpectedPanelKeys { get; }
-
-    /// <summary>Host BitModal width/height (CSS values).</summary>
     string Width { get; }
     string Height { get; }
     string MinWidth { get; }
+    string MaxWidth { get; }
+
+    IReadOnlyList<string> ExpectedPanelKeys { get; }
 
     List<NavSectionDetail> BuildCustomNavSections(NavigationManager nav);
 
@@ -28,5 +26,6 @@ public interface IModalProvider
     Task<bool> CanCloseAsync(CancellationToken ct);
 
     Task<(bool IsValid, IReadOnlyList<string> Messages)> ValidateProviderAsync(CancellationToken ct);
+
 
 }
