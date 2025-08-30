@@ -15,7 +15,8 @@ public interface IModalProvider
     string Width { get; }
     string Height { get; }
     string MinWidth { get; }
-    List<CustomNavItem> BuildCustomNavItems(NavigationManager nav);
+
+    List<NavSectionDetail> BuildCustomNavSections(NavigationManager nav);
 
     /// <summary>
     /// Maps the current panel key to a RouteData (component type + parameters) for the right panel.
@@ -25,5 +26,7 @@ public interface IModalProvider
     Task OnModalOpeningAsync(CancellationToken ct);
 
     Task<bool> CanCloseAsync(CancellationToken ct);
+
+    Task<(bool IsValid, IReadOnlyList<string> Messages)> ValidateProviderAsync(CancellationToken ct);
 
 }

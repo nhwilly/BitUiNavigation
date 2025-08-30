@@ -17,6 +17,8 @@ public abstract class ModalProviderBase : IModalProvider
 
     protected readonly IStore Store;
     protected readonly ILogger _logger;
+    public virtual Task<(bool, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
+    => Task.FromResult<(bool, IReadOnlyList<string>)>((true, Array.Empty<string>()));
 
     protected ModalProviderBase(IStore store, ILogger logger)
     {
@@ -45,12 +47,7 @@ public abstract class ModalProviderBase : IModalProvider
     /// </summary>
     public virtual Task OnModalOpeningAsync(CancellationToken ct) => Task.CompletedTask;
 
-    /// <summary>
-    /// Build nav items for this provider.
-    /// </summary>
-    //public abstract List<BitNavItem> BuildNavItems(NavigationManager nav);
-
-    public abstract List<CustomNavItem> BuildCustomNavItems(NavigationManager nav);
+    public abstract List<NavSectionDetail> BuildCustomNavSections(NavigationManager nav);
 
     /// <summary>
     /// Create a URL for a specific panel within this modal.

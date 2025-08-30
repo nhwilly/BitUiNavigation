@@ -36,6 +36,7 @@ public sealed partial class ModalHostState : State<ModalHostState>
         }
         return true;
     }
+
     public static class SetValidityActionSet
     {
         public sealed class Action : IAction
