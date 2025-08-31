@@ -51,7 +51,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
             IconName = BitIconName.Settings,
             CustomNavItems =
                 [
-                    new() { Key = nameof(UserMembershipsPanel), Text = "Memberships", IconName = BitIconName.UserEvent, Url = BuildPanelUrl(nav, nameof(UserMembershipsPanel)) },
+                    new() { Key = nameof(UserMembershipsPanel), Text = "Memberships", IconName = BitIconName.UserEvent, Url = BuildPanelUrl(nav, ProviderName, nameof(UserMembershipsPanel)) },
                     new() { Key = nameof(UserProfilePanel), Text = "Profile", IconName = BitIconName.Contact, Url = BuildPanelUrl(nav, nameof(UserProfilePanel)) }
                 ]
         });

@@ -37,7 +37,7 @@ public abstract class ModalProviderBase : IModalProvider
 
     public abstract List<NavSectionDetail> BuildCustomNavSections(NavigationManager nav);
 
-    protected string BuildPanelUrl(NavigationManager nav, string panelName)
+    protected string BuildPanelUrl(NavigationManager nav, string providerName, string panelName)
     {
         var currentPath = "/" + nav.ToBaseRelativePath(nav.Uri).Split('?')[0];
         var qs = System.Web.HttpUtility.ParseQueryString(new Uri(nav.Uri).Query);
@@ -94,7 +94,7 @@ public abstract class ModalProviderBase : IModalProvider
             }
         }
     }
-    
+
     public virtual Task<(bool, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
         => Task.FromResult<(bool, IReadOnlyList<string>)>((true, Array.Empty<string>()));
 }
