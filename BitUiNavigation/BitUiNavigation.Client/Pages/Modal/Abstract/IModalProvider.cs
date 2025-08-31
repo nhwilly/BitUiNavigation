@@ -15,7 +15,7 @@ public interface IModalProvider
 
     IReadOnlyList<string> ExpectedPanelKeys { get; }
 
-    List<NavSectionDetail> BuildCustomNavSections(NavigationManager nav);
+    Task BuildCustomNavSections(NavigationManager nav, CancellationToken ct);
     List<NavSectionDetail> NavSections { get; }
 
     /// <summary>

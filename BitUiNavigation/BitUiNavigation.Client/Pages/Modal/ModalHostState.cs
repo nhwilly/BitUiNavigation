@@ -1,4 +1,5 @@
-﻿using TimeWarp.State;
+﻿using BitUiNavigation.Client.Pages.Modal.Providers;
+using TimeWarp.State;
 
 namespace BitUiNavigation.Client.Services;
 
@@ -9,6 +10,7 @@ public sealed partial class ModalHostState : State<ModalHostState>
     public IReadOnlyDictionary<string, Dictionary<string, PanelValidity>> Validity => _validity;
     public record PanelValidity(bool IsValid, int ErrorCount);
 
+    public List<NavSectionDetail> NavSections { get; private set; } = [];
     /// <summary>
     /// True if every expected panel for the provider is valid.
     /// If a panel hasn't published yet, it's treated as valid unless missingBlocks==true.
@@ -64,6 +66,34 @@ public sealed partial class ModalHostState : State<ModalHostState>
         }
     }
 
+    public static class SetNavSectionsActionSet
+    {
+        public sealed class Action : IAction
+        {
+            public List<NavSectionDetail> NavSections { get; }
+            public Action(List<NavSectionDetail> navSections)
+            {
+                NavSections = navSections ?? [];
+            }
+        }
+        public sealed class Handler : ActionHandler<Action>
+        {
+            private readonly ILogger<ModalHostState> _logger;
+            private ModalHostState ModalHostState => Store.GetState<ModalHostState>();
+            public Handler(IStore store, ILogger<ModalHostState> logger) : base(store)
+            {
+                _logger = logger;
+            }
+            public override async Task Handle(Action action, CancellationToken cancellationToken)
+            {
+                _logger.LogDebug("SetNavSections Count={Count}", action.NavSections.Count);
+                //ModalHostState.NavSections.Clear();
+                //ModalHostState.NavSections.AddRange(action.NavSections);
+                ModalHostState.NavSections = action.NavSections;
+                await Task.CompletedTask;
+            }
+        }
+    }
     public string Title { get; private set; } = string.Empty;
     public static class SetTitleActionSet
     {

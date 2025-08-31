@@ -4,6 +4,7 @@ using BitUiNavigation.Client.Pages.Modal.Providers;
 using FluentValidation;
 using Microsoft.AspNetCore.Components;
 using TimeWarp.State;
+using static System.Collections.Specialized.BitVector32;
 
 namespace BitUiNavigation.Client.Pages.UserProfile;
 public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset
@@ -24,7 +25,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     public bool IsInitializing => UserState.IsInitializing;
     public bool HasChanged => UserState.HasChanged;
     public bool ShowResultDialog => ModalState.ShowResult;
-    public override List<NavSectionDetail> NavSections => _navSections;
+    //public override List<NavSectionDetail> NavSections => _navSections;
 
     private List<NavSectionDetail> _navSections = [];
     public bool SaveOnCloseEnabled => UserState.SaveOnCloseEnabled;
@@ -44,7 +45,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     };
 
 
-    public override List<NavSectionDetail> BuildCustomNavSections(NavigationManager nav)
+    public override async Task BuildCustomNavSections(NavigationManager nav, CancellationToken ct)
     {
         var sections = new List<NavSectionDetail>();
         sections.Add(new NavSectionDetail()
@@ -63,10 +64,10 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
             DecorateCustomNavItemsWithValidationIndicators(section.CustomNavItems);
         }
         _navSections = sections;
-        return sections;
+        await HostState.SetNavSections(sections, ct);
     }
 
-    public void AddANavItem()
+    public async Task AddANavItem(CancellationToken ct)
     {
         _navSections.Add(new NavSectionDetail()
         {
@@ -77,6 +78,8 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
                     new() { Key = "NewItem", Text = "New Item", IconName = BitIconName.Add, Url = "#" }
                 ]
         });
+        await HostState.SetNavSections(_navSections, ct);
+
     }
     public override async Task OnModalOpeningAsync(CancellationToken ct)
     {
