@@ -120,7 +120,7 @@
 </style>
 
 @code {
-    [Parameter, SupplyParameterFromQuery] public string? Provider { get; set; }
+    [Parameter, SupplyParameterFromQuery] public string? Modal { get; set; }
     [Parameter, SupplyParameterFromQuery] public string? Panel { get; set; }
 
     private IModalProvider? _activeModalProvider;
@@ -238,14 +238,6 @@
         StateHasChanged();
     }
 
-    // private void SetActiveProvider(IModalProvider? provider)
-    // {
-    //     _activeModalProvider = provider;
-    //     StateHasChanged();
-    // }
-
-
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -309,12 +301,12 @@
         //     // create empty provider with a single panel with an error message.
         //     throw new Exception("ModalHost: Missing required 'provider' query string parameter");
         // }
-        var match = ServiceProvider.GetKeyedService<IModalProvider>(Provider);
+        var match = ServiceProvider.GetKeyedService<IModalProvider>(Modal);
 
 
         var newPanelName = match is null
             ? null
-            : Normalize(Provider, Panel ?? match.DefaultPanel);
+            : Normalize(Modal, Panel ?? match.DefaultPanel);
 
         var wasActive = _activeModalProvider is not null;
         var willBeActive = match is not null;
@@ -322,7 +314,7 @@
         if (willBeActive && !wasActive)
         {
             // Store previous URL (to restore when modal closes)
-            _preOpenUrl = RemoveQueryParam(fullUri, match!.ProviderName);
+            _preOpenUrl = RemoveModalQueryParameters(fullUri);
 
             Logger.LogDebug("OnModalOpeningAsync for provider '{ProviderName}'", match.ProviderName);
             // call modal provider hook to initialize

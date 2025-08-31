@@ -4,4 +4,6 @@
 <p>Manage your application settings here.</p>
 @code {
     [Parameter] public Guid Id { get; set; }
+    [Parameter, SupplyParameterFromQuery]
+    public Guid? AccountId { get; set; }
 }
