@@ -1,4 +1,6 @@
-﻿namespace BitUiNavigation.Client.Pages.Modals;
+﻿using BitUiNavigation.Client.Pages.Modal.Panels;
+
+namespace BitUiNavigation.Client.Pages.Modal.Abstract;
 /// <summary>
 /// Allows a <see cref="ModalHost"/> to determine if a child <see cref="ModalPanelBase{TModel}"/> modal 
 /// panel supports checking before closing the <see cref="ModalHost"/>

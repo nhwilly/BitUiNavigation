@@ -1,10 +1,8 @@
 ﻿// NEW: Capability contract for providers that support Save/Reset and a single gate for saving.
-namespace BitUiNavigation.Client.Pages.Modals;
-
-public interface IModalSave : IModalHasChanged
+namespace BitUiNavigation.Client.Pages.Modal.Abstract;
+public interface IModalHasChanged
 {
-    bool CanSave { get; }
-    Task SaveAsync(CancellationToken ct);
+    bool HasChanged { get; }
 }
 
 // UserModelProvider implements IModalSave and IModalReset

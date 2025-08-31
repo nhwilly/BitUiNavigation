@@ -1,4 +1,4 @@
-﻿using BitUiNavigation.Client.Pages.Modals;
+﻿using BitUiNavigation.Client.Pages.Modal.Abstract;
 
 namespace BitUiNavigation.Client.Pages.UserProfile;
 public record UserProfileViewModel : BaseRecord

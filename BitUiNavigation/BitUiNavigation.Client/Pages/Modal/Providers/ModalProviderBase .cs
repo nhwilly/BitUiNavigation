@@ -1,9 +1,11 @@
 ﻿using Bit.BlazorUI;
+using BitUiNavigation.Client.Pages.Modal.Abstract;
+using BitUiNavigation.Client.Pages.Modal.Components;
 using BitUiNavigation.Client.Pages.UserProfile;
 using Microsoft.AspNetCore.Components;
 using TimeWarp.State;
 
-namespace BitUiNavigation.Client.Pages.Modals;
+namespace BitUiNavigation.Client.Pages.Modal.Providers;
 
 public abstract class ModalProviderBase : IModalProvider
 {
@@ -66,7 +68,7 @@ public abstract class ModalProviderBase : IModalProvider
         {
             if (item is null || string.IsNullOrWhiteSpace(item.Key)) continue;
 
-            var panelKey = UrlExtensions.Normalize(item.Key, DefaultPanel);
+            var panelKey = Normalize(item.Key, DefaultPanel);
 
             // Safe: only enters when perPanel is not null AND the key exists.
             if (perPanel?.TryGetValue(panelKey, out var pv) == true && pv is { IsValid: false })

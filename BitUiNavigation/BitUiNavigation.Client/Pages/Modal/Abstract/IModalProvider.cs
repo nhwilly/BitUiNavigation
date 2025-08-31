@@ -1,7 +1,8 @@
 ﻿using Bit.BlazorUI;
+using BitUiNavigation.Client.Pages.Modal.Providers;
 using Microsoft.AspNetCore.Components;
 
-namespace BitUiNavigation.Client.Pages.Modals;
+namespace BitUiNavigation.Client.Pages.Modal.Abstract;
 
 public interface IModalProvider
 {

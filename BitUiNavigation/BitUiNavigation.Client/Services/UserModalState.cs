@@ -175,7 +175,7 @@ public sealed partial class UserModalState : State<UserModalState>
                 var saved = await _userService.SaveUserAsync(State.User);
 
                 // Update state (Entity + Original + VM)
-                State.Commit(saved);
+                // State.Commit(saved);
                 State.MapDtoToViewModel();
             }
         }

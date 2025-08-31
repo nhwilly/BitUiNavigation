@@ -1,8 +1,10 @@
 using Bit.BlazorUI;
-using BitUiNavigation.Client.Pages.Modals;
+using BitUiNavigation.Client.Pages.Modal.Abstract;
+using BitUiNavigation.Client.Pages.Modal.Providers;
 using BitUiNavigation.Client.Pages.UserProfile;
 using FluentValidation;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using TimeWarp.State;
 namespace BitUiNavigation.Client;
 
@@ -19,7 +21,8 @@ public class Program
         services.AddBitBlazorUIServices();
         services.AddTimeWarpState();
         services.AddScoped<IModalProviderSource, DefaultModalProviderSource>();
-        services.AddScoped<IModalProvider, UserModalProvider>();
+        //services.AddScoped<IModalProvider, UserModalProvider>();
+        services.AddKeyedTransient<IModalProvider, UserModalProvider>("User");
         services.AddValidatorsFromAssemblyContaining<UserProfileModelValidator>();
         services.AddScoped<UserService>();
     }

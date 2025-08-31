@@ -1,4 +1,7 @@
-﻿@inherits TimeWarpStateComponent
+﻿@using BitUiNavigation.Client.Pages.Modal.Abstract
+@using BitUiNavigation.Client.Pages.Modal.Providers
+@inherits TimeWarpStateComponent
+@inject IServiceProvider ServiceProvider
 @inject NavigationManager NavManager
 @inject IModalProviderSource ModalProviderSource
 @inject ILogger<ModalHost> Logger
@@ -6,7 +9,7 @@
 
 @if (_activeModalProvider is not null)
 {
-    <BitDialog IsBlocking  IsOpen="@(_state.ShowResult)">
+    <BitDialog IsBlocking IsOpen="@(_state.ShowResult)">
         <ChildContent>
             <div>
                 shit
@@ -33,10 +36,10 @@
 
             <div style="flex:1;display:flex;flex-direction:column;height:100%">
                 <div style="flex-shrink:0;border-top-right-radius:20px;">
-                    <BitStack Horizontal Align="BitAlignment.SpaceBetween" Class="sticky-header" Style="padding: 0.75rem 1rem;">
-                        <BitText Style="font-weight:600;">@(ModalHostState.)</BitText>
+                    <BitStack Horizontal HorizontalAlign="BitAlignment.SpaceBetween" Class="sticky-header" Style="padding: 0.75rem 1rem;">
+                        <BitText Style="font-weight:600;">@(_state.Title)</BitText>
 
-                        @if (_saveReset?.IsDirty == true)
+                        @* @if (_saveReset?.IsDirty == true)
                         {
                             var isBusy = _state.IsSaving || _state.IsResetting;
 
@@ -61,7 +64,7 @@
                                     </BitButton>
                                 }
                             </BitStack>
-                        }
+                        } *@
                     </BitStack>
                 </div>
 
@@ -117,13 +120,16 @@
 </style>
 
 @code {
+    [Parameter, SupplyParameterFromQuery] public string? Provider { get; set; }
+    [Parameter, SupplyParameterFromQuery] public string? Panel { get; set; }
+
     private IModalProvider? _activeModalProvider;
     private string _panelName = string.Empty;
     private string? _preOpenUrl;
     private IModalPanel? _panel;
     private bool _needsSessionInit = false;
     private bool MissingPanelValidityBlocksClose => false; // flip to true if you want stricter policy
-    private List<string>? _providerValidationMessages;
+    private List<string>? _providerValidationMessages=[];
     private ModalHostState _state => GetState<ModalHostState>();
 
     private ModalContext _ctx => new()
@@ -298,18 +304,17 @@
     private async Task ReadFromUri(string fullUri, bool requestStateHasChanged)
     {
         var uri = new Uri(fullUri);
-        var qs = HttpUtility.ParseQueryString(uri.Query);
+        // if (string.IsNullOrWhiteSpace(Provider))
+        // {
+        //     // create empty provider with a single panel with an error message.
+        //     throw new Exception("ModalHost: Missing required 'provider' query string parameter");
+        // }
+        var match = ServiceProvider.GetKeyedService<IModalProvider>(Provider);
 
-        // check all the modal providers and ensure that the one
-        // we are navigating to matches.
-        var match = ModalProviderSource
-            .GetModalProviders()
-            .FirstOrDefault(p =>
-                !string.IsNullOrWhiteSpace(qs[p.ProviderName]));
 
         var newPanelName = match is null
             ? null
-            : Normalize(qs[match.ProviderName], match.DefaultPanel);
+            : Normalize(Provider, Panel ?? match.DefaultPanel);
 
         var wasActive = _activeModalProvider is not null;
         var willBeActive = match is not null;

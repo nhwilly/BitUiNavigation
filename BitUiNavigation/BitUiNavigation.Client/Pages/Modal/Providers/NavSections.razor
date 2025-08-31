@@ -4,7 +4,7 @@
 {
 
     <BitText Typography="@BitTypography.Subtitle1">@(section.Title.ToUpper())</BitText>
-    <BitNav IsEnabled="@(!ModalHostState.IsSaving)"
+    <BitNav 
             Mode="BitNavMode.Automatic"
             Items="@(section.CustomNavItems)"
             Match="BitNavMatch.Wildcard"

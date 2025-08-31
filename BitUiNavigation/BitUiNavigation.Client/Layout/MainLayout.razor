@@ -1,5 +1,6 @@
 ﻿@using BitUiNavigation.Client.Pages
-@using BitUiNavigation.Client.Pages.Modals
+@using BitUiNavigation.Client.Pages.Modal
+@using BitUiNavigation.Client.Pages.Modal.Providers
 @using BitUiNavigation.Client.Pages.UserProfile
 
 @inherits LayoutComponentBase
@@ -96,7 +97,8 @@ else
 
         var allParams = new Dictionary<string, object?>
         {
-            [key] = section
+            ["provider"] = key,
+            ["panel"] = section
         };
 
         if (additionalParams is not null)

@@ -1,5 +1,7 @@
 ﻿// NEW: Capability contract for providers that support Save/Reset and a single gate for saving.
-namespace BitUiNavigation.Client.Pages.Modals;
+
+// NEW: Capability contract for providers that support Save/Reset and a single gate for saving.
+namespace BitUiNavigation.Client.Pages.Modal.Abstract;
 
 public interface IModalReset : IModalHasChanged
 {

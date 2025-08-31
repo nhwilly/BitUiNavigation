@@ -1,4 +1,6 @@
-﻿namespace BitUiNavigation.Client.Pages.Modals;
+﻿using BitUiNavigation.Client.Pages.Modal.Abstract;
+
+namespace BitUiNavigation.Client.Pages.Modal.Providers;
 
 public sealed class DefaultModalProviderSource : IModalProviderSource
 {

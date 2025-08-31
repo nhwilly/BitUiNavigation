@@ -1,11 +1,12 @@
 ﻿using System.Linq;
+using BitUiNavigation.Client.Pages.Modal.Abstract;
 using BitUiNavigation.Client.Services;
 using FluentValidation;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 using TimeWarp.State;
 
-namespace BitUiNavigation.Client.Pages.Modals;
+namespace BitUiNavigation.Client.Pages.Modal.Panels;
 
 public abstract class ModalPanelBase<TModel> :
     TimeWarpStateComponent,

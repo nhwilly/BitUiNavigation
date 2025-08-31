@@ -1,11 +1,11 @@
 ﻿using Bit.BlazorUI;
-using BitUiNavigation.Client.Pages.UserProfile;
-using BitUiNavigation.Client.Services;
+using BitUiNavigation.Client.Pages.Modal.Abstract;
+using BitUiNavigation.Client.Pages.Modal.Providers;
 using FluentValidation;
 using Microsoft.AspNetCore.Components;
 using TimeWarp.State;
 
-namespace BitUiNavigation.Client.Pages.Modals;
+namespace BitUiNavigation.Client.Pages.UserProfile;
 public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset
 {
     private readonly IValidator<UserProviderAggregate> _providerValidator;
@@ -65,15 +65,15 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
 
     public override async Task OnModalOpeningAsync(CancellationToken ct)
     {
-        await UserState.SetIsLoading(true, ct);
+        // await UserState.SetIsLoading(true, ct);
         await UserState.Initialize(AccountId, LocationId, ct);
         await Task.CompletedTask;
-        await UserState.SetIsLoading(false, ct);
+        // await UserState.SetIsLoading(false, ct);
     }
     public override async Task OnModalOpenedAsync(CancellationToken ct)
     {
         await ModalState.SetTitle(UserState.ProviderTitle, ct);
-        await UserState.SetIsLoading(false, ct);
+        // await UserState.SetIsLoading(false, ct);
     }
 
     public async Task ResetAsync(CancellationToken ct)
@@ -106,9 +106,9 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
 
     public async Task SaveAsync(CancellationToken ct)
     {
-        await UserState.SetIsLoading(true, ct);
+        // await UserState.SetIsLoading(true, ct);
         await UserState.SaveUser(ct);
-        await UserState.SetIsLoading(false, ct);
+        // await UserState.SetIsLoading(false, ct);
         if (ShowResultDialog)
             await ModalState.ShowResultModal(true, "title", "message", ct);
     }
