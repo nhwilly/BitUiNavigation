@@ -37,11 +37,12 @@ public abstract class ModalProviderBase : IModalProvider
 
     public abstract List<NavSectionDetail> BuildCustomNavSections(NavigationManager nav);
 
-    protected string BuildPanelUrl(NavigationManager nav, string providerName, string panelName)
+    protected string BuildPanelUrl(NavigationManager nav, string panelName)
     {
         var currentPath = "/" + nav.ToBaseRelativePath(nav.Uri).Split('?')[0];
         var qs = System.Web.HttpUtility.ParseQueryString(new Uri(nav.Uri).Query);
-        qs.Set(ProviderName, Normalize(panelName, DefaultPanel));
+        qs.Set("modal", ProviderName);
+        qs.Set("panel", Normalize(panelName, DefaultPanel));
         return $"{currentPath}?{qs}";
     }
 

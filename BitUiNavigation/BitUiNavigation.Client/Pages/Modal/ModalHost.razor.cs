@@ -54,9 +54,13 @@ namespace BitUiNavigation.Client.Pages.Modal
             var match = ServiceProvider.GetKeyedService<IModalProvider>(Modal);
 
 
+            //var newPanelName = match is null
+            //    ? null
+            //    : Normalize(Modal, Panel ?? match.DefaultPanel);
             var newPanelName = match is null
                 ? null
-                : Normalize(Modal, Panel ?? match.DefaultPanel);
+                : Panel ?? match.DefaultPanel;
+
 
             var wasActive = _activeModalProvider is not null;
             var willBeActive = match is not null;
