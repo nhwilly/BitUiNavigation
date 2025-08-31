@@ -1,7 +1,6 @@
 using Bit.BlazorUI;
 using BitUiNavigation.Client.Pages.Modals;
 using BitUiNavigation.Client.Pages.UserProfile;
-using BitUiNavigation.Client.Pages.Workspace;
 using FluentValidation;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using TimeWarp.State;
@@ -21,7 +20,7 @@ public class Program
         services.AddTimeWarpState();
         services.AddScoped<IModalProviderSource, DefaultModalProviderSource>();
         services.AddScoped<IModalProvider, UserModalProvider>();
-        services.AddScoped<IModalProvider, WorkspaceModalProvider>();
+        //services.AddScoped<IModalProvider, WorkspaceModalProvider>();
         services.AddValidatorsFromAssemblyContaining<UserProfileModelValidator>();
         services.AddScoped<UserService>();
     }
