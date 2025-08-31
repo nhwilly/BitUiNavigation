@@ -1,7 +1,6 @@
 ﻿using Bit.BlazorUI;
 using BitUiNavigation.Client.Pages.Modal.Abstract;
 using BitUiNavigation.Client.Pages.Modal.Components;
-using BitUiNavigation.Client.Pages.UserProfile;
 using Microsoft.AspNetCore.Components;
 using TimeWarp.State;
 
@@ -15,6 +14,7 @@ public abstract class ModalProviderBase : IModalProvider
     public virtual string MinWidth => "350px";
     public virtual string MaxWidth => "1200px";
     public virtual string Height => "640px";
+    public virtual List<NavSectionDetail> NavSections { get; } = [];
     public virtual bool AutoSaveOnNavigate => false;
     protected readonly IStore Store;
     protected readonly ILogger _logger;
@@ -37,13 +37,10 @@ public abstract class ModalProviderBase : IModalProvider
 
     public abstract List<NavSectionDetail> BuildCustomNavSections(NavigationManager nav);
 
-    protected string BuildPanelUrl(NavigationManager nav, string panelName)
+    protected static string BuildPanelRelativeUrl(NavigationManager nav, string panelName)
     {
-        var currentPath = "/" + nav.ToBaseRelativePath(nav.Uri).Split('?')[0];
-        var qs = System.Web.HttpUtility.ParseQueryString(new Uri(nav.Uri).Query);
-        qs.Set("modal", ProviderName);
-        qs.Set("panel", Normalize(panelName, DefaultPanel));
-        return $"{currentPath}?{qs}";
+        var absolute = nav.GetUriWithQueryParameter("panel", panelName);
+        return "/" + nav.ToBaseRelativePath(absolute);
     }
 
     public virtual RouteData BuildRouteData(string panelName)

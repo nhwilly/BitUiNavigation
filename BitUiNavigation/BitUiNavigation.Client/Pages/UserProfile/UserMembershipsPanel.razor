@@ -13,6 +13,7 @@
                       IconName="@BitIconName.UserClapper" />
         <ValidationMessage For="() => Model.Name" />
     </EditForm>
+    <BitButton OnClick="AddMenuItem">Add menu</BitButton>
 </SkeletonWhileBusy>
 <h3>UserMemberships</h3>
 <h1>Pivot #1: Samples</h1>
@@ -27,5 +28,9 @@
 @code {
     private UserModalState UserModalState => GetState<UserModalState>();
     protected override UserMembershipsViewModel Model => UserModalState.MembershipsVm;
-
+    private ModalHostState ModalHostState => GetState<ModalHostState>();
+    private async Task AddMenuItem(bool args)
+    {
+        await ModalHostState.RefreshNavItems();
+    }
 }

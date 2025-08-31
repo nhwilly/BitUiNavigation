@@ -1,5 +1,6 @@
 ﻿using Bit.BlazorUI;
 using BitUiNavigation.Client.Pages.Modal.Abstract;
+using BitUiNavigation.Client.Pages.Modal.Providers;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Routing;
 
@@ -18,7 +19,7 @@ namespace BitUiNavigation.Client.Pages.Modal
         private bool MissingPanelValidityBlocksClose => false; // flip to true if you want stricter policy
         private List<string>? _providerValidationMessages = [];
         private ModalHostState _state => GetState<ModalHostState>();
-
+        //public List<NavSectionDetail> NavSections { get; set; } = [];
         private ModalContext _ctx => new()
         {
             ProviderKey = _activeModalProvider?.ProviderName ?? "UnknownProvider",
@@ -35,6 +36,7 @@ namespace BitUiNavigation.Client.Pages.Modal
         private EventCallback _onDialogPrimary;
         private EventCallback _onDialogSecondary;
 
+
         /// <summary>
         /// Inspects the provided URI and determines if it matches any of the model providers
         /// that were registered in dependency injection.  Selects a panel from the route
@@ -45,48 +47,32 @@ namespace BitUiNavigation.Client.Pages.Modal
         /// <param name="requestStateHasChanged"></param>
         private async Task ReadFromUri(string fullUri, bool requestStateHasChanged)
         {
-            var uri = new Uri(fullUri);
-            // if (string.IsNullOrWhiteSpace(Provider))
-            // {
-            //     // create empty provider with a single panel with an error message.
-            //     throw new Exception("ModalHost: Missing required 'provider' query string parameter");
-            // }
-            var match = ServiceProvider.GetKeyedService<IModalProvider>(Modal);
-
-
-            //var newPanelName = match is null
-            //    ? null
-            //    : Normalize(Modal, Panel ?? match.DefaultPanel);
-            var newPanelName = match is null
-                ? null
-                : Panel ?? match.DefaultPanel;
-
-
-            var wasActive = _activeModalProvider is not null;
-            var willBeActive = match is not null;
-
-            if (willBeActive && !wasActive)
+            // if we don't have a valid modal query parameter, we are not active
+            var hasModalInUri = !string.IsNullOrWhiteSpace(Modal);
+            if (!hasModalInUri)
             {
-                // Store previous URL (to restore when modal closes)
-                _preOpenUrl = RemoveModalQueryParameters(fullUri);
-
-                Logger.LogDebug("OnModalOpeningAsync for provider '{ProviderName}'", match.ProviderName);
-                // call modal provider hook to initialize
-                await match!.OnModalOpeningAsync(CancellationToken);
-                _needsSessionInit = true;
-            }
-
-            // Detect modal close
-            if (!willBeActive && wasActive)
-            {
+                _activeModalProvider = null;
+                _panelName = string.Empty;
                 _preOpenUrl = null;
+                return;
             }
 
-            // Handle panel navigation
-            _activeModalProvider = match;
-            var oldPanelName = _panelName;
-            _panelName = newPanelName ?? string.Empty;
-            Logger.LogDebug("Changing panels from '{OldPanel}' to '{NewPanel}'", oldPanelName, newPanelName);
+            var modalDoesNotExist = _activeModalProvider is null;
+
+            var modalRequestedIsDifferent = !string.Equals(_activeModalProvider?.ProviderName, Modal, StringComparison.OrdinalIgnoreCase);
+            var panelNameMatchesCurrent = string.Equals(_panelName, Panel, StringComparison.OrdinalIgnoreCase);
+            _panelName = Panel ?? _activeModalProvider?.DefaultPanel ?? string.Empty;
+
+            // are we new or are we navigating to a new modal?
+            if (modalDoesNotExist || modalRequestedIsDifferent)
+            {
+                _activeModalProvider = ServiceProvider.GetRequiredKeyedService<IModalProvider>(Modal);
+                _preOpenUrl = RemoveModalQueryParameters(fullUri);
+                await _activeModalProvider.OnModalOpeningAsync(CancellationToken);
+                _needsSessionInit = true;
+                _ = _activeModalProvider.BuildCustomNavSections(NavManager);
+                Logger.LogDebug("Changing modal to '{Modal}' '{Panel}'", _activeModalProvider.ProviderName, _panelName);
+            }
 
             if (requestStateHasChanged)
                 StateHasChanged();
@@ -185,13 +171,12 @@ namespace BitUiNavigation.Client.Pages.Modal
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
-            if (firstRender)
-            {
-                await ReadFromUri(NavManager.Uri, requestStateHasChanged: true);
-            }
+            Logger.LogDebug("OnAfterRender: Modal='{Modal}', Panel='{Panel}'", Modal, Panel);
 
+            // we have a new modal session that just opened, so we call the provider
             if (_needsSessionInit && _activeModalProvider is not null)
             {
+                await ReadFromUri(NavManager.Uri, requestStateHasChanged: true);
                 _needsSessionInit = false;
                 // call provider *after* first render
                 await _activeModalProvider.OnModalOpenedAsync(CancellationToken);
@@ -213,20 +198,38 @@ namespace BitUiNavigation.Client.Pages.Modal
                 .ArePanelsValid(providerKey, expectedPanelKeys, MissingPanelValidityBlocksClose);
         }
 
-        private void RegisterPanel(IModalPanel panel) => _panel = panel;
-
         private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
         {
-            // fire-and-forget wrapper that calls your async method
+            // fire-and-forget wrapper that calls the async method
             _ = OnLocationChanged(sender, e);
         }
 
-        protected override async Task OnInitializedAsync()
+        //protected override async Task OnInitializedAsync()
+        //{
+        //    Logger.LogDebug("OnInitializedAsync: Modal='{Modal}', Panel='{Panel}'", Modal, Panel);
+        //    // we have to have this here because this modal is always running and it needs 
+        //    // to inspect the URL for to see if it should open a modal or not.
+        //    NavManager.LocationChanged += HandleLocationChanged;
+        //    //await ReadFromUri(NavManager.Uri, requestStateHasChanged: false);
+        //}
+
+        /// <summary>
+        ///We have to have this here because this modal is always running and it needs 
+        /// to inspect the URL for to see if it should open a modal or not.
+        /// </summary>
+        protected override void OnInitialized()
         {
+            Logger.LogDebug("OnInitializedAsync: Modal='{Modal}', Panel='{Panel}'", Modal, Panel);
             NavManager.LocationChanged += HandleLocationChanged;
-            await ReadFromUri(NavManager.Uri, requestStateHasChanged: false);
         }
 
+        /// <summary>
+        /// When the location changes, we need to parse the URL to see if we need to open a modal
+        /// or move to another panel within the modal.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        /// <returns></returns>
         private async Task OnLocationChanged(object? sender, LocationChangedEventArgs e)
             => await ReadFromUri(e.Location, requestStateHasChanged: true);
 
@@ -325,7 +328,7 @@ namespace BitUiNavigation.Client.Pages.Modal
             // the preOpenUrl was empty, let's just deduce it from our current location.
             else if (_activeModalProvider is not null)
             {
-                var stripped = NavManager.GetUriWithQueryParameter(_activeModalProvider.ProviderName, (string?)null);
+                var stripped = RemoveModalQueryParameters(NavManager.Uri);
                 NavManager.NavigateTo(stripped, replace: true);
             }
 
@@ -333,9 +336,6 @@ namespace BitUiNavigation.Client.Pages.Modal
             _activeModalProvider = null;
             _panelName = string.Empty;
             _panel = null;
-            // _activeProviderBase = null;   NEW
-            // _saveReset = null;             NEW
-
         }
 
         public override void Dispose()

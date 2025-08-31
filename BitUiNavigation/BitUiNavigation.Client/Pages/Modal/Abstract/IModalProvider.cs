@@ -16,6 +16,7 @@ public interface IModalProvider
     IReadOnlyList<string> ExpectedPanelKeys { get; }
 
     List<NavSectionDetail> BuildCustomNavSections(NavigationManager nav);
+    List<NavSectionDetail> NavSections { get; }
 
     /// <summary>
     /// Maps the current panel key to a RouteData (component type + parameters) for the right panel.

@@ -24,7 +24,9 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     public bool IsInitializing => UserState.IsInitializing;
     public bool HasChanged => UserState.HasChanged;
     public bool ShowResultDialog => ModalState.ShowResult;
+    public override List<NavSectionDetail> NavSections => _navSections;
 
+    private List<NavSectionDetail> _navSections = [];
     public bool SaveOnCloseEnabled => UserState.SaveOnCloseEnabled;
 
     public UserModalProvider(
@@ -51,8 +53,8 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
             IconName = BitIconName.Settings,
             CustomNavItems =
                 [
-                    new() { Key = nameof(UserMembershipsPanel), Text = "Memberships", IconName = BitIconName.UserEvent, Url = BuildPanelUrl(nav,  nameof(UserMembershipsPanel)) },
-                    new() { Key = nameof(UserProfilePanel), Text = "Profile", IconName = BitIconName.Contact, Url = BuildPanelUrl(nav,  nameof(UserProfilePanel)) }
+                    new() { Key = nameof(UserMembershipsPanel), Text = "Memberships", IconName = BitIconName.UserEvent, Url = BuildPanelRelativeUrl(nav,  nameof(UserMembershipsPanel)) },
+                    new() { Key = nameof(UserProfilePanel), Text = "Profile", IconName = BitIconName.Contact, Url = BuildPanelRelativeUrl(nav,  nameof(UserProfilePanel)) }
                 ]
         });
 
@@ -60,9 +62,22 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         {
             DecorateCustomNavItemsWithValidationIndicators(section.CustomNavItems);
         }
+        _navSections = sections;
         return sections;
     }
 
+    public void AddANavItem()
+    {
+        _navSections.Add(new NavSectionDetail()
+        {
+            Title = "New Section",
+            IconName = BitIconName.Add,
+            CustomNavItems =
+                [
+                    new() { Key = "NewItem", Text = "New Item", IconName = BitIconName.Add, Url = "#" }
+                ]
+        });
+    }
     public override async Task OnModalOpeningAsync(CancellationToken ct)
     {
         // await UserState.SetIsLoading(true, ct);
