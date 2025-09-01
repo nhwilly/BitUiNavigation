@@ -63,6 +63,31 @@ public sealed partial class ModalHostState : State<ModalHostState>
         }
     }
 
+    public static class InitializeModalActionSet
+    {
+        public sealed class Action : IAction
+        {
+            public Action() { }
+        }
+        public sealed class Handler : ActionHandler<Action>
+        {
+            private readonly ILogger<ModalHostState> _logger;
+            private ModalHostState State => Store.GetState<ModalHostState>();
+            public Handler(IStore store, ILogger<ModalHostState> logger) : base(store)
+            {
+                _logger = logger;
+            }
+            public override async Task Handle(Action action, CancellationToken cancellationToken)
+            {
+                _logger.LogDebug("InitializeModal");
+                //State.NavSections.Clear();
+                //State.Title = string.Empty;
+                //State.ShowResult = false;
+                State._validity.Clear();
+                await Task.CompletedTask;
+            }
+        }
+    }
     public static class SetNavSectionsActionSet
     {
         public sealed class Action : IAction
@@ -175,27 +200,36 @@ public sealed partial class ModalHostState : State<ModalHostState>
             {
                 _logger.LogDebug("SetValidity Provider={ProviderKey} Panel={PanelName} IsValid={IsValid} ErrorCount={ErrorCount}",
                     action.ProviderKey, action.PanelName, action.IsValid, action.ErrorCount);
+
+                IModalProvider? provider;
+                // if providerKey not found, add it
                 if (!ModalHostState._validity.TryGetValue(action.ProviderKey, out var panelDict))
                 {
                     panelDict = new Dictionary<string, PanelValidity>(StringComparer.OrdinalIgnoreCase);
                     ModalHostState._validity[action.ProviderKey] = panelDict;
                     panelDict[action.PanelName] = new PanelValidity(action.IsValid, action.ErrorCount);
                 }
+                // we have a providerKey, see if panel exists
                 else
                 {
-                    if (panelDict.TryGetValue(action.PanelName, out var existing) &&
-                        existing.IsValid == action.IsValid &&
-                        existing.ErrorCount == action.ErrorCount)
+                    var panelExists = panelDict.TryGetValue(action.PanelName, out var existingPanel);
+                    if (panelExists)
                     {
-                        // no change
-                        return;
+                        if (existingPanel?.IsValid == action.IsValid && existingPanel.ErrorCount == action.ErrorCount) // no need to redraw
+                        {
+                            return;
+                        }
+                        else // panel is already in the list, and doesn't match, update it and redecorate
+                        {
+                            panelDict[action.PanelName] = new PanelValidity(action.IsValid, action.ErrorCount);
+                            provider = _serviceProvider.GetRequiredKeyedService<IModalProvider>(action.ProviderKey);
+                            provider.DecorateCustomNavItemsWithValidationIndicators([.. ModalHostState.NavSections.SelectMany(s => s.CustomNavItems)]);
+                            return;
+                        }
                     }
-                    else
-                    {
-                        panelDict[action.PanelName] = new PanelValidity(action.IsValid, action.ErrorCount);
-                        var provider =_serviceProvider.GetRequiredKeyedService<IModalProvider>(action.ProviderKey);
-                        provider.DecorateCustomNavItemsWithValidationIndicators([.. ModalHostState.NavSections.SelectMany(s => s.CustomNavItems)]);
-                    }
+                    // panel not found, add it
+                    panelDict[action.PanelName] = new PanelValidity(action.IsValid, action.ErrorCount);
+                    provider = _serviceProvider.GetRequiredKeyedService<IModalProvider>(action.ProviderKey);
                 }
                 await Task.CompletedTask;
             }

@@ -41,29 +41,29 @@
 
                         @* @if (_saveReset?.IsDirty == true)
                         {
-                            var isBusy = _state.IsSaving || _state.IsResetting;
+                        var isBusy = _state.IsSaving || _state.IsResetting;
 
-                            <BitStack Horizontal Gap="0.5rem">
-                                @if (_ac.CanReset)
-                                {
-                                    <BitButton OnClick="@OnResetClicked"
-                                               IsEnabled="@(!isBusy)"
-                                               IconName="@BitIconName.Reset"
-                                               Color="BitColor.Primary">
-                                        Reset
-                                    </BitButton>
-                                }
+                        <BitStack Horizontal Gap="0.5rem">
+                            @if (_ac.CanReset)
+                            {
+                            <BitButton OnClick="@OnResetClicked"
+                                       IsEnabled="@(!isBusy)"
+                                       IconName="@BitIconName.Reset"
+                                       Color="BitColor.Primary">
+                                Reset
+                            </BitButton>
+                            }
 
-                                @if (_saveReset.CanSave)
-                                {
-                                    <BitButton OnClick="@OnSaveClicked"
-                                               IsEnabled="@(!isBusy)"
-                                               IconName="@BitIconName.Save"
-                                               Color="BitColor.Primary">
-                                        Save
-                                    </BitButton>
-                                }
-                            </BitStack>
+                            @if (_saveReset.CanSave)
+                            {
+                            <BitButton OnClick="@OnSaveClicked"
+                                       IsEnabled="@(!isBusy)"
+                                       IconName="@BitIconName.Save"
+                                       Color="BitColor.Primary">
+                                Save
+                            </BitButton>
+                            }
+                        </BitStack>
                         } *@
                     </BitStack>
                 </div>
@@ -92,6 +92,7 @@
                                 <RouteView @key="_panelName"
                                            RouteData="@_activeModalProvider.BuildRouteData(_panelName)"
                                            DefaultLayout="@typeof(EmptyLayout)" />
+
                             </CascadingValue>
                         </div>
                     </div>

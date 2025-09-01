@@ -13,14 +13,14 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     public override string ProviderName => "User";
     public override string DefaultPanel => nameof(UserMembershipsPanel);
     private UserModalState UserState => Store.GetState<UserModalState>();
-    private ModalHostState ModalState => Store.GetState<ModalHostState>();
+    private ModalHostState ModalHostState => Store.GetState<ModalHostState>();
     public override bool AutoSaveOnNavigate => true; // return user preference or override it.
     public bool CanSave => UserState.CanSave;
     public bool CanReset => UserState.CanReset;
     public bool IsResetting => UserState.IsResetting;
     public bool IsInitializing => UserState.IsInitializing;
     public bool HasChanged => UserState.HasChanged;
-    public bool ShowResultDialog => ModalState.ShowResult;
+    public bool ShowResultDialog => ModalHostState.ShowResult;
     public bool SaveOnCloseEnabled => UserState.SaveOnCloseEnabled;
 
     public UserModalProvider(
@@ -80,7 +80,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     }
     public override async Task OnModalOpenedAsync(CancellationToken ct)
     {
-        await ModalState.SetTitle(UserState.ProviderTitle, ct);
+        await ModalHostState.SetTitle(UserState.ProviderTitle, ct);
         // await UserState.SetIsLoading(false, ct);
     }
 
@@ -118,7 +118,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         await UserState.SaveUser(ct);
         // await UserState.SetIsLoading(false, ct);
         if (ShowResultDialog)
-            await ModalState.ShowResultModal(true, "title", "message", ct);
+            await ModalHostState.ShowResultModal(true, "title", "message", ct);
     }
 }
 

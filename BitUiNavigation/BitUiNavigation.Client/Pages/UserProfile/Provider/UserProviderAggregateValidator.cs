@@ -12,7 +12,7 @@ public sealed class UserProviderAggregateValidator : AbstractValidator<UserProvi
         //RuleFor(x => x.LocationId)
         //    .NotEmpty().WithMessage("A location is required.");
 
-        // Add any cross-panel / cross-state rules here
-        // e.g. When(...).Must(...).WithMessage(...)
+        //Add any cross - panel / cross - state rules here
+        // e.g.When(...).Must(...).WithMessage(...)
     }
 }

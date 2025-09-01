@@ -73,7 +73,7 @@ public abstract class ModalPanelBase<TModel> :
     {
         if (_ctx is null) return;
 
-        _ctx.OnFieldChanged -= OnFieldChanged;
+        //_ctx.OnFieldChanged -= OnFieldChanged;
         _ctx.OnValidationStateChanged -= OnValidationStateChanged;
         Logger?.LogDebug("Unsubscribed from EditContext for {Panel}", GetType().Name);
         _ctx = null;
@@ -102,10 +102,10 @@ public abstract class ModalPanelBase<TModel> :
             return;
         }
 
-        // What the UI actually shows (DA and/or FV messages)
         var errorCount = ctx.GetValidationMessages().Count();
         var isValid = errorCount == 0;
 
+        // TODO can we check and not invoke an update if exists and unchanged?
         await ModalHostState.SetValidity(
             Ctx.ProviderKey,
             Ctx.PanelName,

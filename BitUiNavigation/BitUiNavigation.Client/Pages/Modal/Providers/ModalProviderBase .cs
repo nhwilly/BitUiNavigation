@@ -88,7 +88,7 @@ public abstract class ModalProviderBase : IModalProvider
             {
                 // leave as-is for valid/unknown
                 // If you want to clear or set an "ok" icon, do it here.
-                // item.ValidationIconName = null;
+                 item.ValidationIconName = null;
             }
         }
     }

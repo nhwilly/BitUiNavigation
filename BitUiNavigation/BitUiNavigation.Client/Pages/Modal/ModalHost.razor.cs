@@ -1,4 +1,5 @@
-﻿using Bit.BlazorUI;
+﻿using System.Threading.Tasks;
+using Bit.BlazorUI;
 using BitUiNavigation.Client.Pages.Modal.Abstract;
 using BitUiNavigation.Client.Pages.Modal.Providers;
 using Microsoft.AspNetCore.Components;
@@ -36,7 +37,6 @@ namespace BitUiNavigation.Client.Pages.Modal
         private EventCallback _onDialogPrimary;
         private EventCallback _onDialogSecondary;
 
-
         /// <summary>
         /// Inspects the provided URI and determines if it matches any of the model providers
         /// that were registered in dependency injection.  Selects a panel from the route
@@ -67,6 +67,7 @@ namespace BitUiNavigation.Client.Pages.Modal
             if (modalDoesNotExist || modalRequestedIsDifferent)
             {
                 _activeModalProvider = ServiceProvider.GetRequiredKeyedService<IModalProvider>(Modal);
+                await _state.InitializeModal();
                 _preOpenUrl = RemoveModalQueryParameters(fullUri);
                 await _activeModalProvider.OnModalOpeningAsync(CancellationToken);
                 await _activeModalProvider.BuildNavSections(NavManager, CancellationToken);
@@ -125,7 +126,6 @@ namespace BitUiNavigation.Client.Pages.Modal
 
             _preOpenUrl = null;
             _activeModalProvider = null;
-            _isDialogOpen = false;
             StateHasChanged();
             await Task.CompletedTask;
         }
@@ -176,6 +176,7 @@ namespace BitUiNavigation.Client.Pages.Modal
             // we have a new modal session that just opened, so we call the provider
             if (_needsSessionInit && _activeModalProvider is not null)
             {
+                _modalReady = true;
                 await ReadFromUri(NavManager.Uri, requestStateHasChanged: true);
                 _needsSessionInit = false;
                 // call provider *after* first render
@@ -185,7 +186,7 @@ namespace BitUiNavigation.Client.Pages.Modal
             await base.OnAfterRenderAsync(firstRender);
         }
 
-        private bool CanCloseActiveProvider()
+        private async Task<bool> CanCloseActiveProvider()
         {
             if (_activeModalProvider is null) return true;
 
@@ -194,8 +195,10 @@ namespace BitUiNavigation.Client.Pages.Modal
             // Normalize your keys the same way you publish them from ModalPanelBase / ModalContext
             var expectedPanelKeys = _activeModalProvider.ExpectedPanelKeys; // <-- now public
 
-            return GetState<ModalHostState>()
-                .ArePanelsValid(providerKey, expectedPanelKeys, MissingPanelValidityBlocksClose);
+            var areValid = _state.ArePanelsValid(providerKey, expectedPanelKeys, MissingPanelValidityBlocksClose);
+            return await Task.FromResult(areValid);
+            //return GetState<ModalHostState>()
+            //    .ArePanelsValid(providerKey, expectedPanelKeys, MissingPanelValidityBlocksClose);
         }
 
         private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
@@ -238,8 +241,8 @@ namespace BitUiNavigation.Client.Pages.Modal
         private async Task TryCloseAsync()
         {
             if (_activeModalProvider is not IModalSave modalSave) return;
-
-            if (!CanCloseActiveProvider())
+            var canClose = await CanCloseActiveProvider();
+            if (!canClose)
             {
                 // show a toast/snack bar/banner as you like
                 return;
@@ -275,50 +278,50 @@ namespace BitUiNavigation.Client.Pages.Modal
             // }
 
             // NEW: Save-or-discard flow
-            if (modalSave.HasChanged)
-            {
-                if (_activeModalProvider is not ISupportsSaveOnNavigate modalSaveOnNavigate)
-                {
-                    var (valid, _) = await _activeModalProvider!.ValidateProviderAsync(CancellationToken);
-                    if (valid)
-                    {
-                        await modalSave.SaveAsync(CancellationToken);
-                        // if (!saved)
-                        // {
-                        //     ShowInfoDialog(
-                        //         title: "Unable to save before closing",
-                        //         body: "There was a problem saving your changes. Please try again.",
-                        //         primaryText: "OK"
-                        //     );
-                        //     return; keep modal open
-                        // }
-                    }
-                    else
-                    {
-                        ShowConfirmDialog(
-                            title: "Discard changes and close?",
-                            body: "You have unsaved changes with validation issues.",
-                            primaryText: "Discard & Close",
-                            secondaryText: "Cancel",
-                            onPrimary: async () => { await DiscardAndCloseAsync(); },
-                            onSecondary: () => { /* keep open */ }
-                        );
-                        return;
-                    }
-                }
-                else
-                {
-                    ShowConfirmDialog(
-                        title: "Discard changes and close?",
-                        body: "You have unsaved changes.",
-                        primaryText: "Discard & Close",
-                        secondaryText: "Cancel",
-                        onPrimary: async () => { await DiscardAndCloseAsync(); },
-                        onSecondary: () => { /* keep open */ }
-                    );
-                    return;
-                }
-            }
+            //if (modalSave.HasChanged)
+            //{
+            //    if (_activeModalProvider is not ISupportsSaveOnNavigate modalSaveOnNavigate)
+            //    {
+            //        var (valid, _) = await _activeModalProvider!.ValidateProviderAsync(CancellationToken);
+            //        if (valid)
+            //        {
+            //            await modalSave.SaveAsync(CancellationToken);
+            //            // if (!saved)
+            //            // {
+            //            //     ShowInfoDialog(
+            //            //         title: "Unable to save before closing",
+            //            //         body: "There was a problem saving your changes. Please try again.",
+            //            //         primaryText: "OK"
+            //            //     );
+            //            //     return; keep modal open
+            //            // }
+            //        }
+            //        else
+            //        {
+            //            ShowConfirmDialog(
+            //                title: "Discard changes and close?",
+            //                body: "You have unsaved changes with validation issues.",
+            //                primaryText: "Discard & Close",
+            //                secondaryText: "Cancel",
+            //                onPrimary: async () => { await DiscardAndCloseAsync(); },
+            //                onSecondary: () => { /* keep open */ }
+            //            );
+            //            return;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        ShowConfirmDialog(
+            //            title: "Discard changes and close?",
+            //            body: "You have unsaved changes.",
+            //            primaryText: "Discard & Close",
+            //            secondaryText: "Cancel",
+            //            onPrimary: async () => { await DiscardAndCloseAsync(); },
+            //            onSecondary: () => { /* keep open */ }
+            //        );
+            //        return;
+            //    }
+            //}
 
 
 
