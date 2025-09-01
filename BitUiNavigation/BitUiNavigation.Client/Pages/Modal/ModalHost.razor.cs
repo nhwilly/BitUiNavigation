@@ -17,7 +17,7 @@
         private ModalContext ModalContext => new()
         {
             ProviderKey = _modalProvider?.ProviderName ?? "UnknownProvider",
-            PanelName = _panelName 
+            PanelName = _panelName
         };
 
         private bool _modalHostIsInitializing = true;
