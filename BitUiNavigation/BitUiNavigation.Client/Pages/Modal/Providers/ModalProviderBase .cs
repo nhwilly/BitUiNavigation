@@ -95,5 +95,7 @@ public abstract class ModalProviderBase : IModalProvider
 
     public virtual Task<(bool, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
         => Task.FromResult<(bool, IReadOnlyList<string>)>((true, Array.Empty<string>()));
+
+    public abstract bool HasUnsavedChanges { get; }
 }
 

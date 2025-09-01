@@ -1,4 +1,5 @@
 ﻿@using BitUiNavigation.Client.Pages.Modal.Abstract
+@using BitUiNavigation.Client.Pages.Modal.Components
 @using BitUiNavigation.Client.Pages.Modal.Providers
 @inherits TimeWarpStateComponent
 @inject IServiceProvider ServiceProvider
@@ -7,7 +8,7 @@
 @inject ILogger<ModalHost> Logger
 @implements IDisposable
 
-@if (_activeModalProvider is not null)
+@if (_modalProvider is not null)
 {
     <BitDialog IsBlocking IsOpen="@(_state.ShowResult)">
         <ChildContent>
@@ -70,27 +71,14 @@
 
                 <BitSeparator Border="BitColorKind.Tertiary" />
 
-                @if (_providerValidationMessages?.Count > 0)
-                {
-                    <BitText Style="padding:0 1rem; font-weight:600;" Color="@BitColor.Info">
-                        Please resolve these issues:
-                    </BitText>
-                    <BitMessage Multiline Style="width: auto; margin: 0rem 1rem;" Color="@BitColor.Error">
-                        <ul style="margin:0; padding-left:1rem;">
-                            @foreach (var msg in _providerValidationMessages)
-                            {
-                                <li>@msg</li>
-                            }
-                        </ul>
-                    </BitMessage>
-                }
+                <ProviderValidationSummary Messages="@_providerValidationMessages" />
 
                 <div style="flex:1;overflow:hidden;border-bottom-right-radius:20px;position:relative;">
                     <div style="height:100%;overflow-y:auto;">
                         <div style="padding:1rem;">
                             <CascadingValue TValue="@ModalContext" Value="@_ctx">
                                 <RouteView @key="_panelName"
-                                           RouteData="@_activeModalProvider.BuildRouteData(_panelName)"
+                                           RouteData="@_modalProvider.BuildRouteData(_panelName)"
                                            DefaultLayout="@typeof(EmptyLayout)" />
 
                             </CascadingValue>

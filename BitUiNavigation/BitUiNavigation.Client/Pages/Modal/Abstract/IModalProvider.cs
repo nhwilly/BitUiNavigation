@@ -26,4 +26,6 @@ public interface IModalProvider
 
     void DecorateCustomNavItemsWithValidationIndicators(List<CustomNavItem> items);
 
+    bool HasUnsavedChanges { get; }
+
 }

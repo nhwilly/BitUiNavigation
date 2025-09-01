@@ -54,7 +54,11 @@ public sealed partial class UserModalState : State<UserModalState>
         };
 
         MembershipsVm = new UserMembershipsViewModel { Name = User.Name };
-        // TODO: Map other panel VMs from Entity as needed
+        SometimesViewModel = new SometimesViewModel { Description = "" };
+
+        ProfileVmOriginal = ProfileVm with { };
+        MembershipsVmOriginal = MembershipsVm with { };
+        SometimesViewModelOriginal = SometimesViewModel with { };
     }
 
     private void MapViewModelToDto()

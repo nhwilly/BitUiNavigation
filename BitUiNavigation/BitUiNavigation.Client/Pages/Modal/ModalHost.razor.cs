@@ -12,7 +12,7 @@ namespace BitUiNavigation.Client.Pages.Modal
         [Parameter, SupplyParameterFromQuery] public string? Modal { get; set; }
         [Parameter, SupplyParameterFromQuery] public string? Panel { get; set; }
 
-        private IModalProvider? _activeModalProvider;
+        private IModalProvider? _modalProvider;
         private string _panelName = string.Empty;
         private string? _preOpenUrl;
         private IModalPanel? _panel;
@@ -23,10 +23,11 @@ namespace BitUiNavigation.Client.Pages.Modal
 
         private ModalContext _ctx => new()
         {
-            ProviderKey = _activeModalProvider?.ProviderName ?? "UnknownProvider",
+            ProviderKey = _modalProvider?.ProviderName ?? "UnknownProvider",
             PanelName = _panelName // or nameof(UserProfilePanel) if you map it
         };
 
+        private bool _modalHostIsInitializing = true;
         // NEW: Blocking dialog local state
         private bool _isDialogOpen;
         private string _dialogTitle = string.Empty;
@@ -48,31 +49,31 @@ namespace BitUiNavigation.Client.Pages.Modal
         private async Task ReadFromUri(string fullUri, bool requestStateHasChanged)
         {
             // if we don't have a valid modal query parameter, we are not active
-            var hasModalInUri = !string.IsNullOrWhiteSpace(Modal);
-            if (!hasModalInUri)
+            var hasModalQueryStringParam = !string.IsNullOrWhiteSpace(Modal);
+            if (!hasModalQueryStringParam)
             {
-                _activeModalProvider = null;
+                _modalProvider = null;
                 _panelName = string.Empty;
                 _preOpenUrl = null;
                 return;
             }
 
-            var modalDoesNotExist = _activeModalProvider is null;
+            var providerIsNull = _modalProvider is null;
 
-            var modalRequestedIsDifferent = !string.Equals(_activeModalProvider?.ProviderName, Modal, StringComparison.OrdinalIgnoreCase);
+            var providerRequestedIsDifferent = !string.Equals(_modalProvider?.ProviderName, Modal, StringComparison.OrdinalIgnoreCase);
             var panelNameMatchesCurrent = string.Equals(_panelName, Panel, StringComparison.OrdinalIgnoreCase);
-            _panelName = Panel ?? _activeModalProvider?.DefaultPanel ?? string.Empty;
+            _panelName = Panel ?? _modalProvider?.DefaultPanel ?? string.Empty;
 
             // are we new or are we navigating to a new modal?
-            if (modalDoesNotExist || modalRequestedIsDifferent)
+            if (providerIsNull || providerRequestedIsDifferent)
             {
-                _activeModalProvider = ServiceProvider.GetRequiredKeyedService<IModalProvider>(Modal);
+                _modalProvider = ServiceProvider.GetRequiredKeyedService<IModalProvider>(Modal);
                 await _state.InitializeModal();
                 _preOpenUrl = RemoveModalQueryParameters(fullUri);
-                await _activeModalProvider.OnModalOpeningAsync(CancellationToken);
-                await _activeModalProvider.BuildNavSections(NavManager, CancellationToken);
+                await _modalProvider.OnModalOpeningAsync(CancellationToken);
+                await _modalProvider.BuildNavSections(NavManager, CancellationToken);
                 _needsSessionInit = true;
-                Logger.LogDebug("Changing modal to '{Modal}' '{Panel}'", _activeModalProvider.ProviderName, _panelName);
+                Logger.LogDebug("Changing modal to '{Modal}' '{Panel}'", _modalProvider.ProviderName, _panelName);
             }
 
             if (requestStateHasChanged)
@@ -82,9 +83,9 @@ namespace BitUiNavigation.Client.Pages.Modal
 
         private async Task OnSaveClicked()
         {
-            if (_activeModalProvider is not IModalSave modalSave) return;
+            if (_modalProvider is not IModalSave modalSave) return;
 
-            var (isValid, _) = await _activeModalProvider.ValidateProviderAsync(CancellationToken);
+            var (isValid, _) = await _modalProvider.ValidateProviderAsync(CancellationToken);
             if (!isValid)
             {
                 ShowInfoDialog(
@@ -109,7 +110,7 @@ namespace BitUiNavigation.Client.Pages.Modal
 
         private async Task OnResetClicked()
         {
-            if (_activeModalProvider is not IModalReset modalReset) return;
+            if (_modalProvider is not IModalReset modalReset) return;
             await modalReset.ResetAsync(CancellationToken);
         }
 
@@ -121,11 +122,11 @@ namespace BitUiNavigation.Client.Pages.Modal
             if (!string.IsNullOrEmpty(_preOpenUrl))
                 NavManager.NavigateTo(_preOpenUrl!, replace: true);
 
-            else if (_activeModalProvider is not null)
-                NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(_activeModalProvider.ProviderName, (string?)null), replace: true);
+            else if (_modalProvider is not null)
+                NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(_modalProvider.ProviderName, (string?)null), replace: true);
 
             _preOpenUrl = null;
-            _activeModalProvider = null;
+            _modalProvider = null;
             StateHasChanged();
             await Task.CompletedTask;
         }
@@ -174,55 +175,32 @@ namespace BitUiNavigation.Client.Pages.Modal
             Logger.LogDebug("OnAfterRender: Modal='{Modal}', Panel='{Panel}'", Modal, Panel);
 
             // we have a new modal session that just opened, so we call the provider
-            if (_needsSessionInit && _activeModalProvider is not null)
+            if (_needsSessionInit && _modalProvider is not null)
             {
-                _modalReady = true;
+                _modalHostIsInitializing = false;
                 await ReadFromUri(NavManager.Uri, requestStateHasChanged: true);
                 _needsSessionInit = false;
-                // call provider *after* first render
-                await _activeModalProvider.OnModalOpenedAsync(CancellationToken);
+                await _modalProvider.OnModalOpenedAsync(CancellationToken);
             }
 
             await base.OnAfterRenderAsync(firstRender);
         }
 
-        private async Task<bool> CanCloseActiveProvider()
-        {
-            if (_activeModalProvider is null) return true;
-
-            var providerKey = _activeModalProvider.ProviderName;
-
-            // Normalize your keys the same way you publish them from ModalPanelBase / ModalContext
-            var expectedPanelKeys = _activeModalProvider.ExpectedPanelKeys; // <-- now public
-
-            var areValid = _state.ArePanelsValid(providerKey, expectedPanelKeys, MissingPanelValidityBlocksClose);
-            return await Task.FromResult(areValid);
-            //return GetState<ModalHostState>()
-            //    .ArePanelsValid(providerKey, expectedPanelKeys, MissingPanelValidityBlocksClose);
-        }
-
-        private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
-        {
-            // fire-and-forget wrapper that calls the async method
-            _ = OnLocationChanged(sender, e);
-        }
-
-        //protected override async Task OnInitializedAsync()
-        //{
-        //    Logger.LogDebug("OnInitializedAsync: Modal='{Modal}', Panel='{Panel}'", Modal, Panel);
-        //    // we have to have this here because this modal is always running and it needs 
-        //    // to inspect the URL for to see if it should open a modal or not.
-        //    NavManager.LocationChanged += HandleLocationChanged;
-        //    //await ReadFromUri(NavManager.Uri, requestStateHasChanged: false);
-        //}
+        /// <summary>
+        /// Fire-and-forget wrapper that calls the async method.  OnLocationChanged is async
+        /// but the subscription to the event handler is not.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void HandleLocationChanged(object? sender, LocationChangedEventArgs e) => _ = OnLocationChanged(sender, e);
 
         /// <summary>
-        ///We have to have this here because this modal is always running and it needs 
-        /// to inspect the URL for to see if it should open a modal or not.
+        /// Remember that the modal component is always included in the main layout.  This allows us to show a modal from anywhere.
+        /// That means each navigation anywhere in the app will be reviewed to see if it contains a modal.
         /// </summary>
         protected override void OnInitialized()
         {
-            Logger.LogDebug("OnInitializedAsync: Modal='{Modal}', Panel='{Panel}'", Modal, Panel);
+            Logger.LogDebug("OnInitialized: Modal='{Modal}', Panel='{Panel}'", Modal, Panel);
             NavManager.LocationChanged += HandleLocationChanged;
             // Process the initial URL so we can support deep linking.
             _ = ReadFromUri(NavManager.Uri, requestStateHasChanged: false);
@@ -230,7 +208,8 @@ namespace BitUiNavigation.Client.Pages.Modal
 
         /// <summary>
         /// When the location changes, we need to parse the URL to see if we need to open a modal
-        /// or move to another panel within the modal.
+        /// or move to another panel within the modal.  We need to fire StateHasChanged to 
+        /// update the UI.
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -238,109 +217,115 @@ namespace BitUiNavigation.Client.Pages.Modal
         private async Task OnLocationChanged(object? sender, LocationChangedEventArgs e)
             => await ReadFromUri(e.Location, requestStateHasChanged: true);
 
+        private async Task<bool> ArePanelsValid()
+        {
+            if (_modalProvider is null) return true;
+
+            var providerKey = _modalProvider.ProviderName;
+            var expectedPanelKeys = _modalProvider.ExpectedPanelKeys;
+            var areValid = _state.ArePanelsValid(providerKey, expectedPanelKeys, MissingPanelValidityBlocksClose);
+            return await Task.FromResult(areValid);
+        }
+        private async Task<bool> IsProviderValid()
+        {
+            if (_modalProvider is null) return true;
+
+            var (isValid, messages) = await _modalProvider.ValidateProviderAsync(CancellationToken);
+            if (!isValid)
+            {
+                _providerValidationMessages = messages?.ToList() ?? [];
+            }
+            return isValid;
+        }
+
         private async Task TryCloseAsync()
         {
-            if (_activeModalProvider is not IModalSave modalSave) return;
-            var canClose = await CanCloseActiveProvider();
-            if (!canClose)
+            if (_modalProvider is null)
             {
-                // show a toast/snack bar/banner as you like
+                Logger.LogDebug("ModalProvider is null - closing.");
+                CloseModal();
                 return;
             }
-            // Optional provider-specific hook (non-blocking if you don't need it)
-            if (_activeModalProvider is IBeforeCloseHook hook)
+
+            // Optional pre-close hook (blocking if you implement it)
+            // This may mutate state, so we do it first.
+            if (_modalProvider is IBeforeCloseHook hook)
             {
-                var ok = await hook.OnBeforeCloseAsync(CancellationToken);
-                if (!ok) return;
+                var canClose = await hook.OnBeforeCloseAsync(CancellationToken);
+                Logger.LogDebug("BeforeCloseHook returned {CanClose}", canClose);
+                if (!canClose) return;
+            }
+            // TODO: Possibly set a flag to indicate they tried to close but were blocked by validation.
+            // then always do a provider aggregate validation with each normal validation.  Or we may have to
+            // check for each field change.
+
+            var panelsAreValid = await ArePanelsValid();
+            var providerIsValid = await IsProviderValid();
+
+            if (!panelsAreValid || !providerIsValid)
+            {
+                Logger.LogDebug("Cannot close: PanelsValid={PanelsValid}, ProviderValid={ProviderValid}", panelsAreValid, providerIsValid);
+                // TODO: set flag to display validation dialogue in UI
+                // this will allow the model to become valid through corrections or reset.
+                StateHasChanged();
+                return;
             }
 
+            // now we know it is valid.  are there any changes to save?
+            if (!_modalProvider.HasUnsavedChanges)
+            {
+                Logger.LogDebug("No unsaved changes - closing.");
+                CloseModal();
+                return;
+            }
 
+            // now it's valid and there are changes.  what to do?
 
+            // if we can't save, we have to close without saving -
+            // probably an error condition, log it or toast it or both
+            if (_modalProvider is not IModalSave modalSave)
+            {
+                Logger.LogError("ModalProvider '{Provider}' has unsaved changes but does not support saving.", _modalProvider.ProviderName);
+                // TODO: toast at a minimum, then close...
+                CloseModal();
+                return;
+            }
 
+            // if we can save but not on navigation
+            // we need to set flag to display a choice of discard/save/cancel
+            if (_modalProvider is not ISupportsSaveOnClose)
+            {
+                Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes but does not support SaveOnClose.", _modalProvider.ProviderName);
+                // TODO set flag here...
+                CloseModal();
+                return;
+            }
 
+            Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes and supports SaveOnClose - saving.", _modalProvider.ProviderName);
+            // so at this point, we are valid, have changes and can save on navigation.
+            await modalSave.SaveAsync(CancellationToken);
+            CloseModal();
 
+        }
 
-
-
-            // if (_activeModalProvider is not null)
-            // {
-            //     var (isValid, messages) = await _activeModalProvider.ValidateProviderAsync(CancellationToken);
-            //     if (!isValid)
-            //     {
-            //         cache messages for UI and block close
-            //         _providerValidationMessages = messages?.ToList() ?? [];
-            //         StateHasChanged();
-            //         return;
-            //     }
-
-            //     clear any prior provider errors
-            //     _providerValidationMessages = null;
-            // }
-
-            // NEW: Save-or-discard flow
-            //if (modalSave.HasChanged)
-            //{
-            //    if (_activeModalProvider is not ISupportsSaveOnNavigate modalSaveOnNavigate)
-            //    {
-            //        var (valid, _) = await _activeModalProvider!.ValidateProviderAsync(CancellationToken);
-            //        if (valid)
-            //        {
-            //            await modalSave.SaveAsync(CancellationToken);
-            //            // if (!saved)
-            //            // {
-            //            //     ShowInfoDialog(
-            //            //         title: "Unable to save before closing",
-            //            //         body: "There was a problem saving your changes. Please try again.",
-            //            //         primaryText: "OK"
-            //            //     );
-            //            //     return; keep modal open
-            //            // }
-            //        }
-            //        else
-            //        {
-            //            ShowConfirmDialog(
-            //                title: "Discard changes and close?",
-            //                body: "You have unsaved changes with validation issues.",
-            //                primaryText: "Discard & Close",
-            //                secondaryText: "Cancel",
-            //                onPrimary: async () => { await DiscardAndCloseAsync(); },
-            //                onSecondary: () => { /* keep open */ }
-            //            );
-            //            return;
-            //        }
-            //    }
-            //    else
-            //    {
-            //        ShowConfirmDialog(
-            //            title: "Discard changes and close?",
-            //            body: "You have unsaved changes.",
-            //            primaryText: "Discard & Close",
-            //            secondaryText: "Cancel",
-            //            onPrimary: async () => { await DiscardAndCloseAsync(); },
-            //            onSecondary: () => { /* keep open */ }
-            //        );
-            //        return;
-            //    }
-            //}
-
-
-
-            // proceed with existing close logic...
+        private void CloseModal()
+        {
             if (!string.IsNullOrEmpty(_preOpenUrl))
             {
                 NavManager.NavigateTo(_preOpenUrl!, replace: true);
             }
             // the preOpenUrl was empty, let's just deduce it from our current location.
-            else if (_activeModalProvider is not null)
+            else if (_modalProvider is not null)
             {
                 var stripped = RemoveModalQueryParameters(NavManager.Uri);
                 NavManager.NavigateTo(stripped, replace: true);
             }
 
             _preOpenUrl = null;
-            _activeModalProvider = null;
+            _modalProvider = null;
             _panelName = string.Empty;
             _panel = null;
+
         }
 
         public override void Dispose()
@@ -353,11 +338,11 @@ namespace BitUiNavigation.Client.Pages.Modal
 
         private string CreateContainerCss()
         {
-            if (_activeModalProvider is null) return string.Empty;
+            if (_modalProvider is null) return string.Empty;
             return $@"
         .{ModalContainerClass} {{
-            width:  {_activeModalProvider.Width};
-            height: {_activeModalProvider.Height};
+            width:  {_modalProvider.Width};
+            height: {_modalProvider.Height};
             border-radius:20px;
         }}";
         }
