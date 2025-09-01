@@ -16,7 +16,6 @@ public interface IModalProvider
     IReadOnlyList<string> ExpectedPanelKeys { get; }
 
     Task BuildCustomNavSections(NavigationManager nav, CancellationToken ct);
-    List<NavSectionDetail> NavSections { get; }
 
     /// <summary>
     /// Maps the current panel key to a RouteData (component type + parameters) for the right panel.

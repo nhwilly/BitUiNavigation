@@ -69,8 +69,8 @@ namespace BitUiNavigation.Client.Pages.Modal
                 _activeModalProvider = ServiceProvider.GetRequiredKeyedService<IModalProvider>(Modal);
                 _preOpenUrl = RemoveModalQueryParameters(fullUri);
                 await _activeModalProvider.OnModalOpeningAsync(CancellationToken);
+                await _activeModalProvider.BuildCustomNavSections(NavManager, CancellationToken);
                 _needsSessionInit = true;
-                _ = _activeModalProvider.BuildCustomNavSections(NavManager);
                 Logger.LogDebug("Changing modal to '{Modal}' '{Panel}'", _activeModalProvider.ProviderName, _panelName);
             }
 

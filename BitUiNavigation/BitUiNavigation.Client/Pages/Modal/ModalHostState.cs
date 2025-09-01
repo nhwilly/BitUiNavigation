@@ -123,30 +123,30 @@ public sealed partial class ModalHostState : State<ModalHostState>
         }
     }
 
-    public static class RefreshNavItemsActionSet
-    {
-        public sealed class Action : IAction
-        {
-            public Action() { }
-        }
-        public sealed class Handler : ActionHandler<Action>
-        {
-            private readonly ILogger<UserModalState> _logger;
-            private ModalHostState ModalHostState => Store.GetState<ModalHostState>();
-            public Handler(
-                IStore store,
-                ILogger<UserModalState> logger)
-                : base(store)
-            {
-                _logger = logger;
-            }
-            public override async Task Handle(Action action, CancellationToken cancellationToken)
-            {
-                Notify
-                await Task.CompletedTask;
-            }
-        }
-    }
+    //public static class RefreshNavItemsActionSet
+    //{
+    //    public sealed class Action : IAction
+    //    {
+    //        public Action() { }
+    //    }
+    //    public sealed class Handler : ActionHandler<Action>
+    //    {
+    //        private readonly ILogger<UserModalState> _logger;
+    //        private ModalHostState ModalHostState => Store.GetState<ModalHostState>();
+    //        public Handler(
+    //            IStore store,
+    //            ILogger<UserModalState> logger)
+    //            : base(store)
+    //        {
+    //            _logger = logger;
+    //        }
+    //        public override async Task Handle(Action action, CancellationToken cancellationToken)
+    //        {
+    //            Notify
+    //            await Task.CompletedTask;
+    //        }
+    //    }
+    //}
 
     public static class SetValidityActionSet
     {

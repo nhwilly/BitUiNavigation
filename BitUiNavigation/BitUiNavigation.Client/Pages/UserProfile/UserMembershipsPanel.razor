@@ -31,6 +31,6 @@
     private ModalHostState ModalHostState => GetState<ModalHostState>();
     private async Task AddMenuItem(bool args)
     {
-        await ModalHostState.RefreshNavItems();
+        await Task.CompletedTask;
     }
 }

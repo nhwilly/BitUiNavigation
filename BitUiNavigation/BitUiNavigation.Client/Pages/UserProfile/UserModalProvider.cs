@@ -1,12 +1,4 @@
-﻿using Bit.BlazorUI;
-using BitUiNavigation.Client.Pages.Modal.Abstract;
-using BitUiNavigation.Client.Pages.Modal.Providers;
-using FluentValidation;
-using Microsoft.AspNetCore.Components;
-using TimeWarp.State;
-using static System.Collections.Specialized.BitVector32;
-
-namespace BitUiNavigation.Client.Pages.UserProfile;
+﻿namespace BitUiNavigation.Client.Pages.UserProfile;
 public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset
 {
     private readonly IValidator<UserProviderAggregate> _providerValidator;
