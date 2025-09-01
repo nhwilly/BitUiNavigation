@@ -14,7 +14,7 @@ public abstract class ModalProviderBase : IModalProvider
     public virtual string MinWidth => "350px";
     public virtual string MaxWidth => "1200px";
     public virtual string Height => "640px";
-    //public virtual List<NavSectionDetail> NavSections { get; } = [];
+
     public virtual bool AutoSaveOnNavigate => false;
     protected readonly IStore Store;
     protected readonly ILogger _logger;
@@ -35,7 +35,7 @@ public abstract class ModalProviderBase : IModalProvider
 
     public virtual Task OnModalOpeningAsync(CancellationToken ct) => Task.CompletedTask;
 
-    public abstract Task BuildCustomNavSections(NavigationManager nav, CancellationToken ct);
+    public abstract Task BuildNavSections(NavigationManager nav, CancellationToken ct);
 
     protected static string BuildPanelRelativeUrl(NavigationManager nav, string panelName)
     {

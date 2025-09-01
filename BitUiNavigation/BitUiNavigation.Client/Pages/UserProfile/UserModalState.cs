@@ -1,5 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
 using BitUiNavigation.Client.Pages.UserProfile;
+using BitUiNavigation.Client.Pages.UserProfile.Memberships;
+using BitUiNavigation.Client.Pages.UserProfile.Profile;
+using BitUiNavigation.Client.Pages.UserProfile.Sometimes;
 using TimeWarp.State;
 
 namespace BitUiNavigation.Client.Services;
@@ -12,6 +15,8 @@ public sealed partial class UserModalState : State<UserModalState>
     private UserProfileViewModel ProfileVmOriginal { get; set; } = new();
     private UserMembershipsViewModel MembershipsVmOriginal { get; set; } = new();
 
+    public SometimesViewModel SometimesViewModel { get; private set; } = new();
+    private SometimesViewModel SometimesViewModelOriginal { get; set; } = new();
     private readonly Dictionary<Type, bool> _lastKnownByType = [];
     public IReadOnlyDictionary<Type, bool> LastKnownValidityByType => _lastKnownByType;
 
@@ -32,7 +37,8 @@ public sealed partial class UserModalState : State<UserModalState>
         {
             return
                 ProfileVm != ProfileVmOriginal ||
-                MembershipsVm != MembershipsVmOriginal;
+                MembershipsVm != MembershipsVmOriginal ||
+                SometimesViewModel != SometimesViewModelOriginal;
         }
     }
 
@@ -95,10 +101,8 @@ public sealed partial class UserModalState : State<UserModalState>
             private UserModalState UserModalState => Store.GetState<UserModalState>();
             public override async Task Handle(Action action, CancellationToken cancellationToken)
             {
-                UserModalState.IsToggled = action.IsToggled;
-                // TODO: Consider moving this to ModalProviderBase if multiple providers need it
-                // and update ImodalProvider to include RefreshNavSections
-                await ((UserModalProvider)_provider).RefreshNavSections(_nav, cancellationToken);
+                UserModalState.IsToggled = !UserModalState.IsToggled;
+                await _provider.BuildNavSections(_nav, cancellationToken);
             }
         }
     }

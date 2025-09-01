@@ -1,7 +1,4 @@
-﻿using BitUiNavigation.Client.Pages.Modal.Providers;
-using TimeWarp.State;
-
-namespace BitUiNavigation.Client.Services;
+﻿namespace BitUiNavigation.Client.Services;
 
 public sealed partial class ModalHostState : State<ModalHostState>
 {

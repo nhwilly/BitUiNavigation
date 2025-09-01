@@ -1,6 +1,6 @@
 ﻿using BitUiNavigation.Client.Pages.Modal.Abstract;
 
-namespace BitUiNavigation.Client.Pages.UserProfile;
+namespace BitUiNavigation.Client.Pages.UserProfile.Profile;
 public record UserProfileViewModel : BaseRecord
 {
     public string FirstName { get; set; } = string.Empty;

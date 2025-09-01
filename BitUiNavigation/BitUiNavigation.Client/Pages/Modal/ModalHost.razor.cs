@@ -19,7 +19,7 @@ namespace BitUiNavigation.Client.Pages.Modal
         private bool MissingPanelValidityBlocksClose => false; // flip to true if you want stricter policy
         private List<string>? _providerValidationMessages = [];
         private ModalHostState _state => GetState<ModalHostState>();
-        //public List<NavSectionDetail> NavSections { get; set; } = [];
+
         private ModalContext _ctx => new()
         {
             ProviderKey = _activeModalProvider?.ProviderName ?? "UnknownProvider",
@@ -69,7 +69,7 @@ namespace BitUiNavigation.Client.Pages.Modal
                 _activeModalProvider = ServiceProvider.GetRequiredKeyedService<IModalProvider>(Modal);
                 _preOpenUrl = RemoveModalQueryParameters(fullUri);
                 await _activeModalProvider.OnModalOpeningAsync(CancellationToken);
-                await _activeModalProvider.BuildCustomNavSections(NavManager, CancellationToken);
+                await _activeModalProvider.BuildNavSections(NavManager, CancellationToken);
                 _needsSessionInit = true;
                 Logger.LogDebug("Changing modal to '{Modal}' '{Panel}'", _activeModalProvider.ProviderName, _panelName);
             }

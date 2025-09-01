@@ -1,7 +1,8 @@
-﻿
-using Microsoft.AspNetCore.Components;
+﻿using BitUiNavigation.Client.Pages.UserProfile.Memberships;
+using BitUiNavigation.Client.Pages.UserProfile.Profile;
+using BitUiNavigation.Client.Pages.UserProfile.Sometimes;
 
-namespace BitUiNavigation.Client.Pages.UserProfile;
+namespace BitUiNavigation.Client.Pages.UserProfile.Provider;
 public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset
 {
     private readonly IValidator<UserProviderAggregate> _providerValidator;
@@ -33,13 +34,11 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     protected override Dictionary<string, Type> PanelMap { get; } = new(StringComparer.OrdinalIgnoreCase)
     {
         [nameof(UserMembershipsPanel)] = typeof(UserMembershipsPanel),
-        [nameof(UserProfilePanel)] = typeof(UserProfilePanel)
+        [nameof(UserProfilePanel)] = typeof(UserProfilePanel),
+        [nameof(SometimesPanel)] = typeof(SometimesPanel),
     };
 
-    public async Task RefreshNavSections(NavigationManager nav, CancellationToken ct)
-    => await BuildCustomNavSections(nav, ct);
-
-    public override async Task BuildCustomNavSections(NavigationManager nav, CancellationToken ct)
+    public override async Task BuildNavSections(NavigationManager nav, CancellationToken ct)
     {
         var sections = new List<NavSectionDetail>();
         sections.Add(new NavSectionDetail()
@@ -53,6 +52,18 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
                 ]
         });
 
+        if (UserState.IsToggled)
+        {
+            sections.Add(new NavSectionDetail()
+            {
+                Title = "Sometimes",
+                IconName = BitIconName.Calendar,
+                CustomNavItems =
+                [
+                    new() { Key = nameof(SometimesPanel), Text = "Sometimes", IconName = BitIconName.Calendar, Url = BuildPanelRelativeUrl(nav,  nameof(SometimesPanel)) }
+                ]
+            });
+        }
         foreach (var section in sections)
         {
             DecorateCustomNavItemsWithValidationIndicators(section.CustomNavItems);

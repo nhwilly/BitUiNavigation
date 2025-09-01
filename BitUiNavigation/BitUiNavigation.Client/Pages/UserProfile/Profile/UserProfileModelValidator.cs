@@ -1,6 +1,6 @@
 ﻿using FluentValidation;
 
-namespace BitUiNavigation.Client.Pages.UserProfile;
+namespace BitUiNavigation.Client.Pages.UserProfile.Profile;
 
 public class UserProfileModelValidator : AbstractValidator<UserProfileViewModel>
 {

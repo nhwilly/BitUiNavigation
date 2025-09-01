@@ -1,0 +1,17 @@
+﻿@inherits ModalPanelBase<SometimesViewModel>
+<SkeletonWhileBusy IsBusy="@(UserModalState.IsInitializing)">
+    <EditForm @ref="editForm" Model="@Model">
+        <FluentValidationValidator />
+        <BitTextField @bind-Value="Model.Description"
+                      Label="Description"
+                      Placeholder="Enter a name..."
+                      IconName="@BitIconName.GroupedDescending" />
+        <ValidationMessage For="() => Model.Description" />
+    </EditForm>
+</SkeletonWhileBusy>
+<h3>Sometime this panel is shown</h3>
+
+@code {
+    private UserModalState UserModalState => GetState<UserModalState>();
+    protected override SometimesViewModel Model => UserModalState.SometimesViewModel;
+}

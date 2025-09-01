@@ -2,6 +2,8 @@ using Bit.BlazorUI;
 using BitUiNavigation.Client.Pages.Modal.Abstract;
 using BitUiNavigation.Client.Pages.Modal.Providers;
 using BitUiNavigation.Client.Pages.UserProfile;
+using BitUiNavigation.Client.Pages.UserProfile.Profile;
+using BitUiNavigation.Client.Pages.UserProfile.Provider;
 using FluentValidation;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;

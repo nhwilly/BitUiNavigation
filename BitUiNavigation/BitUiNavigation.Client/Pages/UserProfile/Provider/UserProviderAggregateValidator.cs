@@ -1,4 +1,4 @@
-﻿namespace BitUiNavigation.Client.Pages.UserProfile;
+﻿namespace BitUiNavigation.Client.Pages.UserProfile.Provider;
 
 using FluentValidation;
 

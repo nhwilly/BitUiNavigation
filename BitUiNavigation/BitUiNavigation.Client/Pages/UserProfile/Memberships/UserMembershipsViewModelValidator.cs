@@ -1,6 +1,4 @@
-﻿using FluentValidation;
-
-namespace BitUiNavigation.Client.Pages.UserProfile;
+﻿namespace BitUiNavigation.Client.Pages.UserProfile.Memberships;
 
 public class UserMembershipsViewModelValidator : AbstractValidator<UserMembershipsViewModel>
 {

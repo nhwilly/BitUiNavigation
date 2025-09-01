@@ -1,8 +1,4 @@
-﻿using Bit.BlazorUI;
-using BitUiNavigation.Client.Pages.Modal.Providers;
-using Microsoft.AspNetCore.Components;
-
-namespace BitUiNavigation.Client.Pages.Modal.Abstract;
+﻿namespace BitUiNavigation.Client.Pages.Modal.Abstract;
 
 public interface IModalProvider
 {
@@ -15,7 +11,7 @@ public interface IModalProvider
 
     IReadOnlyList<string> ExpectedPanelKeys { get; }
 
-    Task BuildCustomNavSections(NavigationManager nav, CancellationToken ct);
+    Task BuildNavSections(NavigationManager nav, CancellationToken ct);
 
     /// <summary>
     /// Maps the current panel key to a RouteData (component type + parameters) for the right panel.
