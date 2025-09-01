@@ -71,20 +71,6 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         await HostState.SetNavSections(sections, ct);
     }
 
-    //public async Task AddANavItem(CancellationToken ct)
-    //{
-    //    _navSections.Add(new NavSectionDetail()
-    //    {
-    //        Title = "New Section",
-    //        IconName = BitIconName.Add,
-    //        CustomNavItems =
-    //            [
-    //                new() { Key = "NewItem", Text = "New Item", IconName = BitIconName.Add, Url = "#" }
-    //            ]
-    //    });
-    //    await HostState.SetNavSections(_navSections, ct);
-
-    //}
     public override async Task OnModalOpeningAsync(CancellationToken ct)
     {
         // await UserState.SetIsLoading(true, ct);

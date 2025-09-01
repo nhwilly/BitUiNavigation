@@ -137,7 +137,7 @@ public sealed partial class UserModalState : State<UserModalState>
                 {
                     _logger.LogDebug("Initializing UserEditSession for AccountId={AccountId}, LocationId={LocationId}",
                         action.AccountId, action.LocationId);
-                    var dto = await _userService.GetUserAsync(action.AccountId.ToString());
+                    UserState.User = await _userService.GetUserAsync(action.AccountId.ToString());
                     UserState.MapDtoToViewModel();
                 }
                 catch (Exception ex)
