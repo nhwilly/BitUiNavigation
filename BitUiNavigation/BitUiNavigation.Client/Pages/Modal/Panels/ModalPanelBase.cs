@@ -62,7 +62,7 @@ public abstract class ModalPanelBase<TModel> :
         if (ctx is null) return;
 
         _ctx = ctx;
-        _ctx.OnFieldChanged += OnFieldChanged;
+        //_ctx.OnFieldChanged += OnFieldChanged;
         _ctx.OnValidationStateChanged += OnValidationStateChanged;
 
         RehydrateIfPreviouslyInvalid(_ctx);

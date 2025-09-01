@@ -24,5 +24,6 @@ public interface IModalProvider
 
     Task<(bool IsValid, IReadOnlyList<string> Messages)> ValidateProviderAsync(CancellationToken ct);
 
+    void DecorateCustomNavItemsWithValidationIndicators(List<CustomNavItem> items);
 
 }

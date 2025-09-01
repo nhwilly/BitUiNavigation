@@ -54,7 +54,7 @@ public abstract class ModalProviderBase : IModalProvider
 
     public virtual Task<bool> CanCloseAsync(CancellationToken ct) => Task.FromResult(true);
 
-    protected void DecorateCustomNavItemsWithValidationIndicators(List<CustomNavItem> items)
+    public void DecorateCustomNavItemsWithValidationIndicators(List<CustomNavItem> items)
     {
         // Snapshot to avoid repeated state reads
         var host = Store.GetState<ModalHostState>();

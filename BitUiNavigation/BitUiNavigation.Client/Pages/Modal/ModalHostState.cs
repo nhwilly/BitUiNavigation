@@ -165,9 +165,11 @@ public sealed partial class ModalHostState : State<ModalHostState>
         {
             private readonly ILogger<ModalHostState> _logger;
             private ModalHostState ModalHostState => Store.GetState<ModalHostState>();
-            public Handler(IStore store, ILogger<ModalHostState> logger) : base(store)
+            private IServiceProvider _serviceProvider;
+            public Handler(IStore store, ILogger<ModalHostState> logger, IServiceProvider serviceProvider) : base(store)
             {
                 _logger = logger;
+                _serviceProvider = serviceProvider;
             }
             public override async Task Handle(Action action, CancellationToken cancellationToken)
             {
@@ -177,8 +179,24 @@ public sealed partial class ModalHostState : State<ModalHostState>
                 {
                     panelDict = new Dictionary<string, PanelValidity>(StringComparer.OrdinalIgnoreCase);
                     ModalHostState._validity[action.ProviderKey] = panelDict;
+                    panelDict[action.PanelName] = new PanelValidity(action.IsValid, action.ErrorCount);
                 }
-                panelDict[action.PanelName] = new PanelValidity(action.IsValid, action.ErrorCount);
+                else
+                {
+                    if (panelDict.TryGetValue(action.PanelName, out var existing) &&
+                        existing.IsValid == action.IsValid &&
+                        existing.ErrorCount == action.ErrorCount)
+                    {
+                        // no change
+                        return;
+                    }
+                    else
+                    {
+                        panelDict[action.PanelName] = new PanelValidity(action.IsValid, action.ErrorCount);
+                        var provider =_serviceProvider.GetRequiredKeyedService<IModalProvider>(action.ProviderKey);
+                        provider.DecorateCustomNavItemsWithValidationIndicators([.. ModalHostState.NavSections.SelectMany(s => s.CustomNavItems)]);
+                    }
+                }
                 await Task.CompletedTask;
             }
         }
