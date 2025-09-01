@@ -28,9 +28,8 @@
 @code {
     private UserModalState UserModalState => GetState<UserModalState>();
     protected override UserMembershipsViewModel Model => UserModalState.MembershipsVm;
-    private ModalHostState ModalHostState => GetState<ModalHostState>();
     private async Task AddMenuItem(bool args)
     {
-        await Task.CompletedTask;
+        await UserModalState.SetNavItemToggle(true, CancellationToken);
     }
 }

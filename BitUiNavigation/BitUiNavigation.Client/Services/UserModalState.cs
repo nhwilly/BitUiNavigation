@@ -1,4 +1,5 @@
-﻿using BitUiNavigation.Client.Pages.UserProfile;
+﻿using System.Runtime.CompilerServices;
+using BitUiNavigation.Client.Pages.UserProfile;
 using TimeWarp.State;
 
 namespace BitUiNavigation.Client.Services;
@@ -22,7 +23,7 @@ public sealed partial class UserModalState : State<UserModalState>
     public bool IsSaving => true;
     public bool IsResetting => true;
     public bool SaveOnCloseEnabled => true;
-
+    public bool IsToggled { get; private set; }
     public bool IsInitializing { get; private set; }
 
     public bool HasChanged
@@ -64,6 +65,43 @@ public sealed partial class UserModalState : State<UserModalState>
         // TODO: include additional view model → entity mappings
     }
 
+    public static class SetNavItemToggleActionSet
+    {
+        public sealed class Action : IAction
+        {
+            public bool IsToggled { get; }
+            public Action(bool isToggled)
+            {
+                IsToggled = isToggled;
+            }
+        }
+        public sealed class Handler : ActionHandler<Action>
+        {
+            private readonly ILogger<UserModalState> _logger;
+            private readonly IModalProvider _provider;
+            private readonly NavigationManager _nav;
+            private UserModalState State => Store.GetState<UserModalState>();
+            public Handler(
+                IStore store,
+                IServiceProvider serviceProvider,
+                ILogger<UserModalState> logger,
+                NavigationManager nav)
+                : base(store)
+            {
+                _provider = serviceProvider.GetRequiredKeyedService<IModalProvider>("User");
+                _logger = logger;
+                _nav = nav;
+            }
+            private UserModalState UserModalState => Store.GetState<UserModalState>();
+            public override async Task Handle(Action action, CancellationToken cancellationToken)
+            {
+                UserModalState.IsToggled = action.IsToggled;
+                // TODO: Consider moving this to ModalProviderBase if multiple providers need it
+                // and update ImodalProvider to include RefreshNavSections
+                await ((UserModalProvider)_provider).RefreshNavSections(_nav, cancellationToken);
+            }
+        }
+    }
     public static class InitializeActionSet
     {
         public sealed class Action : IAction

@@ -1,4 +1,7 @@
-﻿namespace BitUiNavigation.Client.Pages.UserProfile;
+﻿
+using Microsoft.AspNetCore.Components;
+
+namespace BitUiNavigation.Client.Pages.UserProfile;
 public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset
 {
     private readonly IValidator<UserProviderAggregate> _providerValidator;
@@ -17,9 +20,6 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     public bool IsInitializing => UserState.IsInitializing;
     public bool HasChanged => UserState.HasChanged;
     public bool ShowResultDialog => ModalState.ShowResult;
-    //public override List<NavSectionDetail> NavSections => _navSections;
-
-    private List<NavSectionDetail> _navSections = [];
     public bool SaveOnCloseEnabled => UserState.SaveOnCloseEnabled;
 
     public UserModalProvider(
@@ -36,6 +36,8 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         [nameof(UserProfilePanel)] = typeof(UserProfilePanel)
     };
 
+    public async Task RefreshNavSections(NavigationManager nav, CancellationToken ct)
+    => await BuildCustomNavSections(nav, ct);
 
     public override async Task BuildCustomNavSections(NavigationManager nav, CancellationToken ct)
     {
@@ -55,24 +57,23 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         {
             DecorateCustomNavItemsWithValidationIndicators(section.CustomNavItems);
         }
-        _navSections = sections;
         await HostState.SetNavSections(sections, ct);
     }
 
-    public async Task AddANavItem(CancellationToken ct)
-    {
-        _navSections.Add(new NavSectionDetail()
-        {
-            Title = "New Section",
-            IconName = BitIconName.Add,
-            CustomNavItems =
-                [
-                    new() { Key = "NewItem", Text = "New Item", IconName = BitIconName.Add, Url = "#" }
-                ]
-        });
-        await HostState.SetNavSections(_navSections, ct);
+    //public async Task AddANavItem(CancellationToken ct)
+    //{
+    //    _navSections.Add(new NavSectionDetail()
+    //    {
+    //        Title = "New Section",
+    //        IconName = BitIconName.Add,
+    //        CustomNavItems =
+    //            [
+    //                new() { Key = "NewItem", Text = "New Item", IconName = BitIconName.Add, Url = "#" }
+    //            ]
+    //    });
+    //    await HostState.SetNavSections(_navSections, ct);
 
-    }
+    //}
     public override async Task OnModalOpeningAsync(CancellationToken ct)
     {
         // await UserState.SetIsLoading(true, ct);
