@@ -221,6 +221,8 @@ namespace BitUiNavigation.Client.Pages.Modal
         {
             Logger.LogDebug("OnInitializedAsync: Modal='{Modal}', Panel='{Panel}'", Modal, Panel);
             NavManager.LocationChanged += HandleLocationChanged;
+            // Process the initial URL so we can support deep linking.
+            _ = ReadFromUri(NavManager.Uri, requestStateHasChanged: false);
         }
 
         /// <summary>
