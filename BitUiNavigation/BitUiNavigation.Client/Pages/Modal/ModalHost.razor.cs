@@ -1,11 +1,4 @@
-﻿using System.Threading.Tasks;
-using Bit.BlazorUI;
-using BitUiNavigation.Client.Pages.Modal.Abstract;
-using BitUiNavigation.Client.Pages.Modal.Providers;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Routing;
-
-namespace BitUiNavigation.Client.Pages.Modal
+﻿namespace BitUiNavigation.Client.Pages.Modal
 {
     public partial class ModalHost
     {
@@ -21,10 +14,10 @@ namespace BitUiNavigation.Client.Pages.Modal
         private List<string>? _providerValidationMessages = [];
         private ModalHostState _state => GetState<ModalHostState>();
 
-        private ModalContext _ctx => new()
+        private ModalContext ModalContext => new()
         {
             ProviderKey = _modalProvider?.ProviderName ?? "UnknownProvider",
-            PanelName = _panelName // or nameof(UserProfilePanel) if you map it
+            PanelName = _panelName 
         };
 
         private bool _modalHostIsInitializing = true;
@@ -198,12 +191,12 @@ namespace BitUiNavigation.Client.Pages.Modal
         /// Remember that the modal component is always included in the main layout.  This allows us to show a modal from anywhere.
         /// That means each navigation anywhere in the app will be reviewed to see if it contains a modal.
         /// </summary>
-        protected override void OnInitialized()
+        protected override async Task OnInitializedAsync()
         {
             Logger.LogDebug("OnInitialized: Modal='{Modal}', Panel='{Panel}'", Modal, Panel);
             NavManager.LocationChanged += HandleLocationChanged;
             // Process the initial URL so we can support deep linking.
-            _ = ReadFromUri(NavManager.Uri, requestStateHasChanged: false);
+            await ReadFromUri(NavManager.Uri, requestStateHasChanged: false);
         }
 
         /// <summary>

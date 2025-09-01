@@ -76,7 +76,7 @@
                 <div style="flex:1;overflow:hidden;border-bottom-right-radius:20px;position:relative;">
                     <div style="height:100%;overflow-y:auto;">
                         <div style="padding:1rem;">
-                            <CascadingValue TValue="@ModalContext" Value="@_ctx">
+                            <CascadingValue TValue="@ModalContext" Value="@ModalContext">
                                 <RouteView @key="_panelName"
                                            RouteData="@_modalProvider.BuildRouteData(_panelName)"
                                            DefaultLayout="@typeof(EmptyLayout)" />

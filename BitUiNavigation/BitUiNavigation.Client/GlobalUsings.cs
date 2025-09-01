@@ -6,3 +6,4 @@ global using BitUiNavigation.Client.Pages.Modal.Providers;
 global using FluentValidation;
 global using Microsoft.AspNetCore.Components;
 global using TimeWarp.State;
+global using Microsoft.AspNetCore.Components.Routing;
