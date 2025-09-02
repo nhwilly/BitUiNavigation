@@ -10,17 +10,17 @@ public sealed partial class UserModalState : State<UserModalState>
 {
     public UserDto? User { get; private set; }
 
-    public UserProfileViewModel? ProfileVm { get; private set; }
-    public UserMembershipsViewModel? MembershipsVm { get; private set; }
-    private UserProfileViewModel? ProfileVmOriginal { get; set; }
-    private UserMembershipsViewModel? MembershipsVmOriginal { get; set; }
+    public UserProfileViewModel ProfileVm { get; private set; } = new();
+    public UserMembershipsViewModel MembershipsVm { get; private set; } = new();
+    private UserProfileViewModel ProfileVmOriginal { get; set; } = new();
+    private UserMembershipsViewModel MembershipsVmOriginal { get; set; } = new();
 
-    public SometimesViewModel? SometimesViewModel { get; private set; }
-    private SometimesViewModel? SometimesViewModelOriginal { get; set; }
-    private readonly Dictionary<Type, bool>? _lastKnownByType;
-    public IReadOnlyDictionary<Type, bool>? LastKnownValidityByType => _lastKnownByType;
+    public SometimesViewModel SometimesViewModel { get; private set; } = new();
+    private SometimesViewModel SometimesViewModelOriginal { get; set; } = new();
+    private readonly Dictionary<Type, bool> _lastKnownByType = [];
+    public IReadOnlyDictionary<Type, bool> LastKnownValidityByType => _lastKnownByType;
 
-    public string ProviderTitle => User is null ? "User" : $"User: {User?.FirstName} {User?.LastName}";
+    public string ProviderTitle => User is null ? "User" : $"User: {User.FirstName} {User.LastName}";
     public override void Initialize() { }
 
     public bool CanSave => HasChanged;
@@ -67,9 +67,9 @@ public sealed partial class UserModalState : State<UserModalState>
 
         User = User with
         {
-            FirstName = ProfileVm?.FirstName,
-            LastName = ProfileVm?.LastName,
-            Name = MembershipsVm?.Name,
+            FirstName = ProfileVm.FirstName,
+            LastName = ProfileVm.LastName,
+            Name = MembershipsVm.Name,
         };
 
         // TODO: include additional view model → entity mappings
@@ -107,35 +107,6 @@ public sealed partial class UserModalState : State<UserModalState>
             {
                 UserModalState.IsToggled = !UserModalState.IsToggled;
                 await _provider.BuildNavSections(_nav, cancellationToken);
-            }
-        }
-    }
-
-    public static class ClearActionSet
-    {
-        public sealed class Action : IAction { }
-        public sealed class Handler : ActionHandler<Action>
-        {
-            private readonly ILogger<UserModalState> _logger;
-            private UserModalState State => Store.GetState<UserModalState>();
-            public Handler(
-                IStore store,
-                ILogger<UserModalState> logger)
-                : base(store)
-            {
-                _logger = logger;
-            }
-            public override async Task Handle(Action action, CancellationToken cancellationToken)
-            {
-                State.User = null;
-                State.ProfileVm = null;
-                State.MembershipsVm = null;
-                State.SometimesViewModel = null;
-                State.ProfileVmOriginal = null;
-                State.MembershipsVmOriginal = null;
-                State.SometimesViewModelOriginal = null;
-                _logger.LogDebug("Cleared UserModalState.");
-                await Task.CompletedTask;
             }
         }
     }
