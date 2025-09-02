@@ -236,7 +236,7 @@
             if (_modalProvider is null)
             {
                 Logger.LogDebug("ModalProvider is null - closing.");
-                CloseModal();
+                await CloseModal();
                 return;
             }
 
@@ -268,7 +268,7 @@
             if (!_modalProvider.HasUnsavedChanges)
             {
                 Logger.LogDebug("No unsaved changes - closing.");
-                CloseModal();
+                await CloseModal();
                 return;
             }
 
@@ -280,7 +280,7 @@
             {
                 Logger.LogError("ModalProvider '{Provider}' has unsaved changes but does not support saving.", _modalProvider.ProviderName);
                 // TODO: toast at a minimum, then close...
-                CloseModal();
+                await CloseModal();
                 return;
             }
 
@@ -290,19 +290,23 @@
             {
                 Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes but does not support SaveOnClose.", _modalProvider.ProviderName);
                 // TODO set flag here...
-                CloseModal();
+                await CloseModal();
                 return;
             }
 
             Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes and supports SaveOnClose - saving.", _modalProvider.ProviderName);
             // so at this point, we are valid, have changes and can save on navigation.
             await modalSave.SaveAsync(CancellationToken);
-            CloseModal();
+            await CloseModal();
 
         }
 
-        private void CloseModal()
+        private async Task CloseModal()
         {
+            if (_modalProvider is not null)
+            {
+                await _modalProvider.ClearState(CancellationToken);
+            }
             if (!string.IsNullOrEmpty(_preOpenUrl))
             {
                 NavManager.NavigateTo(_preOpenUrl!, replace: true);
@@ -324,6 +328,7 @@
         public override void Dispose()
         {
             NavManager.LocationChanged -= HandleLocationChanged;
+            GC.SuppressFinalize(this);
             base.Dispose();
         }
 

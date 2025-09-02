@@ -28,4 +28,6 @@ public interface IModalProvider
 
     bool HasUnsavedChanges { get; }
 
+    Task ClearState(CancellationToken ct);
+
 }

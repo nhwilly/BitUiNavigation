@@ -1,8 +1,4 @@
-﻿using Bit.BlazorUI;
-using BitUiNavigation.Client.Pages.Modal.Abstract;
-using BitUiNavigation.Client.Pages.Modal.Components;
-using Microsoft.AspNetCore.Components;
-using TimeWarp.State;
+﻿using BitUiNavigation.Client.Pages.Modal.Components;
 
 namespace BitUiNavigation.Client.Pages.Modal.Providers;
 
@@ -29,6 +25,7 @@ public abstract class ModalProviderBase : IModalProvider
 
     protected abstract Dictionary<string, Type> PanelMap { get; }
 
+    public abstract Task ClearState(CancellationToken ct);
     public virtual IReadOnlyList<string> ExpectedPanelKeys => [.. PanelMap.Keys.Select(k => Normalize(k, DefaultPanel))];
 
     public virtual Task OnModalOpenedAsync(CancellationToken ct) => Task.CompletedTask;

@@ -121,6 +121,16 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
             await ModalHostState.ShowResultModal(true, "title", "message", ct);
     }
 
+    public async ValueTask DisposeAsync()
+    {
+        await UserState.Clear(CancellationToken.None);
+    }
+
+    public override async Task ClearState(CancellationToken ct)
+    {
+        await UserState.Clear(ct);
+    }
+
     public override bool HasUnsavedChanges=>UserState.HasChanged;
 }
 
