@@ -236,7 +236,7 @@
             if (_modalProvider is null)
             {
                 Logger.LogDebug("ModalProvider is null - closing.");
-                await CloseModal();
+                await CloseModalHost();
                 return;
             }
 
@@ -260,6 +260,7 @@
                 Logger.LogDebug("Cannot close: PanelsValid={PanelsValid}, ProviderValid={ProviderValid}", panelsAreValid, providerIsValid);
                 // TODO: set flag to display validation dialogue in UI
                 // this will allow the model to become valid through corrections or reset.
+                await _state.ShowBlockingDialog(true, "some title","sopmebody");
                 StateHasChanged();
                 return;
             }
@@ -268,7 +269,7 @@
             if (!_modalProvider.HasUnsavedChanges)
             {
                 Logger.LogDebug("No unsaved changes - closing.");
-                await CloseModal();
+                await CloseModalHost();
                 return;
             }
 
@@ -280,7 +281,7 @@
             {
                 Logger.LogError("ModalProvider '{Provider}' has unsaved changes but does not support saving.", _modalProvider.ProviderName);
                 // TODO: toast at a minimum, then close...
-                await CloseModal();
+                await CloseModalHost();
                 return;
             }
 
@@ -290,18 +291,18 @@
             {
                 Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes but does not support SaveOnClose.", _modalProvider.ProviderName);
                 // TODO set flag here...
-                await CloseModal();
+                await CloseModalHost();
                 return;
             }
 
             Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes and supports SaveOnClose - saving.", _modalProvider.ProviderName);
             // so at this point, we are valid, have changes and can save on navigation.
             await modalSave.SaveAsync(CancellationToken);
-            await CloseModal();
+            await CloseModalHost();
 
         }
 
-        private async Task CloseModal()
+        private async Task CloseModalHost()
         {
             if (_modalProvider is not null)
             {

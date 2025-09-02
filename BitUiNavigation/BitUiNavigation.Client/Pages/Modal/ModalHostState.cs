@@ -31,8 +31,8 @@ public sealed partial class ModalHostState : State<ModalHostState>
         return true;
     }
 
-    public bool ShowResult { get; private set; }
-    public static class ShowResultModalActionSet
+    public bool ShowBlocking { get; private set; }
+    public static class ShowBlockingDialogActionSet
     {
         public sealed class Action : IAction
         {
@@ -57,7 +57,7 @@ public sealed partial class ModalHostState : State<ModalHostState>
             public override async Task Handle(Action action, CancellationToken cancellationToken)
             {
                 _logger.LogDebug("SetShowResultModal Show={Show}", action.Show);
-                State.ShowResult = action.Show;
+                State.ShowBlocking = action.Show;
                 await Task.CompletedTask;
             }
         }

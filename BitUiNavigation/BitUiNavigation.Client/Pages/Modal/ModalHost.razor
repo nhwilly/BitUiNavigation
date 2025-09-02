@@ -10,18 +10,12 @@
 
 @if (_modalProvider is not null)
 {
-    <BitDialog IsBlocking IsOpen="@(_state.ShowResult)">
-        <ChildContent>
-            <div>
-                shit
-            </div>
-        </ChildContent>
-    </BitDialog>
     <BitModal IsOpen="true"
               OnOverlayClick="@TryCloseAsync"
               OnDismiss="@TryCloseAsync"
               Classes="@ClassStyles">
 
+        @* The navigation section *@
         <BitStack Horizontal Gap="0rem" Style="height: 100%">
             <BitStack Class="nav-panel" FitWidth Style="border-top-left-radius:20px; border-bottom-left-radius:20px;">
                 <BitButton Style="margin: 1rem 0 0 1rem"
@@ -34,45 +28,20 @@
                 <NavSections NavSectionDetails="@(_state.NavSections)" />
             </BitStack>
 
-
+            @* The header section *@
             <div style="flex:1;display:flex;flex-direction:column;height:100%">
                 <div style="flex-shrink:0;border-top-right-radius:20px;">
                     <BitStack Horizontal HorizontalAlign="BitAlignment.SpaceBetween" Class="sticky-header" Style="padding: 0.75rem 1rem;">
                         <BitText Style="font-weight:600;">@(_state.Title)</BitText>
-
-                        @* @if (_saveReset?.IsDirty == true)
-                        {
-                        var isBusy = _state.IsSaving || _state.IsResetting;
-
-                        <BitStack Horizontal Gap="0.5rem">
-                            @if (_ac.CanReset)
-                            {
-                            <BitButton OnClick="@OnResetClicked"
-                                       IsEnabled="@(!isBusy)"
-                                       IconName="@BitIconName.Reset"
-                                       Color="BitColor.Primary">
-                                Reset
-                            </BitButton>
-                            }
-
-                            @if (_saveReset.CanSave)
-                            {
-                            <BitButton OnClick="@OnSaveClicked"
-                                       IsEnabled="@(!isBusy)"
-                                       IconName="@BitIconName.Save"
-                                       Color="BitColor.Primary">
-                                Save
-                            </BitButton>
-                            }
-                        </BitStack>
-                        } *@
                     </BitStack>
                 </div>
 
                 <BitSeparator Border="BitColorKind.Tertiary" />
 
                 <ProviderValidationSummary Messages="@_providerValidationMessages" />
+                <BlockingDialog IsOpen="@_state.ShowBlocking" Body="blah blah"></BlockingDialog>
 
+                @* The body section *@
                 <div style="flex:1;overflow:hidden;border-bottom-right-radius:20px;position:relative;">
                     <div style="height:100%;overflow-y:auto;">
                         <div style="padding:1rem;">

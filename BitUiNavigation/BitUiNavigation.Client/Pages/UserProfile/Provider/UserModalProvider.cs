@@ -20,7 +20,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     public bool IsResetting => UserState.IsResetting;
     public bool IsInitializing => UserState.IsInitializing;
     public bool HasChanged => UserState.HasChanged;
-    public bool ShowResultDialog => ModalHostState.ShowResult;
+    public bool ShowResultDialog => ModalHostState.ShowBlocking;
     public bool SaveOnCloseEnabled => UserState.SaveOnCloseEnabled;
 
     public UserModalProvider(
@@ -118,7 +118,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         await UserState.SaveUser(ct);
         // await UserState.SetIsLoading(false, ct);
         if (ShowResultDialog)
-            await ModalHostState.ShowResultModal(true, "title", "message", ct);
+            await ModalHostState.ShowBlockingDialog(true, "title", "message", ct);
     }
 
     public async ValueTask DisposeAsync()

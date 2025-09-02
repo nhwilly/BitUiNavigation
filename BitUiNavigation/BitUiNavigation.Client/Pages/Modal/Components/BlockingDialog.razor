@@ -1,9 +1,7 @@
-﻿@* NEW: Generic blocking dialog used for "Fix issues" and "Discard & Close" flows *@
-@using Bit.BlazorUI
-
-<BitDialog IsOpen="IsOpen"
+﻿@inherits TimeWarpStateComponent
+<BitDialog @bind-IsOpen="IsOpen"
            Title="@Title"
-           IsModal="true"
+           IsBlocking="true"
            Class="max-w-[520px]">
     <div style="padding: 0.5rem 0 1rem 0;">
         @Body
@@ -27,4 +25,5 @@
 
     [Parameter] public EventCallback OnPrimaryClicked { get; set; }
     [Parameter] public EventCallback OnSecondaryClicked { get; set; }
+    private ModalHostState ModalHostState => GetState<ModalHostState>();
 }
