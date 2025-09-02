@@ -39,7 +39,22 @@
                 <BitSeparator Border="BitColorKind.Tertiary" />
 
                 <ProviderValidationSummary Messages="@_providerValidationMessages" />
-                <BlockingDialog IsOpen="@_state.ShowBlocking" Body="blah blah"></BlockingDialog>
+
+                @switch (_alertType)
+                {
+                    case ModalAlertType.None:
+                        break;
+                    case ModalAlertType.Validation:
+                        <ValidationFailureOnSave OnOk="@(async () => await (_modalProvider as IModalSave).SaveAsync(CancellationToken))" />
+                        break;
+                    case ModalAlertType.UnsavedChanges:
+                        <UnsavedChangesOnSave />
+                        break;
+                    case ModalAlertType.ResetWarning:
+                        <ResetStateWarning />
+                        break;
+                }
+                <BlockingModal IsOpen="@_state.ShowBlocking" />
 
                 @* The body section *@
                 <div style="flex:1;overflow:hidden;border-bottom-right-radius:20px;position:relative;">

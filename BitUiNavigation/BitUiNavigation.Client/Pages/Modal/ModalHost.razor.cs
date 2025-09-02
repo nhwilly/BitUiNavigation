@@ -1,4 +1,6 @@
-﻿namespace BitUiNavigation.Client.Pages.Modal
+﻿using BitUiNavigation.Client.Pages.Modal.Components;
+
+namespace BitUiNavigation.Client.Pages.Modal
 {
     public partial class ModalHost
     {
@@ -21,6 +23,7 @@
         };
 
         private bool _modalHostIsInitializing = true;
+        private ModalAlertType _alertType = ModalAlertType.None;
         // NEW: Blocking dialog local state
         private bool _isDialogOpen;
         private string _dialogTitle = string.Empty;
@@ -231,6 +234,23 @@
             return isValid;
         }
 
+        private async Task OnInvalid()
+        {
+            var content = new ModalHostDialogContent
+            {
+                Title = "Validation Errors",
+                Body = "There are validation errors in your changes. Please correct them before continuing.",
+                ShowOkButton =true,
+                ShowDiscardButton=true,
+                DiscardButtonText="Discard Changes",
+                IconName= BitIconName.CriticalErrorSolid,
+            };
+            await _state.ShowBlockingDialog(true, content);
+        }
+        private async Task OnUnsavedChanges() { }
+
+        private async Task OnReset() { }
+
         private async Task TryCloseAsync()
         {
             if (_modalProvider is null)
@@ -258,10 +278,12 @@
             if (!panelsAreValid || !providerIsValid)
             {
                 Logger.LogDebug("Cannot close: PanelsValid={PanelsValid}, ProviderValid={ProviderValid}", panelsAreValid, providerIsValid);
+                // message bar to correct their work or discard before closing.  both buttons visible at that point.
+
                 // TODO: set flag to display validation dialogue in UI
                 // this will allow the model to become valid through corrections or reset.
-                await _state.ShowBlockingDialog(true, "some title","sopmebody");
-                StateHasChanged();
+                await OnInvalid();
+                //StateHasChanged();
                 return;
             }
 
@@ -290,6 +312,7 @@
             if (_modalProvider is not ISupportsSaveOnClose)
             {
                 Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes but does not support SaveOnClose.", _modalProvider.ProviderName);
+                // message bar to save their changes or discard before closing.  both buttons visible at that point.
                 // TODO set flag here...
                 await CloseModalHost();
                 return;

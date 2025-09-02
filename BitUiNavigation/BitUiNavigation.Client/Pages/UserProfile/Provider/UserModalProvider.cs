@@ -117,8 +117,8 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         // await UserState.SetIsLoading(true, ct);
         await UserState.SaveUser(ct);
         // await UserState.SetIsLoading(false, ct);
-        if (ShowResultDialog)
-            await ModalHostState.ShowBlockingDialog(true, "title", "message", ct);
+        //if (ShowResultDialog)
+        //    await ModalHostState.ShowBlockingDialog(true, "title", "message", ct);
     }
 
     public async ValueTask DisposeAsync()

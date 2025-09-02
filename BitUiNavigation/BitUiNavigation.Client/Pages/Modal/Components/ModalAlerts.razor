@@ -1,0 +1,19 @@
+﻿@switch (AlertType)
+{
+    case ModalAlertType.None:
+        break;
+    case ModalAlertType.Validation:
+        <ValidationFailureOnSave />
+        break;
+    case ModalAlertType.UnsavedChanges:
+        <UnsavedChangesOnSave />
+        break;
+    case ModalAlertType.ResetWarning:
+        <ResetStateWarning />
+        break;
+}
+
+@code {
+    [Parameter, EditorRequired] public ModalAlertType AlertType { get; set; } = ModalAlertType.None;
+    [Parameter, EditorRequired] public ModalHostDialogContent Content { get; set; } = default!;
+}

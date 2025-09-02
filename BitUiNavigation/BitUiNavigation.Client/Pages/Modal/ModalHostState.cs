@@ -1,4 +1,6 @@
-﻿namespace BitUiNavigation.Client.Services;
+﻿using BitUiNavigation.Client.Pages.Modal.Components;
+
+namespace BitUiNavigation.Client.Services;
 
 public sealed partial class ModalHostState : State<ModalHostState>
 {
@@ -32,18 +34,18 @@ public sealed partial class ModalHostState : State<ModalHostState>
     }
 
     public bool ShowBlocking { get; private set; }
+    public ModalHostDialogContent? ModalHostDialogContent { get; private set; }
     public static class ShowBlockingDialogActionSet
     {
         public sealed class Action : IAction
         {
-            public bool Show { get; }
-            public string Title { get; }
-            public string Message { get; }
-            public Action(bool show, string title, string message)
+            public bool ShowDialogue { get; }
+            public ModalHostDialogContent Content { get; }
+
+            public Action(bool showDialogue, ModalHostDialogContent content)
             {
-                Show = show;
-                Title = title;
-                Message = message;
+                ShowDialogue = showDialogue;
+                Content = content;
             }
         }
         public sealed class Handler : ActionHandler<Action>
@@ -56,8 +58,9 @@ public sealed partial class ModalHostState : State<ModalHostState>
             }
             public override async Task Handle(Action action, CancellationToken cancellationToken)
             {
-                _logger.LogDebug("SetShowResultModal Show={Show}", action.Show);
-                State.ShowBlocking = action.Show;
+                _logger.LogDebug("SetShowResultModal Show={Show}", action.ShowDialogue);
+                State.ShowBlocking = action.ShowDialogue;
+                State.ModalHostDialogContent = action.Content;
                 await Task.CompletedTask;
             }
         }

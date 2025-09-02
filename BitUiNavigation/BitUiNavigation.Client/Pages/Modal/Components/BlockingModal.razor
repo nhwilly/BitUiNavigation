@@ -1,0 +1,36 @@
+﻿@inherits TimeWarpStateComponent
+<BitModal IsOpen="@IsOpen" Blocking>
+    <BitStack>
+        @* header *@
+        <BitStack Horizontal HorizontalAlign="BitAlignment.Start" Gap="2em" Style="padding: 0.75rem 1rem;">
+            <BitIcon IconName="@BitIconName.Warning"></BitIcon>
+            <BitText Style="font-weight:600;">Please wait</BitText>
+        </BitStack>
+
+        @* body *@
+        <BitText Style="padding: 0 1rem 1rem 1rem;">
+            @State.ModalHostDialogContent?.Body
+        </BitText>
+
+        @* buttons *@
+        <BitStack>
+            Buttons
+        </BitStack>
+
+    </BitStack>
+
+</BitModal>
+@code {
+    // [Parameter, EditorRequired] public ModalHostDialogContent Content { get; set; } = default!;
+    [Parameter, EditorRequired] public bool IsOpen { get; set; }
+    private ModalHostState State => GetState<ModalHostState>();
+    private string IconName => State?.ModalHostDialogContent?.IconName ?? BitIconName.Info;
+    
+    // [Parameter, EditorRequired] public bool Blocking { get; set; }
+    // [Parameter] public EventCallback OnClose { get; set; }
+    // [Parameter] public EventCallback OnSave { get; set; }
+    // [Parameter] public EventCallback OnDiscard { get; set; }
+    // [Parameter] public EventCallback OnReset { get; set; }
+    // [Parameter] public EventCallback OnOk { get; set; }
+
+}

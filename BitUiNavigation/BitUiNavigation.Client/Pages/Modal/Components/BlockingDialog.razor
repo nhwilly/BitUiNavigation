@@ -1,29 +1,33 @@
 ﻿@inherits TimeWarpStateComponent
-<BitDialog @bind-IsOpen="IsOpen"
-           Title="@Title"
-           IsBlocking="true"
-           Class="max-w-[520px]">
+<BitDialog IsOpen="@IsOpen"
+           Classes="@Classes"
+           ShowCloseButton="false"
+           ShowCancelButton="false"
+           ShowOkButton="false"
+           IsBlocking="true">
     <div style="padding: 0.5rem 0 1rem 0;">
         @Body
     </div>
 
-    @if (ShowSecondary)
-    {
-        <BitButton OnClick="OnSecondaryClicked" Color="BitColor.Warning">@SecondaryText</BitButton>
-    }
-    <BitButton OnClick="OnPrimaryClicked" Color="BitColor.Primary">@PrimaryText</BitButton>
 </BitDialog>
-
+<style>
+    .rounded {
+        border-radius: 1em !important;
+    }
+</style>
 @code {
-    [Parameter] public bool IsOpen { get; set; }
-    [Parameter] public string Title { get; set; } = string.Empty;
-    [Parameter] public string Body { get; set; } = string.Empty;
+    private bool IsOpen => State.ShowBlocking;
+    private string Title => State?.ModalHostDialogContent?.Title ?? string.Empty;
+    private string Body => State?.ModalHostDialogContent?.Body ?? string.Empty;
+    private bool ShowOkButton => State?.ModalHostDialogContent?.ShowOkButton ?? false;
+    private bool ShowCancelButton => State?.ModalHostDialogContent?.ShowCancelButton ?? false;
+    private ModalHostState State => GetState<ModalHostState>();
+    BitDialogClassStyles Classes = new BitDialogClassStyles
+    {
+        // Root = "rounded",
+        Container = "rounded",
+        Header = "rounded",
+        ButtonsContainer = "rounded",
+    };
 
-    [Parameter] public string PrimaryText { get; set; } = "OK";
-    [Parameter] public string SecondaryText { get; set; } = "Cancel";
-    [Parameter] public bool ShowSecondary { get; set; }
-
-    [Parameter] public EventCallback OnPrimaryClicked { get; set; }
-    [Parameter] public EventCallback OnSecondaryClicked { get; set; }
-    private ModalHostState ModalHostState => GetState<ModalHostState>();
 }
