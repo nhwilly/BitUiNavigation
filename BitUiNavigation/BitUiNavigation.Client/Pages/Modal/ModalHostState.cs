@@ -9,11 +9,12 @@ public sealed partial class ModalHostState : State<ModalHostState>
         _validity?.Clear();
         ModalAlertType = ModalAlertType.None;
         NavSections = [];
+        Saving = false;
     }
     private readonly Dictionary<string, Dictionary<string, PanelValidity>> _validity = [];
     public IReadOnlyDictionary<string, Dictionary<string, PanelValidity>> Validity => _validity;
     public record PanelValidity(bool IsValid, int ErrorCount);
-
+    public bool Saving { get; private set; } = false;
     public ModalAlertType ModalAlertType { get; private set; } = ModalAlertType.None;
     public List<NavSectionDetail> NavSections { get; private set; } = [];
     /// <summary>
@@ -39,9 +40,32 @@ public sealed partial class ModalHostState : State<ModalHostState>
         return true;
     }
 
-    //public bool ShowBlocking { get; private set; }
-    //public ModalHostDialogContent? ModalHostDialogContent { get; private set; }
-
+    public static class SetIsSavingActionSet
+    {
+        public sealed class Action : IAction
+        {
+            public bool IsSaving { get; }
+            public Action(bool isSaving)
+            {
+                IsSaving = isSaving;
+            }
+        }
+        public sealed class Handler : ActionHandler<Action>
+        {
+            private readonly ILogger<ModalHostState> _logger;
+            private ModalHostState State => Store.GetState<ModalHostState>();
+            public Handler(IStore store, ILogger<ModalHostState> logger) : base(store)
+            {
+                _logger = logger;
+            }
+            public override async Task Handle(Action action, CancellationToken cancellationToken)
+            {
+                _logger.LogDebug("SetIsSaving IsSaving={IsSaving}", action.IsSaving);
+                State.Saving = action.IsSaving;
+                await Task.CompletedTask;
+            }
+        }
+    }
     public static class SetModalAlertTypeActionSet
     {
         public sealed class Action : IAction
@@ -68,36 +92,6 @@ public sealed partial class ModalHostState : State<ModalHostState>
             }
         }
     }
-    //public static class ShowBlockingDialogActionSet
-    //{
-    //    public sealed class Action : IAction
-    //    {
-    //        public bool ShowDialogue { get; }
-    //        public ModalHostDialogContent Content { get; }
-
-    //        public Action(bool showDialogue, ModalHostDialogContent content)
-    //        {
-    //            ShowDialogue = showDialogue;
-    //            Content = content;
-    //        }
-    //    }
-    //    public sealed class Handler : ActionHandler<Action>
-    //    {
-    //        private readonly ILogger<ModalHostState> _logger;
-    //        private ModalHostState State => Store.GetState<ModalHostState>();
-    //        public Handler(IStore store, ILogger<ModalHostState> logger) : base(store)
-    //        {
-    //            _logger = logger;
-    //        }
-    //        public override async Task Handle(Action action, CancellationToken cancellationToken)
-    //        {
-    //            _logger.LogDebug("SetShowResultModal Show={Show}", action.ShowDialogue);
-    //            State.ShowBlocking = action.ShowDialogue;
-    //            State.ModalHostDialogContent = action.Content;
-    //            await Task.CompletedTask;
-    //        }
-    //    }
-    //}
 
     public static class SetNavSectionsActionSet
     {

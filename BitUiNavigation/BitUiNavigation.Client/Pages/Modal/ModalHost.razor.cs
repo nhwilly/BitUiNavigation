@@ -16,15 +16,21 @@ namespace BitUiNavigation.Client.Pages.Modal
         private List<string>? _providerValidationMessages = [];
         private string _providerValidationGeneralMessage = string.Empty;
         private ModalHostState ModalHostState => GetState<ModalHostState>();
-
+        private UserState UserState => GetState<UserState>();
         private ModalContext ModalContext => new()
         {
             ProviderKey = _modalProvider?.ProviderName ?? "UnknownProvider",
             PanelName = _panelName
         };
+        private async Task SetAutoSave()
+        {
+            //await ModalHostState.SetIsSaving(true);
+            await UserState.SetPrefersAutoSave(true);
+            //await ModalHostState.SetIsSaving(false);
+        }
 
         private bool _modalHostIsInitializing = true;
-
+        private bool _modalBusy { get; set; } = false;
         /// <summary>
         /// Inspects the provided URI and determines if it matches any of the model providers
         /// that were registered in dependency injection.  Selects a panel from the route
@@ -88,40 +94,11 @@ namespace BitUiNavigation.Client.Pages.Modal
                 await ModalHostState.SetModalAlertType(ModalAlertType.None);
             }
         }
-        //private async Task OnSaveClicked()
-        //{
-        //    if (_modalProvider is not IModalSave modalSave) return;
-
-        //    var (isValid,_, _) = await _modalProvider.ValidateProviderAsync(CancellationToken);
-        //    if (!isValid)
-        //    {
-        //        await ModalHostState.SetModalAlertType(ModalAlertType.Validation);
-        //        return;
-        //    }
-
-        //    await modalSave.SaveAsync(CancellationToken);
-        //    await ModalHostState.SetModalAlertType(ModalAlertType.None);
-        //}
-
         private async Task OnResetClicked()
         {
             if (_modalProvider is not IModalReset modalReset) return;
             await modalReset.ResetAsync(CancellationToken);
         }
-
-        //private async Task DiscardAndCloseAsync()
-        //{
-        //    if (!string.IsNullOrEmpty(_preOpenUrl))
-        //        NavManager.NavigateTo(_preOpenUrl!, replace: true);
-
-        //    else if (_modalProvider is not null)
-        //        NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(_modalProvider.ProviderName, (string?)null), replace: true);
-
-        //    _preOpenUrl = null;
-        //    _modalProvider = null;
-        //    StateHasChanged();
-        //    await Task.CompletedTask;
-        //}
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
@@ -177,24 +154,44 @@ namespace BitUiNavigation.Client.Pages.Modal
             var providerKey = _modalProvider.ProviderName;
             var expectedPanelKeys = _modalProvider.ExpectedPanelKeys;
             var areValid = ModalHostState.ArePanelsValid(providerKey, expectedPanelKeys, MissingPanelValidityBlocksClose);
+            if (areValid)
+            {
+                await ClearValidationAlert();
+            }
+            else
+            {
+                await ModalHostState.SetModalAlertType(ModalAlertType.Validation);
+            }
+
             return await Task.FromResult(areValid);
+        }
+        private async Task ClearValidationAlert()
+        {
+            if (ModalHostState.ModalAlertType == ModalAlertType.Validation)
+                await ModalHostState.SetModalAlertType(ModalAlertType.None);
+        }
+        private async Task ClearInvalidAggregateAlert()
+        {
+            if (ModalHostState.ModalAlertType == ModalAlertType.InvalidAggregate)
+                await ModalHostState.SetModalAlertType(ModalAlertType.None);
         }
         private async Task<bool> IsProviderValid()
         {
             if (_modalProvider is null) return true;
 
-            var (isValid, generalMesage,messages) = await _modalProvider.ValidateProviderAsync(CancellationToken);
+            var (isValid, generalMesage, messages) = await _modalProvider.ValidateProviderAsync(CancellationToken);
             if (!isValid)
             {
                 _providerValidationMessages = messages?.ToList() ?? [];
                 _providerValidationGeneralMessage = generalMesage;
+                await ModalHostState.SetModalAlertType(ModalAlertType.InvalidAggregate);
+            }
+            else
+            {
+                await ClearInvalidAggregateAlert();
             }
             return isValid;
         }
-
-        private async Task OnUnsavedChanges() { }
-
-        private async Task OnReset() { }
 
         private async Task TryCloseAsync()
         {
@@ -218,19 +215,18 @@ namespace BitUiNavigation.Client.Pages.Modal
             // check for each field change.
 
             var panelsAreValid = await ArePanelsValid();
-            var providerIsValid = await IsProviderValid();
 
             if (!panelsAreValid)
             {
                 Logger.LogDebug("Cannot close: PanelsValid={PanelsValid}", panelsAreValid);
-                await ModalHostState.SetModalAlertType(ModalAlertType.Validation);
                 return;
             }
+
+            var providerIsValid = await IsProviderValid();
 
             if (!providerIsValid)
             {
                 Logger.LogDebug("Cannot close: ProviderValid={ProviderValid}", providerIsValid);
-                await ModalHostState.SetModalAlertType(ModalAlertType.InvalidAggregate);
                 return;
             }
 

@@ -28,7 +28,10 @@
                         <BitText Style="font-weight:600;">@(ModalHostState.Title)</BitText>
                         <BitStack AutoWidth Alignment="BitAlignment.Center" Horizontal HorizontalAlign="BitAlignment.End">
                             <BitButton Variant="@BitVariant.Text" Color="@BitColor.Warning" IconName="@BitIconName.Reset" />
-                            <BitButton Variant="@BitVariant.Text" IconName="@BitIconName.Save" />
+                            <BitButton AutoLoading="true"
+                                       LoadingLabel="Saving"
+                                       Variant="@BitVariant.Text"
+                                       IconName="@BitIconName.Save" />
                             <BitButton Color="BitColor.Tertiary"
                                        OnClick="@TryCloseAsync"
                                        IconOnly
@@ -56,7 +59,7 @@
                     case ModalAlertType.InvalidAggregate:
                         <BitMessage Multiline="@(_providerValidationMessages?.Any() ?? false)" OnDismiss="@OnValidationFailureDismiss" Color="BitColor.SevereWarning">
                             <Content>
-                               @_providerValidationGeneralMessage
+                                @_providerValidationGeneralMessage
                                 <ul style="margin:0; padding-left:1rem;">
                                     @foreach (var msg in _providerValidationMessages ?? [])
                                     {
@@ -72,9 +75,17 @@
                                 Auto save is not available.
                             </Content>
                             <Actions>
-                                <BitButton Size="@BitSize.Small" OnClick="@OnUnsavedChangesOnSave" Color="BitColor.Primary" Variant="BitVariant.Fill">
-                                    Enable
+                                <BitButton AutoLoading="true"
+                                           IconName="@(UserState.PrefersAutoSave ? BitIconName.CheckMark : null)"
+                                           LoadingLabel="Saving"
+                                           LoadingLabelPosition="BitLabelPosition.End"
+                                           Variant="BitVariant.Fill"
+                                           Size="@BitSize.Small"
+                                           OnClick="@SetAutoSave"
+                                           Color="BitColor.Primary">
+                                    @(UserState.PrefersAutoSave ? "Enabled" : "Enable")
                                 </BitButton>
+
                             </Actions>
                         </BitMessage>
                         break;
