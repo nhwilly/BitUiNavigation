@@ -6,12 +6,19 @@ public sealed class UserProviderAggregateValidator : AbstractValidator<UserProvi
 {
     public UserProviderAggregateValidator()
     {
-        //RuleFor(x => x.AccountId)
-        //    .NotEmpty().WithMessage("An account is required.");
+        RuleFor(x => x.AccountId)
+            .NotEmpty().WithMessage("An account is required.");
 
-        //RuleFor(x => x.LocationId)
-        //    .NotEmpty().WithMessage("A location is required.");
+        RuleFor(x => x.LocationId)
+            .NotEmpty().WithMessage("A location is required.");
 
+        RuleFor(x => x).Custom((aggregate, context) =>
+        {
+            context.AddFailure("You are completely fucked.");
+            context.AddFailure("This is a general error not tied to any property.");
+            context.AddFailure("AccountId", "This is an error tied to the AccountId property.");
+            context.AddFailure("LocationId", "This is an error tied to the LocationId property.");  
+        });
         //Add any cross - panel / cross - state rules here
         // e.g.When(...).Must(...).WithMessage(...)
     }

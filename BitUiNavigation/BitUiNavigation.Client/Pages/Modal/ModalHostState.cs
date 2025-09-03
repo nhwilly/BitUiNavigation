@@ -4,7 +4,12 @@ namespace BitUiNavigation.Client.Services;
 
 public sealed partial class ModalHostState : State<ModalHostState>
 {
-    public override void Initialize() { _validity?.Clear(); }
+    public override void Initialize()
+    {
+        _validity?.Clear();
+        ModalAlertType = ModalAlertType.None;
+        NavSections = [];
+    }
     private readonly Dictionary<string, Dictionary<string, PanelValidity>> _validity = [];
     public IReadOnlyDictionary<string, Dictionary<string, PanelValidity>> Validity => _validity;
     public record PanelValidity(bool IsValid, int ErrorCount);
@@ -34,8 +39,8 @@ public sealed partial class ModalHostState : State<ModalHostState>
         return true;
     }
 
-    public bool ShowBlocking { get; private set; }
-    public ModalHostDialogContent? ModalHostDialogContent { get; private set; }
+    //public bool ShowBlocking { get; private set; }
+    //public ModalHostDialogContent? ModalHostDialogContent { get; private set; }
 
     public static class SetModalAlertTypeActionSet
     {
@@ -62,63 +67,38 @@ public sealed partial class ModalHostState : State<ModalHostState>
                 await Task.CompletedTask;
             }
         }
-    }   
-    public static class ShowBlockingDialogActionSet
-    {
-        public sealed class Action : IAction
-        {
-            public bool ShowDialogue { get; }
-            public ModalHostDialogContent Content { get; }
-
-            public Action(bool showDialogue, ModalHostDialogContent content)
-            {
-                ShowDialogue = showDialogue;
-                Content = content;
-            }
-        }
-        public sealed class Handler : ActionHandler<Action>
-        {
-            private readonly ILogger<ModalHostState> _logger;
-            private ModalHostState State => Store.GetState<ModalHostState>();
-            public Handler(IStore store, ILogger<ModalHostState> logger) : base(store)
-            {
-                _logger = logger;
-            }
-            public override async Task Handle(Action action, CancellationToken cancellationToken)
-            {
-                _logger.LogDebug("SetShowResultModal Show={Show}", action.ShowDialogue);
-                State.ShowBlocking = action.ShowDialogue;
-                State.ModalHostDialogContent = action.Content;
-                await Task.CompletedTask;
-            }
-        }
     }
+    //public static class ShowBlockingDialogActionSet
+    //{
+    //    public sealed class Action : IAction
+    //    {
+    //        public bool ShowDialogue { get; }
+    //        public ModalHostDialogContent Content { get; }
 
-    public static class InitializeModalActionSet
-    {
-        public sealed class Action : IAction
-        {
-            public Action() { }
-        }
-        public sealed class Handler : ActionHandler<Action>
-        {
-            private readonly ILogger<ModalHostState> _logger;
-            private ModalHostState State => Store.GetState<ModalHostState>();
-            public Handler(IStore store, ILogger<ModalHostState> logger) : base(store)
-            {
-                _logger = logger;
-            }
-            public override async Task Handle(Action action, CancellationToken cancellationToken)
-            {
-                _logger.LogDebug("InitializeModal");
-                //State.NavSections.Clear();
-                //State.Title = string.Empty;
-                //State.ShowResult = false;
-                State._validity.Clear();
-                await Task.CompletedTask;
-            }
-        }
-    }
+    //        public Action(bool showDialogue, ModalHostDialogContent content)
+    //        {
+    //            ShowDialogue = showDialogue;
+    //            Content = content;
+    //        }
+    //    }
+    //    public sealed class Handler : ActionHandler<Action>
+    //    {
+    //        private readonly ILogger<ModalHostState> _logger;
+    //        private ModalHostState State => Store.GetState<ModalHostState>();
+    //        public Handler(IStore store, ILogger<ModalHostState> logger) : base(store)
+    //        {
+    //            _logger = logger;
+    //        }
+    //        public override async Task Handle(Action action, CancellationToken cancellationToken)
+    //        {
+    //            _logger.LogDebug("SetShowResultModal Show={Show}", action.ShowDialogue);
+    //            State.ShowBlocking = action.ShowDialogue;
+    //            State.ModalHostDialogContent = action.Content;
+    //            await Task.CompletedTask;
+    //        }
+    //    }
+    //}
+
     public static class SetNavSectionsActionSet
     {
         public sealed class Action : IAction

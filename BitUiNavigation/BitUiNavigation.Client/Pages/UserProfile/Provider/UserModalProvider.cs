@@ -20,9 +20,9 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     public bool IsResetting => UserState.IsResetting;
     public bool IsInitializing => UserState.IsInitializing;
     public bool HasChanged => UserState.HasChanged;
-    public bool ShowResultDialog => ModalHostState.ShowBlocking;
     public bool SaveOnCloseEnabled => UserState.SaveOnCloseEnabled;
 
+    public override bool ModalStateSupportsAutoSave => UserState.IsSaving;
     public UserModalProvider(
         IStore store,
         IValidator<UserProviderAggregate> providerValidator,
@@ -90,7 +90,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         await Task.CompletedTask;
     }
 
-    public override async Task<(bool, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
+    public override async Task<(bool,string, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
     {
         // 1) Build the aggregate snapshot from your current state
         var agg = new UserProviderAggregate(
@@ -102,14 +102,24 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         var result = await _providerValidator.ValidateAsync(agg, ct);
 
         // 3) Return (bool, messages)
-        if (result.IsValid) return (true, Array.Empty<string>());
+        if (result is null || result.IsValid) return (true, string.Empty, Array.Empty<string>());
+
+        var generalMessages = result.Errors
+            .Where(f => f.PropertyName == string.Empty)
+            .Select(f => f.ErrorMessage)
+            .ToList();
+
+        var generalMessage = generalMessages.Any()
+            ? string.Join(" ", generalMessages)
+            : "There are validation errors.";
 
         var messages = result.Errors
-            .Select(e => e.ErrorMessage)
-            .Where(m => !string.IsNullOrWhiteSpace(m))
-            .ToArray();
+           .Where(e => e.PropertyName != string.Empty)
+           .Select(e => e.ErrorMessage)
+           .Where(m => !string.IsNullOrWhiteSpace(m))
+           .ToArray();
 
-        return (false, messages);
+        return (false,generalMessage, messages ?? []);
     }
 
     public async Task SaveAsync(CancellationToken ct)
@@ -131,6 +141,6 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         await UserState.Clear(ct);
     }
 
-    public override bool HasUnsavedChanges=>UserState.HasChanged;
+    public override bool HasUnsavedChanges => UserState.HasChanged;
 }
 

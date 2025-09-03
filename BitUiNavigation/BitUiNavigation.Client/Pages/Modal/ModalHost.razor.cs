@@ -14,6 +14,7 @@ namespace BitUiNavigation.Client.Pages.Modal
         private bool _providerNeedsInit = false;
         private bool MissingPanelValidityBlocksClose => false; // flip to true if you want stricter policy
         private List<string>? _providerValidationMessages = [];
+        private string _providerValidationGeneralMessage = string.Empty;
         private ModalHostState ModalHostState => GetState<ModalHostState>();
 
         private ModalContext ModalContext => new()
@@ -54,7 +55,7 @@ namespace BitUiNavigation.Client.Pages.Modal
             if (providerIsNull || providerRequestedIsDifferent)
             {
                 _modalProvider = ServiceProvider.GetRequiredKeyedService<IModalProvider>(Modal);
-                await ModalHostState.InitializeModal();
+                ModalHostState.Initialize();
                 _preOpenUrl = RemoveModalQueryParameters(fullUri);
                 await _modalProvider.OnModalOpeningAsync(CancellationToken);
                 await _modalProvider.BuildNavSections(NavManager, CancellationToken);
@@ -80,27 +81,27 @@ namespace BitUiNavigation.Client.Pages.Modal
             await ModalHostState.SetModalAlertType(ModalAlertType.ResetWarning);
         }
 
-        private async Task OnValidationFailureOk()
+        private async Task OnValidationFailureDismiss()
         {
-            if (ModalHostState.ModalAlertType is ModalAlertType.Validation)
+            if (ModalHostState.ModalAlertType is ModalAlertType.Validation or ModalAlertType.InvalidAggregate)
             {
                 await ModalHostState.SetModalAlertType(ModalAlertType.None);
             }
         }
-        private async Task OnSaveClicked()
-        {
-            if (_modalProvider is not IModalSave modalSave) return;
+        //private async Task OnSaveClicked()
+        //{
+        //    if (_modalProvider is not IModalSave modalSave) return;
 
-            var (isValid, _) = await _modalProvider.ValidateProviderAsync(CancellationToken);
-            if (!isValid)
-            {
-                await ModalHostState.SetModalAlertType(ModalAlertType.Validation);
-                return;
-            }
+        //    var (isValid,_, _) = await _modalProvider.ValidateProviderAsync(CancellationToken);
+        //    if (!isValid)
+        //    {
+        //        await ModalHostState.SetModalAlertType(ModalAlertType.Validation);
+        //        return;
+        //    }
 
-            await modalSave.SaveAsync(CancellationToken);
-            await ModalHostState.SetModalAlertType(ModalAlertType.None);
-        }
+        //    await modalSave.SaveAsync(CancellationToken);
+        //    await ModalHostState.SetModalAlertType(ModalAlertType.None);
+        //}
 
         private async Task OnResetClicked()
         {
@@ -182,27 +183,15 @@ namespace BitUiNavigation.Client.Pages.Modal
         {
             if (_modalProvider is null) return true;
 
-            var (isValid, messages) = await _modalProvider.ValidateProviderAsync(CancellationToken);
+            var (isValid, generalMesage,messages) = await _modalProvider.ValidateProviderAsync(CancellationToken);
             if (!isValid)
             {
                 _providerValidationMessages = messages?.ToList() ?? [];
+                _providerValidationGeneralMessage = generalMesage;
             }
             return isValid;
         }
 
-        private async Task OnInvalid()
-        {
-            var content = new ModalHostDialogContent
-            {
-                Title = "Validation Errors",
-                Body = "There are validation errors in your changes. Please correct them before continuing.",
-                ShowOkButton = true,
-                ShowDiscardButton = true,
-                DiscardButtonText = "Discard Changes",
-                IconName = BitIconName.CriticalErrorSolid,
-            };
-            await ModalHostState.ShowBlockingDialog(true, content);
-        }
         private async Task OnUnsavedChanges() { }
 
         private async Task OnReset() { }
@@ -231,17 +220,17 @@ namespace BitUiNavigation.Client.Pages.Modal
             var panelsAreValid = await ArePanelsValid();
             var providerIsValid = await IsProviderValid();
 
-            if (!panelsAreValid || !providerIsValid)
+            if (!panelsAreValid)
             {
-                Logger.LogDebug("Cannot close: PanelsValid={PanelsValid}, ProviderValid={ProviderValid}", panelsAreValid, providerIsValid);
-                // message bar to correct their work or discard before closing.  both buttons visible at that point.
-
-                // TODO: set flag to display validation dialogue in UI
-                // this will allow the model to become valid through corrections or reset.
-                //await OnInvalid();
+                Logger.LogDebug("Cannot close: PanelsValid={PanelsValid}", panelsAreValid);
                 await ModalHostState.SetModalAlertType(ModalAlertType.Validation);
-                //_alertType = ModalAlertType.Validation;
-                //StateHasChanged();
+                return;
+            }
+
+            if (!providerIsValid)
+            {
+                Logger.LogDebug("Cannot close: ProviderValid={ProviderValid}", providerIsValid);
+                await ModalHostState.SetModalAlertType(ModalAlertType.InvalidAggregate);
                 return;
             }
 
@@ -297,7 +286,7 @@ namespace BitUiNavigation.Client.Pages.Modal
                 var stripped = RemoveModalQueryParameters(NavManager.Uri);
                 NavManager.NavigateTo(stripped, replace: true);
             }
-
+            ModalHostState.Initialize();
             _preOpenUrl = null;
             _modalProvider = null;
             _panelName = string.Empty;
@@ -330,6 +319,11 @@ namespace BitUiNavigation.Client.Pages.Modal
             Content = ModalContainerClass,
         };
 
+        readonly BitMessageClassStyles EnableAutoSaveStyle = new()
+        {
+            Actions = "padding: .5rem;"
+
+        };
         static BitNavClassStyles NavStyles => new()
         {
             SelectedItemContainer = "nav-selected-item-container",

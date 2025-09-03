@@ -22,7 +22,7 @@ public interface IModalProvider
 
     Task<bool> CanCloseAsync(CancellationToken ct);
 
-    Task<(bool IsValid, IReadOnlyList<string> Messages)> ValidateProviderAsync(CancellationToken ct);
+    Task<(bool IsValid, string generalMessage, IReadOnlyList<string> Messages)> ValidateProviderAsync(CancellationToken ct);
 
     void DecorateCustomNavItemsWithValidationIndicators(List<CustomNavItem> items);
 

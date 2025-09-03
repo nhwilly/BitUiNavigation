@@ -11,6 +11,7 @@ public abstract class ModalProviderBase : IModalProvider
     public virtual string MaxWidth => "1200px";
     public virtual string Height => "640px";
 
+    public virtual bool ModalStateSupportsAutoSave => true;
     public virtual bool AutoSaveOnNavigate => false;
     protected readonly IStore Store;
     protected readonly ILogger _logger;
@@ -85,13 +86,13 @@ public abstract class ModalProviderBase : IModalProvider
             {
                 // leave as-is for valid/unknown
                 // If you want to clear or set an "ok" icon, do it here.
-                 item.ValidationIconName = null;
+                item.ValidationIconName = null;
             }
         }
     }
 
-    public virtual Task<(bool, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
-        => Task.FromResult<(bool, IReadOnlyList<string>)>((true, Array.Empty<string>()));
+    public virtual Task<(bool, string, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
+        => Task.FromResult<(bool, string, IReadOnlyList<string>)>((true,string.Empty, Array.Empty<string>()));
 
     public abstract bool HasUnsavedChanges { get; }
 }
