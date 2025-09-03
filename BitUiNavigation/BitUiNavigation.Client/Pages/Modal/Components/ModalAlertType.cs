@@ -7,4 +7,5 @@ public enum ModalAlertType
     UnsavedChanges = 2,
     ResetWarning = 3,
     Error = 4,
+    Info = 5,
 }

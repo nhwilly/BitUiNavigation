@@ -3,7 +3,7 @@ using BitUiNavigation.Client.Pages.UserProfile.Profile;
 using BitUiNavigation.Client.Pages.UserProfile.Sometimes;
 
 namespace BitUiNavigation.Client.Pages.UserProfile.Provider;
-public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset, ISupportsSaveOnClose
+public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset//, ISupportsSaveOnClose
 {
     private readonly IValidator<UserProviderAggregate> _providerValidator;
 

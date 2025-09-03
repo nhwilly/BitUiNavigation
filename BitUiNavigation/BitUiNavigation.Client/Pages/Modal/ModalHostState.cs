@@ -9,6 +9,7 @@ public sealed partial class ModalHostState : State<ModalHostState>
     public IReadOnlyDictionary<string, Dictionary<string, PanelValidity>> Validity => _validity;
     public record PanelValidity(bool IsValid, int ErrorCount);
 
+    public ModalAlertType ModalAlertType { get; private set; } = ModalAlertType.None;
     public List<NavSectionDetail> NavSections { get; private set; } = [];
     /// <summary>
     /// True if every expected panel for the provider is valid.
@@ -35,6 +36,33 @@ public sealed partial class ModalHostState : State<ModalHostState>
 
     public bool ShowBlocking { get; private set; }
     public ModalHostDialogContent? ModalHostDialogContent { get; private set; }
+
+    public static class SetModalAlertTypeActionSet
+    {
+        public sealed class Action : IAction
+        {
+            public ModalAlertType AlertType { get; }
+            public Action(ModalAlertType alertType)
+            {
+                AlertType = alertType;
+            }
+        }
+        public sealed class Handler : ActionHandler<Action>
+        {
+            private readonly ILogger<ModalHostState> _logger;
+            private ModalHostState State => Store.GetState<ModalHostState>();
+            public Handler(IStore store, ILogger<ModalHostState> logger) : base(store)
+            {
+                _logger = logger;
+            }
+            public override async Task Handle(Action action, CancellationToken cancellationToken)
+            {
+                _logger.LogDebug("SetModalAlertType Type={AlertType}", action.AlertType);
+                State.ModalAlertType = action.AlertType;
+                await Task.CompletedTask;
+            }
+        }
+    }   
     public static class ShowBlockingDialogActionSet
     {
         public sealed class Action : IAction

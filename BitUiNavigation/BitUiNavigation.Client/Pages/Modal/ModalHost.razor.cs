@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using BitUiNavigation.Client.Pages.Modal.Components;
+﻿using BitUiNavigation.Client.Pages.Modal.Components;
 
 namespace BitUiNavigation.Client.Pages.Modal
 {
@@ -12,10 +11,10 @@ namespace BitUiNavigation.Client.Pages.Modal
         private string _panelName = string.Empty;
         private string? _preOpenUrl;
         private IModalPanel? _panel;
-        private bool _needsSessionInit = false;
+        private bool _providerNeedsInit = false;
         private bool MissingPanelValidityBlocksClose => false; // flip to true if you want stricter policy
         private List<string>? _providerValidationMessages = [];
-        private ModalHostState _state => GetState<ModalHostState>();
+        private ModalHostState ModalHostState => GetState<ModalHostState>();
 
         private ModalContext ModalContext => new()
         {
@@ -24,16 +23,6 @@ namespace BitUiNavigation.Client.Pages.Modal
         };
 
         private bool _modalHostIsInitializing = true;
-        private ModalAlertType _alertType = ModalAlertType.None;
-        // NEW: Blocking dialog local state
-        private bool _isDialogOpen;
-        private string _dialogTitle = string.Empty;
-        private string _dialogBody = string.Empty;
-        private string _dialogPrimaryText = "OK";
-        private string _dialogSecondaryText = "Cancel";
-        private bool _showDialogSecondary;
-        private EventCallback _onDialogPrimary;
-        private EventCallback _onDialogSecondary;
 
         /// <summary>
         /// Inspects the provided URI and determines if it matches any of the model providers
@@ -65,11 +54,11 @@ namespace BitUiNavigation.Client.Pages.Modal
             if (providerIsNull || providerRequestedIsDifferent)
             {
                 _modalProvider = ServiceProvider.GetRequiredKeyedService<IModalProvider>(Modal);
-                await _state.InitializeModal();
+                await ModalHostState.InitializeModal();
                 _preOpenUrl = RemoveModalQueryParameters(fullUri);
                 await _modalProvider.OnModalOpeningAsync(CancellationToken);
                 await _modalProvider.BuildNavSections(NavManager, CancellationToken);
-                _needsSessionInit = true;
+                _providerNeedsInit = true;
                 Logger.LogDebug("Changing modal to '{Modal}' '{Panel}'", _modalProvider.ProviderName, _panelName);
             }
 
@@ -83,23 +72,20 @@ namespace BitUiNavigation.Client.Pages.Modal
             {
                 await modalSave.SaveAsync(CancellationToken);
             }
-            _alertType = ModalAlertType.None;
-            StateHasChanged();
+            await ModalHostState.SetModalAlertType(ModalAlertType.None);
         }
 
-        // ALERT TYPE SHOULD BE PART OF MODALHOSTSTATE AND THEN ANYONE CAN SHOW/CLEAR AN ERROR.
         private async Task OnUnsavedChangesOnDiscard()
         {
-            _alertType = ModalAlertType.ResetWarning;
-            StateHasChanged();
-            await Task.CompletedTask;
+            await ModalHostState.SetModalAlertType(ModalAlertType.ResetWarning);
         }
 
         private async Task OnValidationFailureOk()
         {
-            _alertType = ModalAlertType.None;
-            StateHasChanged();
-            await Task.CompletedTask;
+            if (ModalHostState.ModalAlertType is ModalAlertType.Validation)
+            {
+                await ModalHostState.SetModalAlertType(ModalAlertType.None);
+            }
         }
         private async Task OnSaveClicked()
         {
@@ -108,21 +94,12 @@ namespace BitUiNavigation.Client.Pages.Modal
             var (isValid, _) = await _modalProvider.ValidateProviderAsync(CancellationToken);
             if (!isValid)
             {
-                _alertType = ModalAlertType.Validation;
-                StateHasChanged();
+                await ModalHostState.SetModalAlertType(ModalAlertType.Validation);
                 return;
             }
 
             await modalSave.SaveAsync(CancellationToken);
-            // if (!ok)
-            // {
-            //     ShowInfoDialog(
-            //         title: "Unable to save",
-            //         body: "There was a problem saving your changes. Please try again.",
-            //         primaryText: "OK"
-            //     );
-            // }
-            // No header projection to update here; buttons hide automatically when IsDirty flips in provider state.
+            await ModalHostState.SetModalAlertType(ModalAlertType.None);
         }
 
         private async Task OnResetClicked()
@@ -131,72 +108,30 @@ namespace BitUiNavigation.Client.Pages.Modal
             await modalReset.ResetAsync(CancellationToken);
         }
 
-        private async Task DiscardAndCloseAsync()
-        {
-            // if (_saveReset is not null)
-            //     await _saveReset.ResetAsync(CancellationToken);
+        //private async Task DiscardAndCloseAsync()
+        //{
+        //    if (!string.IsNullOrEmpty(_preOpenUrl))
+        //        NavManager.NavigateTo(_preOpenUrl!, replace: true);
 
-            if (!string.IsNullOrEmpty(_preOpenUrl))
-                NavManager.NavigateTo(_preOpenUrl!, replace: true);
+        //    else if (_modalProvider is not null)
+        //        NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(_modalProvider.ProviderName, (string?)null), replace: true);
 
-            else if (_modalProvider is not null)
-                NavManager.NavigateTo(NavManager.GetUriWithQueryParameter(_modalProvider.ProviderName, (string?)null), replace: true);
-
-            _preOpenUrl = null;
-            _modalProvider = null;
-            StateHasChanged();
-            await Task.CompletedTask;
-        }
-
-
-        private void ShowInfoDialog(string title, string body, string primaryText)
-        {
-            _dialogTitle = title;
-            _dialogBody = body;
-            _dialogPrimaryText = primaryText;
-            _dialogSecondaryText = string.Empty;
-            _showDialogSecondary = false;
-            _onDialogPrimary = EventCallback.Factory.Create(this, () => { _isDialogOpen = false; StateHasChanged(); });
-            _onDialogSecondary = default;
-            _isDialogOpen = true;
-            StateHasChanged();
-        }
-
-        private void ShowConfirmDialog(string title, string body, string primaryText, string secondaryText, Func<Task> onPrimary, Action onSecondary)
-        {
-            _dialogTitle = title;
-            _dialogBody = body;
-            _dialogPrimaryText = primaryText;
-            _dialogSecondaryText = secondaryText;
-            _showDialogSecondary = true;
-
-            _onDialogPrimary = EventCallback.Factory.Create(this, async () =>
-            {
-                _isDialogOpen = false;
-                await onPrimary();
-            });
-
-            _onDialogSecondary = EventCallback.Factory.Create(this, () =>
-            {
-                _isDialogOpen = false;
-                onSecondary();
-                StateHasChanged();
-            });
-
-            _isDialogOpen = true;
-            StateHasChanged();
-        }
+        //    _preOpenUrl = null;
+        //    _modalProvider = null;
+        //    StateHasChanged();
+        //    await Task.CompletedTask;
+        //}
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
         {
             Logger.LogDebug("OnAfterRender: Modal='{Modal}', Panel='{Panel}'", Modal, Panel);
 
             // we have a new modal session that just opened, so we call the provider
-            if (_needsSessionInit && _modalProvider is not null)
+            if (_providerNeedsInit && _modalProvider is not null)
             {
                 _modalHostIsInitializing = false;
                 await ReadFromUri(NavManager.Uri, requestStateHasChanged: true);
-                _needsSessionInit = false;
+                _providerNeedsInit = false;
                 await _modalProvider.OnModalOpenedAsync(CancellationToken);
             }
 
@@ -240,7 +175,7 @@ namespace BitUiNavigation.Client.Pages.Modal
 
             var providerKey = _modalProvider.ProviderName;
             var expectedPanelKeys = _modalProvider.ExpectedPanelKeys;
-            var areValid = _state.ArePanelsValid(providerKey, expectedPanelKeys, MissingPanelValidityBlocksClose);
+            var areValid = ModalHostState.ArePanelsValid(providerKey, expectedPanelKeys, MissingPanelValidityBlocksClose);
             return await Task.FromResult(areValid);
         }
         private async Task<bool> IsProviderValid()
@@ -266,7 +201,7 @@ namespace BitUiNavigation.Client.Pages.Modal
                 DiscardButtonText = "Discard Changes",
                 IconName = BitIconName.CriticalErrorSolid,
             };
-            await _state.ShowBlockingDialog(true, content);
+            await ModalHostState.ShowBlockingDialog(true, content);
         }
         private async Task OnUnsavedChanges() { }
 
@@ -303,7 +238,9 @@ namespace BitUiNavigation.Client.Pages.Modal
 
                 // TODO: set flag to display validation dialogue in UI
                 // this will allow the model to become valid through corrections or reset.
-                await OnInvalid();
+                //await OnInvalid();
+                await ModalHostState.SetModalAlertType(ModalAlertType.Validation);
+                //_alertType = ModalAlertType.Validation;
                 //StateHasChanged();
                 return;
             }
@@ -323,8 +260,7 @@ namespace BitUiNavigation.Client.Pages.Modal
             if (_modalProvider is not IModalSave modalSave)
             {
                 Logger.LogError("ModalProvider '{Provider}' has unsaved changes but does not support saving.", _modalProvider.ProviderName);
-                // TODO: toast at a minimum, then close...
-                await CloseModalHost();
+                await ModalHostState.SetModalAlertType(ModalAlertType.Error);
                 return;
             }
 
@@ -334,8 +270,7 @@ namespace BitUiNavigation.Client.Pages.Modal
             {
                 Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes but does not support SaveOnClose.", _modalProvider.ProviderName);
                 // message bar to save their changes or discard before closing.  both buttons visible at that point.
-                // TODO set flag here...
-                await CloseModalHost();
+                await ModalHostState.SetModalAlertType(ModalAlertType.UnsavedChanges);
                 return;
             }
 
