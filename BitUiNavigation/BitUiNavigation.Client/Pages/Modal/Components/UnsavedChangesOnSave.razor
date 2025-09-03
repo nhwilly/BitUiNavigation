@@ -1,5 +1,7 @@
 ﻿<h3>UnsavedChangesOnSave</h3>
 
 @code {
+    [Parameter, EditorRequired] public EventCallback OnSave { get; set; }
+    [Parameter, EditorRequired] public EventCallback OnDiscard { get; set; }
 
 }

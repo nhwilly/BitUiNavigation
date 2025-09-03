@@ -1,4 +1,5 @@
-﻿using BitUiNavigation.Client.Pages.Modal.Components;
+﻿using System.Runtime.CompilerServices;
+using BitUiNavigation.Client.Pages.Modal.Components;
 
 namespace BitUiNavigation.Client.Pages.Modal
 {
@@ -76,7 +77,30 @@ namespace BitUiNavigation.Client.Pages.Modal
                 StateHasChanged();
         }
 
+        private async Task OnUnsavedChangesOnSave()
+        {
+            if (_modalProvider is IModalSave modalSave)
+            {
+                await modalSave.SaveAsync(CancellationToken);
+            }
+            _alertType = ModalAlertType.None;
+            StateHasChanged();
+        }
 
+        // ALERT TYPE SHOULD BE PART OF MODALHOSTSTATE AND THEN ANYONE CAN SHOW/CLEAR AN ERROR.
+        private async Task OnUnsavedChangesOnDiscard()
+        {
+            _alertType = ModalAlertType.ResetWarning;
+            StateHasChanged();
+            await Task.CompletedTask;
+        }
+
+        private async Task OnValidationFailureOk()
+        {
+            _alertType = ModalAlertType.None;
+            StateHasChanged();
+            await Task.CompletedTask;
+        }
         private async Task OnSaveClicked()
         {
             if (_modalProvider is not IModalSave modalSave) return;
@@ -84,11 +108,8 @@ namespace BitUiNavigation.Client.Pages.Modal
             var (isValid, _) = await _modalProvider.ValidateProviderAsync(CancellationToken);
             if (!isValid)
             {
-                ShowInfoDialog(
-                    title: "Please fix validation issues",
-                    body: "Your changes contain validation problems. Correct them and try again.",
-                    primaryText: "OK"
-                );
+                _alertType = ModalAlertType.Validation;
+                StateHasChanged();
                 return;
             }
 
@@ -240,10 +261,10 @@ namespace BitUiNavigation.Client.Pages.Modal
             {
                 Title = "Validation Errors",
                 Body = "There are validation errors in your changes. Please correct them before continuing.",
-                ShowOkButton =true,
-                ShowDiscardButton=true,
-                DiscardButtonText="Discard Changes",
-                IconName= BitIconName.CriticalErrorSolid,
+                ShowOkButton = true,
+                ShowDiscardButton = true,
+                DiscardButtonText = "Discard Changes",
+                IconName = BitIconName.CriticalErrorSolid,
             };
             await _state.ShowBlockingDialog(true, content);
         }
