@@ -9,4 +9,4 @@ public enum AutoSaveSupportedType
     UnavailableInCurrentModalState = 8,
     UnsupportedByProvider = 16,
 }
-public record AutoSaveSupportResult(bool isSupported, string? Message = null);
+public record AutoSaveSupportResult(bool IsSupported, string? Message = null);

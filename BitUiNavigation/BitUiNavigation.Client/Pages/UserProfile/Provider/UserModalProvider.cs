@@ -19,7 +19,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     /// If the provider does not support auto-save change this method to reflect that.
     /// This supercedes (overwrites) the entity modal state auto-save support result.
     /// If the provider does not support auto-save, return a result indicating that.
-    /// Suggested text: "Auto save on close is not supported for {ProviderName}."
+    /// Suggested text: "Auto save is not supported for {ProviderName}."
     /// </summary>
     public override AutoSaveSupportResult AutoSaveSupportResult => UserModalState.AutoSaveSupportResult;
 
@@ -95,8 +95,8 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
 
     public async Task ResetAsync(CancellationToken ct)
     {
-
-        await Task.CompletedTask;
+        await UserModalState.DiscardChanges();
+      
     }
 
     public override async Task<(bool, string, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)

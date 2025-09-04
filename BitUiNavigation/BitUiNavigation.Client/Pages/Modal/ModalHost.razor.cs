@@ -81,11 +81,6 @@ namespace BitUiNavigation.Client.Pages.Modal
             await ModalHostState.SetModalAlertType(ModalAlertType.None);
         }
 
-        private async Task OnUnsavedChangesOnDiscard()
-        {
-            await ModalHostState.SetModalAlertType(ModalAlertType.ResetWarning);
-        }
-
         private async Task OnValidationFailureDismiss()
         {
             if (ModalHostState.ModalAlertType is ModalAlertType.Validation or ModalAlertType.InvalidAggregate)
@@ -96,7 +91,22 @@ namespace BitUiNavigation.Client.Pages.Modal
         private async Task OnResetClicked()
         {
             if (_modalProvider is not IModalReset modalReset) return;
-            await modalReset.ResetAsync(CancellationToken);
+            await ModalHostState.SetModalAlertType(ModalAlertType.ResetWarning, "Are you sure you want to discard all changes? This cannot be undone.");
+        }
+
+        private async Task ClearResetWarning()
+        {
+            if (ModalHostState.ModalAlertType == ModalAlertType.ResetWarning)
+                await ModalHostState.SetModalAlertType(ModalAlertType.None);
+        }
+
+        private async Task OnDiscardClicked()
+        {
+            if (_modalProvider is IModalReset modalReset)
+            {
+                await modalReset.ResetAsync(CancellationToken);
+            }
+            await ModalHostState.SetModalAlertType(ModalAlertType.None);
         }
 
         protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -245,21 +255,27 @@ namespace BitUiNavigation.Client.Pages.Modal
             // now it's valid and there are changes.  what to do?
 
             // if we can't save, we have to close without saving -
-            // probably an error condition, log it or toast it or both
+            // probably an error condition, TODO: log it 
             if (_modalProvider is not IModalSave modalSave)
             {
                 Logger.LogError("ModalProvider '{Provider}' has unsaved changes but does not support saving.", _modalProvider.ProviderName);
-                await ModalHostState.SetModalAlertType(ModalAlertType.Error);
+                await ModalHostState.SetModalAlertType(ModalAlertType.Error, $"{_modalProvider.ProviderName} has unsaved changes but does not support saving.");
                 return;
             }
 
             // if we can save but not on navigation
-            // we need to set flag to display a choice of discard/save/cancel
-            if (_modalProvider is not ISupportsAutoSave)
+            if (!_modalProvider.AutoSaveSupportResult.IsSupported)
             {
                 Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes but does not support SaveOnClose.", _modalProvider.ProviderName);
                 // message bar to save their changes or discard before closing.  both buttons visible at that point.
-                await ModalHostState.SetModalAlertType(ModalAlertType.UnsavedChanges);
+                await ModalHostState.SetModalAlertType(ModalAlertType.UnsavedChanges, _modalProvider.AutoSaveSupportResult?.Message ?? "Auto save not available.");
+                return;
+            }
+
+            if (!UserState.PrefersAutoSave)
+            {
+                Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes but does User not prefer auto save.", _modalProvider.ProviderName);
+                await ModalHostState.SetModalAlertType(ModalAlertType.UnsavedChanges, "Auto save not enabled.");
                 return;
             }
 
@@ -269,6 +285,8 @@ namespace BitUiNavigation.Client.Pages.Modal
             await CloseModalHost();
 
         }
+
+        private bool ShowEnableAutoSaveButton => _modalProvider?.AutoSaveSupportResult.IsSupported ?? false && !UserState.PrefersAutoSave;
 
         private async Task CloseModalHost()
         {

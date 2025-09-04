@@ -28,8 +28,11 @@
                         <BitText Style="font-weight:600;">@(ModalHostState.Title)</BitText>
                         <BitStack AutoWidth Alignment="BitAlignment.Center" Horizontal HorizontalAlign="BitAlignment.End">
                             <BitButton Variant="@BitVariant.Text"
-                                       IconName="@BitIconName.Reset" />
+                                       IconName="@BitIconName.Reset"
+                                       Visibility="@(_modalProvider.HasUnsavedChanges ? BitVisibility.Visible: BitVisibility.Hidden)"
+                                       OnClick="@OnResetClicked" />
                             <BitButton AutoLoading="true"
+                                       Visibility="@(_modalProvider.HasUnsavedChanges ? BitVisibility.Visible: BitVisibility.Hidden)"
                                        LoadingLabel="Saving"
                                        Variant="@BitVariant.Text"
                                        IconName="@BitIconName.Save" />
@@ -53,7 +56,7 @@
                     case ModalAlertType.Validation:
                         <BitMessage OnDismiss="@OnValidationFailureDismiss" Color="BitColor.Warning">
                             <Content>
-                                Please correct any validation errors before saving your work.
+                                Please correct any errors before saving your work.
                             </Content>
                         </BitMessage>
                         break;
@@ -73,25 +76,38 @@
                     case ModalAlertType.UnsavedChanges:
                         <BitMessage OnDismiss="@ClearUnsavedChangesAlert" Styles="@EnableAutoSaveStyle" Color="BitColor.Info" Variant="BitVariant.Fill">
                             <Content>
-                                Auto save is not available.
+                                @ModalHostState.ModalAlertMessage
                             </Content>
                             <Actions>
-                                <BitButton Class="@(UserState.PrefersAutoSave ? "auto-save-fade" : null)"
-                                           AutoLoading="true"
-                                           IconName="@(UserState.PrefersAutoSave ? BitIconName.CheckMark : null)"
-                                           LoadingLabel="Saving"
-                                           LoadingLabelPosition="BitLabelPosition.End"
-                                           Variant="BitVariant.Fill"
-                                           Size="@BitSize.Small"
-                                           OnClick="@SetAutoSave"
-                                           Color="BitColor.Primary">
-                                    @(UserState.PrefersAutoSave ? "Enabled" : "Enable")
-                                </BitButton>
+                                @if (ShowEnableAutoSaveButton)
+                                {
+                                    <BitButton Class="@(!UserState.PrefersAutoSave ? null : "auto-save-fade")"
+                                               AutoLoading="true"
+                                               IconName="@(UserState.PrefersAutoSave ? BitIconName.CheckMark : null)"
+                                               LoadingLabel="Saving"
+                                               LoadingLabelPosition="BitLabelPosition.End"
+                                               Variant="BitVariant.Fill"
+                                               Size="@BitSize.Small"
+                                               OnClick="@SetAutoSave"
+                                               Color="BitColor.Primary">
+                                        @(UserState.PrefersAutoSave ? "Enabled" : "Enable")
+                                    </BitButton>
+                                }
                             </Actions>
                         </BitMessage>
                         break;
                     case ModalAlertType.ResetWarning:
-                        <ResetStateWarning />
+                        <BitDialog Title="Discard Changes"
+                                   IsOpen
+                                   IsBlocking
+                                   ShowOkButton
+                                   OkText="Discard changes"
+                                   OnOk="@OnDiscardClicked"
+                                   ShowCancelButton
+                                   OnCancel="@ClearResetWarning"
+                                   OnClose="@ClearResetWarning"
+                                   Message="@ModalHostState.ModalAlertMessage">
+                        </BitDialog>
                         break;
                 }
                 @* The body section *@

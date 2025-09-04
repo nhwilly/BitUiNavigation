@@ -16,6 +16,7 @@ public sealed partial class ModalHostState : State<ModalHostState>
     public record PanelValidity(bool IsValid, int ErrorCount);
     public bool Saving { get; private set; } = false;
     public ModalAlertType ModalAlertType { get; private set; } = ModalAlertType.None;
+    public string ModalAlertMessage { get; private set; } = string.Empty;
     public List<NavSectionDetail> NavSections { get; private set; } = [];
     /// <summary>
     /// True if every expected panel for the provider is valid.
@@ -71,9 +72,11 @@ public sealed partial class ModalHostState : State<ModalHostState>
         public sealed class Action : IAction
         {
             public ModalAlertType AlertType { get; }
-            public Action(ModalAlertType alertType)
+            public string AlertMessage { get; init; } = string.Empty;
+            public Action(ModalAlertType alertType, string? message = null)
             {
                 AlertType = alertType;
+                AlertMessage = message ?? string.Empty;
             }
         }
         public sealed class Handler : ActionHandler<Action>
@@ -86,8 +89,9 @@ public sealed partial class ModalHostState : State<ModalHostState>
             }
             public override async Task Handle(Action action, CancellationToken cancellationToken)
             {
-                _logger.LogDebug("SetModalAlertType Type={AlertType}", action.AlertType);
+                _logger.LogDebug("SetModalAlertType Type={AlertType} Message={Message}", action.AlertType, action.AlertMessage);
                 State.ModalAlertType = action.AlertType;
+                State.ModalAlertMessage = action.AlertMessage;
                 await Task.CompletedTask;
             }
         }
