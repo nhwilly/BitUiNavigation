@@ -4,7 +4,7 @@ using BitUiNavigation.Client.Pages.UserProfile.Profile;
 using BitUiNavigation.Client.Pages.UserProfile.Sometimes;
 
 namespace BitUiNavigation.Client.Services;
-public sealed partial class UserModalState : State<UserModalState>
+public sealed partial class UserModalState : State<UserModalState>, ISupportsAutoSave
 {
     public UserDto? User { get; private set; }
 
@@ -12,6 +12,16 @@ public sealed partial class UserModalState : State<UserModalState>
     public UserMembershipsViewModel MembershipsVm { get; private set; } = new();
     private UserProfileViewModel ProfileVmOriginal { get; set; } = new();
     private UserMembershipsViewModel MembershipsVmOriginal { get; set; } = new();
+    public string InstanceName => ProfileVm?.FirstName ?? string.Empty;
+
+    /// <summary>
+    /// Suggested text: "Auto save on close is not available for ${InstanceName}";
+    /// </summary>
+    public AutoSaveSupportResult AutoSaveSupportResult =>
+        User is null
+            ? new AutoSaveSupportResult(false, "Auto save is not available - no user is loaded.")
+            : new AutoSaveSupportResult(true);
+
 
     public SometimesViewModel SometimesViewModel { get; private set; } = new();
     private SometimesViewModel SometimesViewModelOriginal { get; set; } = new();

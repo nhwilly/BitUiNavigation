@@ -9,6 +9,9 @@ public interface IModalProvider
     string MinWidth { get; }
     string MaxWidth { get; }
 
+    public AutoSaveSupportResult? AutoSaveSupportResult { get; }
+    string InstanceName { get; }
+
     IReadOnlyList<string> ExpectedPanelKeys { get; }
 
     Task BuildNavSections(NavigationManager nav, CancellationToken ct);

@@ -3,7 +3,7 @@ using BitUiNavigation.Client.Pages.UserProfile.Profile;
 using BitUiNavigation.Client.Pages.UserProfile.Sometimes;
 
 namespace BitUiNavigation.Client.Pages.UserProfile.Provider;
-public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset//, ISupportsSaveOnClose
+public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset//, ISupportsAutoSave
 {
     private readonly IValidator<UserProviderAggregate> _providerValidator;
 
@@ -12,17 +12,26 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
 
     public override string ProviderName => "User";
     public override string DefaultPanel => nameof(UserMembershipsPanel);
-    private UserModalState UserState => Store.GetState<UserModalState>();
+    private UserModalState UserModalState => Store.GetState<UserModalState>();
     private ModalHostState ModalHostState => Store.GetState<ModalHostState>();
-    public override bool AutoSaveOnNavigate => true; // return user preference or override it.
-    public bool CanSave => UserState.CanSave;
-    public bool CanReset => UserState.CanReset;
-    public bool IsResetting => UserState.IsResetting;
-    public bool IsInitializing => UserState.IsInitializing;
-    public bool HasChanged => UserState.HasChanged;
-    public bool SaveOnCloseEnabled => UserState.SaveOnCloseEnabled;
 
-    public override bool ModalStateSupportsAutoSave => UserState.IsSaving;
+    /// <summary>
+    /// If the provider does not support auto-save change this method to reflect that.
+    /// This supercedes (overwrites) the entity modal state auto-save support result.
+    /// If the provider does not support auto-save, return a result indicating that.
+    /// Suggested text: "Auto save on close is not supported for {ProviderName}."
+    /// </summary>
+    public override AutoSaveSupportResult AutoSaveSupportResult => UserModalState.AutoSaveSupportResult;
+
+    public bool CanSave => UserModalState.CanSave;
+    public bool CanReset => UserModalState.CanReset;
+    public bool IsResetting => UserModalState.IsResetting;
+    public bool IsInitializing => UserModalState.IsInitializing;
+    public bool HasChanged => UserModalState.HasChanged;
+    public override string InstanceName => string.IsNullOrWhiteSpace(UserModalState?.InstanceName)
+        ? ProviderName
+        : $"{UserModalState.InstanceName}";
+
     public UserModalProvider(
         IStore store,
         IValidator<UserProviderAggregate> providerValidator,
@@ -52,7 +61,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
                 ]
         });
 
-        if (UserState.IsToggled)
+        if (UserModalState.IsToggled)
         {
             sections.Add(new NavSectionDetail()
             {
@@ -74,13 +83,13 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     public override async Task OnModalOpeningAsync(CancellationToken ct)
     {
         // await UserState.SetIsLoading(true, ct);
-        await UserState.Initialize(AccountId, LocationId, ct);
+        await UserModalState.Initialize(AccountId, LocationId, ct);
         await Task.CompletedTask;
         // await UserState.SetIsLoading(false, ct);
     }
     public override async Task OnModalOpenedAsync(CancellationToken ct)
     {
-        await ModalHostState.SetTitle(UserState.ProviderTitle, ct);
+        await ModalHostState.SetTitle(UserModalState.ProviderTitle, ct);
         // await UserState.SetIsLoading(false, ct);
     }
 
@@ -90,7 +99,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         await Task.CompletedTask;
     }
 
-    public override async Task<(bool,string, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
+    public override async Task<(bool, string, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
     {
         // 1) Build the aggregate snapshot from your current state
         var agg = new UserProviderAggregate(
@@ -119,13 +128,13 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
            .Where(m => !string.IsNullOrWhiteSpace(m))
            .ToArray();
 
-        return (false,generalMessage, messages ?? []);
+        return (false, generalMessage, messages ?? []);
     }
 
     public async Task SaveAsync(CancellationToken ct)
     {
         // await UserState.SetIsLoading(true, ct);
-        await UserState.SaveUser(ct);
+        await UserModalState.SaveUser(ct);
         // await UserState.SetIsLoading(false, ct);
         //if (ShowResultDialog)
         //    await ModalHostState.ShowBlockingDialog(true, "title", "message", ct);
@@ -133,14 +142,14 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
 
     public async ValueTask DisposeAsync()
     {
-        await UserState.Clear(CancellationToken.None);
+        await UserModalState.Clear(CancellationToken.None);
     }
 
     public override async Task ClearState(CancellationToken ct)
     {
-        await UserState.Clear(ct);
+        await UserModalState.Clear(ct);
     }
 
-    public override bool HasUnsavedChanges => UserState.HasChanged;
+    public override bool HasUnsavedChanges => UserModalState.HasChanged;
 }
 

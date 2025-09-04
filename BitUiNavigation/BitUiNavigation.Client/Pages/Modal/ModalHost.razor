@@ -27,7 +27,8 @@
                     <BitStack Alignment="@BitAlignment.Center" Horizontal HorizontalAlign="BitAlignment.SpaceBetween" Class="sticky-header" Style="padding: 0.5rem 1rem;">
                         <BitText Style="font-weight:600;">@(ModalHostState.Title)</BitText>
                         <BitStack AutoWidth Alignment="BitAlignment.Center" Horizontal HorizontalAlign="BitAlignment.End">
-                            <BitButton Variant="@BitVariant.Text" Color="@BitColor.Warning" IconName="@BitIconName.Reset" />
+                            <BitButton Variant="@BitVariant.Text"
+                                       IconName="@BitIconName.Reset" />
                             <BitButton AutoLoading="true"
                                        LoadingLabel="Saving"
                                        Variant="@BitVariant.Text"
@@ -70,12 +71,13 @@
                         </BitMessage>
                         break;
                     case ModalAlertType.UnsavedChanges:
-                        <BitMessage Styles="@EnableAutoSaveStyle" Color="BitColor.Info" Variant="BitVariant.Fill">
+                        <BitMessage OnDismiss="@ClearUnsavedChangesAlert" Styles="@EnableAutoSaveStyle" Color="BitColor.Info" Variant="BitVariant.Fill">
                             <Content>
                                 Auto save is not available.
                             </Content>
                             <Actions>
-                                <BitButton AutoLoading="true"
+                                <BitButton Class="@(UserState.PrefersAutoSave ? "auto-save-fade" : null)"
+                                           AutoLoading="true"
                                            IconName="@(UserState.PrefersAutoSave ? BitIconName.CheckMark : null)"
                                            LoadingLabel="Saving"
                                            LoadingLabelPosition="BitLabelPosition.End"
@@ -85,7 +87,6 @@
                                            Color="BitColor.Primary">
                                     @(UserState.PrefersAutoSave ? "Enabled" : "Enable")
                                 </BitButton>
-
                             </Actions>
                         </BitMessage>
                         break;
@@ -110,7 +111,9 @@
         </BitStack>
     </BitModal>
 }
-
+@code {
+    private BitButtonClassStyles _btnClasses => UserState.PrefersAutoSave ? new() : new BitButtonClassStyles { Root = "auto-save-fade" };
+}
 <style>
     @((MarkupString)CreateContainerCss())
 
@@ -126,6 +129,27 @@
 
     .nav-selected-item-container {
         border-color: transparent !important;
+    }
+    /* Add to your component's style block or a css file */
+    .auto-save-fade {
+        /* wait 1.2s, then fade in 400ms and stay hidden */
+        animation: autosave-fadeout 400ms ease-out 1200ms forwards;
+        will-change: opacity, visibility;
+    }
+
+    @@keyframes autosave-fadeout {
+        to {
+            opacity: 0;
+            visibility: hidden; /* keeps layout stable after fade */
+            pointer-events: none;
+        }
+    }
+
+    /* nice-to-have for accessibility */
+    @@media (prefers-reduced-motion: reduce) {
+        .auto-save-fade {
+            animation: none;
+        }
     }
 </style>
 

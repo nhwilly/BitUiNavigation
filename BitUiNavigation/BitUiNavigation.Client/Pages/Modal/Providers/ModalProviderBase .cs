@@ -11,8 +11,15 @@ public abstract class ModalProviderBase : IModalProvider
     public virtual string MaxWidth => "1200px";
     public virtual string Height => "640px";
 
-    public virtual bool ModalStateSupportsAutoSave => true;
-    public virtual bool AutoSaveOnNavigate => false;
+    public abstract string InstanceName { get; }
+
+    /// <summary>
+    /// Presumes auto-save is supported unless overridden.  Note: In order to report a modal entity
+    /// auto-save support result, the provider must report that value by overriding this method.
+    /// If the <i>provider</i> does not support auto-save, it should return a result indicating that.
+    /// </summary>
+    public virtual AutoSaveSupportResult? AutoSaveSupportResult { get; } = new AutoSaveSupportResult(true);
+
     protected readonly IStore Store;
     protected readonly ILogger _logger;
 
@@ -92,8 +99,9 @@ public abstract class ModalProviderBase : IModalProvider
     }
 
     public virtual Task<(bool, string, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
-        => Task.FromResult<(bool, string, IReadOnlyList<string>)>((true,string.Empty, Array.Empty<string>()));
+        => Task.FromResult<(bool, string, IReadOnlyList<string>)>((true, string.Empty, Array.Empty<string>()));
 
     public abstract bool HasUnsavedChanges { get; }
+
 }
 
