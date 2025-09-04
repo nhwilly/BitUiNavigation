@@ -1,4 +1,5 @@
-﻿using BitUiNavigation.Client.Pages.UserProfile.Memberships;
+﻿using BitUiNavigation.Client.Pages.Modal.Helpers;
+using BitUiNavigation.Client.Pages.UserProfile.Memberships;
 using BitUiNavigation.Client.Pages.UserProfile.Profile;
 using BitUiNavigation.Client.Pages.UserProfile.Sometimes;
 
@@ -89,15 +90,10 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     }
     public override async Task OnModalOpenedAsync(CancellationToken ct)
     {
-        await ModalHostState.SetTitle(UserModalState.ProviderTitle, ct);
-        // await UserState.SetIsLoading(false, ct);
+        await ModalHostState.SetTitle(UserModalState.InstanceName, ct);
     }
 
-    public async Task ResetAsync(CancellationToken ct)
-    {
-        await UserModalState.DiscardChanges();
-      
-    }
+    public async Task ResetAsync(CancellationToken ct) => await UserModalState.DiscardChanges();
 
     public override async Task<(bool, string, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
     {
@@ -111,7 +107,8 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         var result = await _providerValidator.ValidateAsync(agg, ct);
 
         // 3) Return (bool, messages)
-        if (result is null || result.IsValid) return (true, string.Empty, Array.Empty<string>());
+        if (result is null || result.IsValid) 
+            return (true, string.Empty, Array.Empty<string>());
 
         var generalMessages = result.Errors
             .Where(f => f.PropertyName == string.Empty)

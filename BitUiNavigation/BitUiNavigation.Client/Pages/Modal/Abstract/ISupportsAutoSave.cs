@@ -1,4 +1,6 @@
-﻿namespace BitUiNavigation.Client.Pages.Modal.Abstract;
+﻿using BitUiNavigation.Client.Pages.Modal.Helpers;
+
+namespace BitUiNavigation.Client.Pages.Modal.Abstract;
 
 public interface ISupportsAutoSave
 {

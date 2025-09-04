@@ -4,7 +4,6 @@
 @inherits TimeWarpStateComponent
 @inject IServiceProvider ServiceProvider
 @inject NavigationManager NavManager
-@inject IModalProviderSource ModalProviderSource
 @inject ILogger<ModalHost> Logger
 @implements IDisposable
 
@@ -35,7 +34,8 @@
                                        Visibility="@(_modalProvider.HasUnsavedChanges ? BitVisibility.Visible: BitVisibility.Hidden)"
                                        LoadingLabel="Saving"
                                        Variant="@BitVariant.Text"
-                                       IconName="@BitIconName.Save" />
+                                       IconName="@BitIconName.Save"
+                                       OnClick="@TrySaveAsync"/>
                             <BitButton Color="BitColor.Tertiary"
                                        OnClick="@TryCloseAsync"
                                        IconOnly

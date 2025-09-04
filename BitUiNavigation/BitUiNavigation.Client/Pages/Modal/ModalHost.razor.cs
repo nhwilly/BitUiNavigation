@@ -207,6 +207,65 @@ namespace BitUiNavigation.Client.Pages.Modal
             return isValid;
         }
 
+        private async Task TrySaveAsync()
+        {
+            if (_modalProvider is null)
+            {
+                Logger.LogDebug("ModalProvider is null - nothing to save...");
+                return;
+            }
+
+            // Optional pre-save hook (blocking if you implement it)
+            // This may mutate state, so we do it first.
+            if (_modalProvider is IBeforeSaveHook hook)
+            {
+                var canSave = await hook.OnBeforeSaveAsync(CancellationToken);
+                Logger.LogDebug("BeforeSaveHook returned {CanSave}", canSave);
+                // need to show alert message here..
+                if (!canSave) return;
+            }
+            // TODO: Possibly set a flag to indicate they tried to close but were blocked by validation.
+            // then always do a provider aggregate validation with each normal validation.  Or we may have to
+            // check for each field change.
+
+            var panelsAreValid = await ArePanelsValid();
+
+            if (!panelsAreValid)
+            {
+                Logger.LogDebug("Cannot close: PanelsValid={PanelsValid}", panelsAreValid);
+                return;
+            }
+
+            var providerIsValid = await IsProviderValid();
+
+            if (!providerIsValid)
+            {
+                Logger.LogDebug("Cannot close: ProviderValid={ProviderValid}", providerIsValid);
+                return;
+            }
+
+            // now we know it is valid.  are there any changes to save?
+            if (!_modalProvider.HasUnsavedChanges)
+            {
+                Logger.LogDebug("No unsaved changes - not saving.");
+                return;
+            }
+
+            // now it's valid and there are changes.  what to do?
+
+            // if we can't save, we have to close without saving -
+            // probably an error condition, TODO: log it 
+            if (_modalProvider is not IModalSave modalSave)
+            {
+                Logger.LogError("ModalProvider '{Provider}' has unsaved changes but does not support saving.", _modalProvider.ProviderName);
+                await ModalHostState.SetModalAlertType(ModalAlertType.Error, $"{_modalProvider.ProviderName} has unsaved changes but does not support saving.");
+                return;
+            }
+
+            Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes and supports Save - saving.", _modalProvider.ProviderName);
+            // so at this point, we are valid, have changes and can save on navigation.
+            await modalSave.SaveAsync(CancellationToken);
+        }
         private async Task TryCloseAsync()
         {
             if (_modalProvider is null)

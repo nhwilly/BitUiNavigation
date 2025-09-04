@@ -1,4 +1,6 @@
-﻿namespace BitUiNavigation.Client.Pages.Modal.Abstract;
+﻿using BitUiNavigation.Client.Pages.Modal.Helpers;
+
+namespace BitUiNavigation.Client.Pages.Modal.Abstract;
 
 public interface IModalProvider
 {
@@ -8,9 +10,9 @@ public interface IModalProvider
     string Height { get; }
     string MinWidth { get; }
     string MaxWidth { get; }
-
-    public AutoSaveSupportResult AutoSaveSupportResult { get; }
     string InstanceName { get; }
+
+    AutoSaveSupportResult AutoSaveSupportResult { get; }
 
     IReadOnlyList<string> ExpectedPanelKeys { get; }
 

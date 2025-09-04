@@ -1,4 +1,5 @@
-﻿using BitUiNavigation.Client.Pages.UserProfile;
+﻿using BitUiNavigation.Client.Pages.Modal.Helpers;
+using BitUiNavigation.Client.Pages.UserProfile;
 using BitUiNavigation.Client.Pages.UserProfile.Memberships;
 using BitUiNavigation.Client.Pages.UserProfile.Profile;
 using BitUiNavigation.Client.Pages.UserProfile.Sometimes;
