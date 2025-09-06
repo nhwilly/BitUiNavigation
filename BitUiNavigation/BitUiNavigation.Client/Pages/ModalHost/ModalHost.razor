@@ -15,13 +15,13 @@
         <BitStack Horizontal Gap="0rem" Style="height: 100%">
             <BitStack Class="nav-panel"
                       FitWidth
-                      Style="border-top-left-radius:20px; border-bottom-left-radius:20px;">
+                      Style="border-top-left-radius:1rem; border-bottom-left-radius:1rem;">
                 <NavSections NavSectionDetails="@(ModalHostState.NavSections)" />
             </BitStack>
 
             @* The header section *@
             <div style="flex:1;display:flex;flex-direction:column;height:100%">
-                <div style="flex-shrink:0;border-top-right-radius:20px;">
+                <div style="flex-shrink:0;border-top-right-radius:1rem;">
                     <BitStack Alignment="@BitAlignment.Center" Horizontal HorizontalAlign="BitAlignment.SpaceBetween" Class="sticky-header" Style="padding: 0.5rem 1rem;">
                         <BitText Style="font-weight:600;">@(ModalHostState.Title)</BitText>
                         <BitStack AutoWidth Alignment="BitAlignment.Center" Horizontal HorizontalAlign="BitAlignment.End">
@@ -110,7 +110,7 @@
                         break;
                 }
                 @* The body section *@
-                <div style="flex:1;overflow:hidden;border-bottom-right-radius:20px;position:relative;">
+                <div style="flex:1;overflow:hidden;border-bottom-right-radius:1rem;position:relative;">
                     <div style="height:100%;overflow-y:auto;">
                         <div style="padding:1rem;">
                             <CascadingValue TValue="@ModalContext" Value="@ModalContext">
