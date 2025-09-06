@@ -193,11 +193,11 @@ namespace BitUiNavigation.Client.Pages.ModalHost
         {
             if (_modalProvider is null) return true;
 
-            var (isValid, generalMesage, messages) = await _modalProvider.ValidateProviderAsync(CancellationToken);
+            var (isValid, generalMessage, messages) = await _modalProvider.ValidateProviderAsync(CancellationToken);
             if (!isValid)
             {
                 _providerValidationMessages = messages?.ToList() ?? [];
-                _providerValidationGeneralMessage = generalMesage;
+                _providerValidationGeneralMessage = generalMessage;
                 await ModalHostState.SetModalAlertType(ModalAlertType.InvalidAggregate);
             }
             else
