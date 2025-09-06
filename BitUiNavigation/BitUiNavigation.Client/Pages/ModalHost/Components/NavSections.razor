@@ -43,28 +43,10 @@
 @code {
     [Parameter, EditorRequired] public List<NavSectionDetail> NavSectionDetails { get; set; }
     private ModalHostState ModalHostState => GetState<ModalHostState>();
-    bool IsSmallDisplay { get; set; }
-    BitNavClassStyles NavStyles => IsSmallDisplay &&!ShowNavItemText ? SmallNavStyles : LargeNavStyles;
-    private bool ShowNavItemText = true;
-    static readonly BitNavClassStyles SmallNavStyles = new()
-    {
-        ItemContainer = "padding-inline-start:0;padding-inline-end:0;"
-    };
 
-    static readonly BitNavClassStyles LargeNavStyles = new()
-    {
-        ItemContainer = "padding-inline-start:1rem;padding-inline-end:1rem;"
-    };
-    private Task HandleNavItemClick(CustomNavItem _)
-    {
-        // BitNav will navigate (Mode=Automatic). We just close the panel.
-        ShowNavItemText = IsSmallDisplay ? false : true;
-        return Task.CompletedTask;
-    }
-    void ToggleOpenNavPanel()
-    {
-        ShowNavItemText = !ShowNavItemText;
-    }
+    bool IsSmallDisplay { get; set; }
+    private bool ShowNavItemText = true;
+    void ToggleOpenNavPanel() => ShowNavItemText = !ShowNavItemText;
 
     bool ShowIconsOnly => IsSmallDisplay && !ShowNavItemText;
 
@@ -74,4 +56,20 @@
         ShowNavItemText = false;
     }
 
+    private Task HandleNavItemClick(CustomNavItem _)
+    {
+        // BitNav will navigate (Mode=Automatic). We just close the panel.
+        ShowNavItemText = IsSmallDisplay ? false : true;
+        return Task.CompletedTask;
+    }
+    BitNavClassStyles NavStyles => ShowIconsOnly ? SmallNavStyles : LargeNavStyles;
+    static readonly BitNavClassStyles SmallNavStyles = new()
+    {
+        ItemContainer = "padding-inline-start:0;padding-inline-end:0;"
+    };
+
+    static readonly BitNavClassStyles LargeNavStyles = new()
+    {
+        ItemContainer = "padding-inline-start:1rem;padding-inline-end:1rem;"
+    };
 }
