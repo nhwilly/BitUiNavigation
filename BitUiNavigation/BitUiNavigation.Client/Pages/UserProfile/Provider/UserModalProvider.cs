@@ -31,6 +31,8 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     public bool CanReset => UserModalState.CanReset;
     public bool IsResetting => UserModalState.IsResetting;
     public bool IsInitializing => UserModalState.IsInitializing;
+    public bool IsSaving =>  UserModalState.IsSaving;
+
     public bool HasChanged => UserModalState.HasChanged;
     public override string InstanceName => string.IsNullOrWhiteSpace(UserModalState?.InstanceName)
         ? ProviderName
@@ -135,11 +137,9 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
 
     public async Task SaveAsync(CancellationToken ct)
     {
-        // await UserState.SetIsLoading(true, ct);
+        await UserModalState.SetIsSaving(true, ct);
         await UserModalState.SaveUser(ct);
-        // await UserState.SetIsLoading(false, ct);
-        //if (ShowResultDialog)
-        //    await ModalHostState.ShowBlockingDialog(true, "title", "message", ct);
+        await UserModalState.SetIsSaving(false, ct);
     }
 
     public async ValueTask DisposeAsync()
@@ -153,5 +153,6 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     }
 
     public override bool HasUnsavedChanges => UserModalState.HasChanged;
+
 }
 

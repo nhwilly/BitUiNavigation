@@ -28,6 +28,8 @@ namespace BitUiNavigation.Client.Pages.ModalHost
             await UserState.SetPrefersAutoSave(true);
         }
 
+        public bool IsSaving => (_modalProvider as IModalSave)?.IsSaving ?? false;
+
         private bool _modalHostIsInitializing = true;
         private bool _modalBusy { get; set; } = false;
         /// <summary>

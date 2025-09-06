@@ -29,7 +29,7 @@
                                        IconName="@BitIconName.Reset"
                                        IsEnabled="@(_modalProvider.HasUnsavedChanges)"
                                        OnClick="@OnResetClicked" />
-                            <BitButton AutoLoading="true"
+                            <BitButton IsLoading="@(IsSaving)"
                                        IsEnabled="@(_modalProvider.HasUnsavedChanges)"
                                        LoadingLabel="Saving"
                                        Variant="@BitVariant.Text"

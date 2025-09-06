@@ -21,7 +21,6 @@ public abstract class ModalProviderBase : IModalProvider
     /// If the <i>provider</i> does not support auto-save, it should return a result indicating that.
     /// </summary>
     public virtual AutoSaveSupportResult AutoSaveSupportResult { get; } = new AutoSaveSupportResult(true);
-
     protected readonly IStore Store;
     protected readonly ILogger _logger;
 
