@@ -11,7 +11,7 @@
 }
 @foreach (var section in NavSectionDetails)
 {
-    @if (!IsSmallDisplay)
+    @if (!IsSmallDisplay || ShowNavItemText)
     {
         <div style="margin: 1rem .5rem 0rem 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
             <BitText Color="@BitColor.PrimaryBorder" Typography="@BitTypography.Subtitle1">
