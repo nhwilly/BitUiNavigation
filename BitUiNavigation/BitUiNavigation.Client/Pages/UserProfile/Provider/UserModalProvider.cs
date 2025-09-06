@@ -21,7 +21,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
 
     /// <summary>
     /// If the provider does not support auto-save change this method to reflect that.
-    /// This supercedes (overwrites) the entity modal state auto-save support result.
+    /// This supersedes (overwrites) the entity modal state auto-save support result.
     /// If the provider does not support auto-save, return a result indicating that.
     /// Suggested text: "Auto save is not supported for {ProviderName}."
     /// </summary>
@@ -86,14 +86,16 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
 
     public override async Task OnModalOpeningAsync(CancellationToken ct)
     {
-        // await UserState.SetIsLoading(true, ct);
-        await UserModalState.Initialize(AccountId, LocationId, ct);
+        await UserModalState.SetInitializingBusy(true, ct);
+        UserModalState.Initialize();
         await Task.CompletedTask;
-        // await UserState.SetIsLoading(false, ct);
     }
     public override async Task OnModalOpenedAsync(CancellationToken ct)
     {
+        await UserModalState.SetInitializingBusy(true, ct);
+        await UserModalState.InitializeData(AccountId, LocationId, ct);
         await ModalHostState.SetTitle(UserModalState.InstanceName, ct);
+        await UserModalState.SetInitializingBusy(false, ct);
     }
 
     public async Task ResetAsync(CancellationToken ct) => await UserModalState.DiscardChanges();

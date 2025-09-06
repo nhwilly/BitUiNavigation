@@ -72,6 +72,23 @@ namespace BitUiNavigation.Client.Pages.ModalHost
                 StateHasChanged();
         }
 
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            Logger.LogDebug("OnAfterRender: Modal='{Modal}', Panel='{Panel}'", Modal, Panel);
+
+            // we have a new modal session that just opened, so we call the provider
+            if (_providerNeedsInit && _modalProvider is not null)
+            {
+                _modalHostIsInitializing = false;
+                await ReadFromUri(NavManager.Uri, requestStateHasChanged: true);
+                _providerNeedsInit = false;
+                await _modalProvider.OnModalOpenedAsync(CancellationToken);
+                StateHasChanged();
+            }
+
+            await base.OnAfterRenderAsync(firstRender);
+        }
+
         private async Task OnUnsavedChangesOnSave()
         {
             if (_modalProvider is IModalSave modalSave)
@@ -109,21 +126,6 @@ namespace BitUiNavigation.Client.Pages.ModalHost
             await ModalHostState.SetModalAlertType(ModalAlertType.None);
         }
 
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            Logger.LogDebug("OnAfterRender: Modal='{Modal}', Panel='{Panel}'", Modal, Panel);
-
-            // we have a new modal session that just opened, so we call the provider
-            if (_providerNeedsInit && _modalProvider is not null)
-            {
-                _modalHostIsInitializing = false;
-                await ReadFromUri(NavManager.Uri, requestStateHasChanged: true);
-                _providerNeedsInit = false;
-                await _modalProvider.OnModalOpenedAsync(CancellationToken);
-            }
-
-            await base.OnAfterRenderAsync(firstRender);
-        }
 
         /// <summary>
         /// Fire-and-forget wrapper that calls the async method.  OnLocationChanged is async

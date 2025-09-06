@@ -147,7 +147,7 @@ public sealed partial class UserModalState : State<UserModalState>, ISupportsAut
             }
         }
     }
-    public static class InitializeActionSet
+    public static class InitializeDataActionSet
     {
         public sealed class Action : IAction
         {
