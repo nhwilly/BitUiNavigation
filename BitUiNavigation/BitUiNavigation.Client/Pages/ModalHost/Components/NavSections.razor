@@ -5,10 +5,17 @@
 <BitMediaQuery Query="screen and (max-width: 640px)" OnChange="@SetDisplaySize" />
 @foreach (var section in NavSectionDetails)
 {
-@*     <div style="margin: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-        <BitText Typography="@BitTypography.Subtitle1">@(section.Title.ToUpper())</BitText>
-    </div> *@
-    <BitNav Style="margin-top: 1.5rem;" IconOnly="@IsSmallDisplay"
+    @if (!IsSmallDisplay)
+    {
+        <div style="margin: 1rem .5rem 0rem 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+            <BitText Color="@BitColor.PrimaryBorder" Typography="@BitTypography.Subtitle1">
+                @(section.Title.ToUpper())
+            </BitText>
+        </div>
+    }
+    <BitNav 
+            Styles="@NavStyles"
+            IconOnly="@IsSmallDisplay"
             Mode="BitNavMode.Automatic"
             Items="@(section.CustomNavItems)"
             Match="BitNavMatch.Wildcard"
@@ -20,7 +27,7 @@
 
             })">
     <ItemTemplate Context="item">
-        <NavItem Item="item" IsSmallDisplay="IsSmallDisplay" />
+        <CustomNav Item="item" ShowItemText="@(!IsSmallDisplay)" />
     </ItemTemplate>
 </BitNav>
 }
@@ -30,12 +37,15 @@
     private ModalHostState ModalHostState => GetState<ModalHostState>();
     bool IsSmallDisplay { get; set; }
     private void SetDisplaySize(bool isSmall) => IsSmallDisplay = isSmall;
+    BitNavClassStyles NavStyles => IsSmallDisplay ? SmallNavStyles : LargeNavStyles;
 
-    static BitNavClassStyles NavStyles => new()
+    static readonly BitNavClassStyles SmallNavStyles = new()
     {
-        SelectedItemContainer = "nav-selected-item-container",
-        ItemContainer = "nav-item-container",
-        Item = "nav-item",
-        SelectedItem = "nav-selected-item",
+        ItemContainer = "padding-inline-start:0;padding-inline-end:0;"
+    };
+
+    static readonly BitNavClassStyles LargeNavStyles = new()
+    {
+        ItemContainer = "padding-inline-start:1rem;padding-inline-end:1rem;"
     };
 }

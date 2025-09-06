@@ -13,7 +13,9 @@
 
         @* The navigation section *@
         <BitStack Horizontal Gap="0rem" Style="height: 100%">
-            <BitStack Class="nav-panel" FitWidth Style="border-top-left-radius:20px; border-bottom-left-radius:20px;">
+            <BitStack Class="nav-panel"
+                      FitWidth
+                      Style="border-top-left-radius:20px; border-bottom-left-radius:20px;">
                 <NavSections NavSectionDetails="@(ModalHostState.NavSections)" />
             </BitStack>
 
@@ -25,14 +27,14 @@
                         <BitStack AutoWidth Alignment="BitAlignment.Center" Horizontal HorizontalAlign="BitAlignment.End">
                             <BitButton Variant="@BitVariant.Text"
                                        IconName="@BitIconName.Reset"
-                                       Visibility="@(_modalProvider.HasUnsavedChanges ? BitVisibility.Visible: BitVisibility.Hidden)"
+                                       IsEnabled="@(_modalProvider.HasUnsavedChanges)"
                                        OnClick="@OnResetClicked" />
                             <BitButton AutoLoading="true"
-                                       Visibility="@(_modalProvider.HasUnsavedChanges ? BitVisibility.Visible: BitVisibility.Hidden)"
+                                       IsEnabled="@(_modalProvider.HasUnsavedChanges)"
                                        LoadingLabel="Saving"
                                        Variant="@BitVariant.Text"
                                        IconName="@BitIconName.Save"
-                                       OnClick="@TrySaveAsync"/>
+                                       OnClick="@TrySaveAsync" />
                             <BitButton Color="BitColor.Tertiary"
                                        OnClick="@TryCloseAsync"
                                        IconOnly
@@ -132,6 +134,7 @@
 
     .nav-panel {
         background-color: var(--bit-clr-bg-sec);
+        gap: 0rem;
     }
 
     .nav-item-container {
