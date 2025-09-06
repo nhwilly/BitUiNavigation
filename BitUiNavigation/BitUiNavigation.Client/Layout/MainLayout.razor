@@ -1,11 +1,4 @@
-﻿@using BitUiNavigation.Client.Pages
-@using BitUiNavigation.Client.Pages.Modal
-@using BitUiNavigation.Client.Pages.Modal.Helpers
-@using BitUiNavigation.Client.Pages.Modal.Providers
-@using BitUiNavigation.Client.Pages.UserProfile
-@using BitUiNavigation.Client.Pages.UserProfile.Profile
-
-@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
 @inject NavigationManager Nav
 <BitMediaQuery ScreenQuery="BitScreenQuery.Xs" OnChange="v => { IsSmall = v; }" />
 @if (!ready)

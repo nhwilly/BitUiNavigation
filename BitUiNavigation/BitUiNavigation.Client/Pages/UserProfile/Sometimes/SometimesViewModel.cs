@@ -1,4 +1,6 @@
-﻿namespace BitUiNavigation.Client.Pages.UserProfile.Sometimes;
+﻿using BitUiNavigation.Client.Pages.ModalHost.Abstract;
+
+namespace BitUiNavigation.Client.Pages.UserProfile.Sometimes;
 
 public record SometimesViewModel: BaseRecord
 {

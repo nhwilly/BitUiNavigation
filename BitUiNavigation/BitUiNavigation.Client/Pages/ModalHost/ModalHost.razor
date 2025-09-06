@@ -1,0 +1,169 @@
+﻿@inherits TimeWarpStateComponent
+@inject IServiceProvider ServiceProvider
+@inject NavigationManager NavManager
+@inject ILogger<ModalHost> Logger
+@implements IDisposable
+
+@if (_modalProvider is not null)
+{
+    <BitModal IsOpen="true"
+              OnOverlayClick="@TryCloseAsync"
+              OnDismiss="@TryCloseAsync"
+              Classes="@ClassStyles">
+
+        @* The navigation section *@
+        <BitStack Horizontal Gap="0rem" Style="height: 100%">
+            <BitStack Class="nav-panel" FitWidth Style="border-top-left-radius:20px; border-bottom-left-radius:20px;">
+                <NavSections NavSectionDetails="@(ModalHostState.NavSections)" />
+            </BitStack>
+
+            @* The header section *@
+            <div style="flex:1;display:flex;flex-direction:column;height:100%">
+                <div style="flex-shrink:0;border-top-right-radius:20px;">
+                    <BitStack Alignment="@BitAlignment.Center" Horizontal HorizontalAlign="BitAlignment.SpaceBetween" Class="sticky-header" Style="padding: 0.5rem 1rem;">
+                        <BitText Style="font-weight:600;">@(ModalHostState.Title)</BitText>
+                        <BitStack AutoWidth Alignment="BitAlignment.Center" Horizontal HorizontalAlign="BitAlignment.End">
+                            <BitButton Variant="@BitVariant.Text"
+                                       IconName="@BitIconName.Reset"
+                                       Visibility="@(_modalProvider.HasUnsavedChanges ? BitVisibility.Visible: BitVisibility.Hidden)"
+                                       OnClick="@OnResetClicked" />
+                            <BitButton AutoLoading="true"
+                                       Visibility="@(_modalProvider.HasUnsavedChanges ? BitVisibility.Visible: BitVisibility.Hidden)"
+                                       LoadingLabel="Saving"
+                                       Variant="@BitVariant.Text"
+                                       IconName="@BitIconName.Save"
+                                       OnClick="@TrySaveAsync"/>
+                            <BitButton Color="BitColor.Tertiary"
+                                       OnClick="@TryCloseAsync"
+                                       IconOnly
+                                       Size="BitSize.Small"
+                                       IconName="@BitIconName.ChromeClose"
+                                       Variant="BitVariant.Text" />
+                        </BitStack>
+                    </BitStack>
+                </div>
+
+                <BitSeparator Border="BitColorKind.Tertiary" />
+
+
+                @switch (ModalHostState.ModalAlertType)
+                {
+                    case ModalAlertType.None:
+                        break;
+                    case ModalAlertType.Validation:
+                        <BitMessage OnDismiss="@OnValidationFailureDismiss" Color="BitColor.Warning">
+                            <Content>
+                                Please correct any errors before saving your work.
+                            </Content>
+                        </BitMessage>
+                        break;
+                    case ModalAlertType.InvalidAggregate:
+                        <BitMessage Multiline="@(_providerValidationMessages?.Any() ?? false)" OnDismiss="@OnValidationFailureDismiss" Color="BitColor.SevereWarning">
+                            <Content>
+                                @_providerValidationGeneralMessage
+                                <ul style="margin:0; padding-left:1rem;">
+                                    @foreach (var msg in _providerValidationMessages ?? [])
+                                    {
+                                        <li>@msg</li>
+                                    }
+                                </ul>
+                            </Content>
+                        </BitMessage>
+                        break;
+                    case ModalAlertType.UnsavedChanges:
+                        <BitMessage OnDismiss="@ClearUnsavedChangesAlert" Styles="@EnableAutoSaveStyle" Color="BitColor.Info" Variant="BitVariant.Fill">
+                            <Content>
+                                @ModalHostState.ModalAlertMessage
+                            </Content>
+                            <Actions>
+                                @if (ShowEnableAutoSaveButton)
+                                {
+                                    <BitButton Class="@(!UserState.PrefersAutoSave ? null : "auto-save-fade")"
+                                               AutoLoading="true"
+                                               IconName="@(UserState.PrefersAutoSave ? BitIconName.CheckMark : null)"
+                                               LoadingLabel="Saving"
+                                               LoadingLabelPosition="BitLabelPosition.End"
+                                               Variant="BitVariant.Fill"
+                                               Size="@BitSize.Small"
+                                               OnClick="@SetAutoSave"
+                                               Color="BitColor.Primary">
+                                        @(UserState.PrefersAutoSave ? "Enabled" : "Enable")
+                                    </BitButton>
+                                }
+                            </Actions>
+                        </BitMessage>
+                        break;
+                    case ModalAlertType.ResetWarning:
+                        <BitDialog Title="Discard Changes"
+                                   IsOpen
+                                   IsBlocking
+                                   ShowOkButton
+                                   OkText="Discard changes"
+                                   OnOk="@OnDiscardClicked"
+                                   ShowCancelButton
+                                   OnCancel="@ClearResetWarning"
+                                   OnClose="@ClearResetWarning"
+                                   Message="@ModalHostState.ModalAlertMessage">
+                        </BitDialog>
+                        break;
+                }
+                @* The body section *@
+                <div style="flex:1;overflow:hidden;border-bottom-right-radius:20px;position:relative;">
+                    <div style="height:100%;overflow-y:auto;">
+                        <div style="padding:1rem;">
+                            <CascadingValue TValue="@ModalContext" Value="@ModalContext">
+                                <RouteView @key="_panelName"
+                                           RouteData="@_modalProvider.BuildRouteData(_panelName)"
+                                           DefaultLayout="@typeof(EmptyLayout)" />
+
+                            </CascadingValue>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </BitStack>
+    </BitModal>
+}
+@code {
+    private BitButtonClassStyles _btnClasses => UserState.PrefersAutoSave ? new() : new BitButtonClassStyles { Root = "auto-save-fade" };
+}
+<style>
+    @((MarkupString)CreateContainerCss())
+
+    .nav-panel {
+        background-color: var(--bit-clr-bg-sec);
+    }
+
+    .nav-item-container {
+        border-radius: 12px !important;
+        margin-bottom: 4px !important;
+        height: 18px !important;
+    }
+
+    .nav-selected-item-container {
+        border-color: transparent !important;
+    }
+    /* Add to your component's style block or a css file */
+    .auto-save-fade {
+        /* wait 1.2s, then fade in 400ms and stay hidden */
+        animation: autosave-fadeout 400ms ease-out 1200ms forwards;
+        will-change: opacity, visibility;
+    }
+
+    @@keyframes autosave-fadeout {
+        to {
+            opacity: 0;
+            visibility: hidden; /* keeps layout stable after fade */
+            pointer-events: none;
+        }
+    }
+
+    /* nice-to-have for accessibility */
+    @@media (prefers-reduced-motion: reduce) {
+        .auto-save-fade {
+            animation: none;
+        }
+    }
+</style>
+
+

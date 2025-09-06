@@ -1,4 +1,6 @@
-﻿@inherits ModalPanelBase<SometimesViewModel>
+﻿@using BitUiNavigation.Client.Pages.ModalHost.Panels
+@using UserModalState = BitUiNavigation.Client.Pages.UserProfile.UserModalState
+@inherits ModalPanelBase<SometimesViewModel>
 <SkeletonWhileBusy IsBusy="@(UserModalState.IsInitializing)">
     <EditForm @ref="editForm" Model="@Model">
         <FluentValidationValidator />

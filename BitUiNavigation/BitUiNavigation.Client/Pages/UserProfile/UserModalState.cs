@@ -1,10 +1,10 @@
-﻿using BitUiNavigation.Client.Pages.Modal.Helpers;
-using BitUiNavigation.Client.Pages.UserProfile;
+﻿using BitUiNavigation.Client.Pages.ModalHost.Abstract;
+using BitUiNavigation.Client.Pages.ModalHost.Helpers;
 using BitUiNavigation.Client.Pages.UserProfile.Memberships;
 using BitUiNavigation.Client.Pages.UserProfile.Profile;
 using BitUiNavigation.Client.Pages.UserProfile.Sometimes;
 
-namespace BitUiNavigation.Client.Services;
+namespace BitUiNavigation.Client.Pages.UserProfile;
 public sealed partial class UserModalState : State<UserModalState>, ISupportsAutoSave
 {
     public UserDto? User { get; private set; }

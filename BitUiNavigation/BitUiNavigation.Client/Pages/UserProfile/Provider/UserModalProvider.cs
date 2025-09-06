@@ -1,7 +1,10 @@
-﻿using BitUiNavigation.Client.Pages.Modal.Helpers;
+﻿using BitUiNavigation.Client.Pages.ModalHost.Abstract;
+using BitUiNavigation.Client.Pages.ModalHost.Helpers;
+using BitUiNavigation.Client.Pages.ModalHost.Providers;
 using BitUiNavigation.Client.Pages.UserProfile.Memberships;
 using BitUiNavigation.Client.Pages.UserProfile.Profile;
 using BitUiNavigation.Client.Pages.UserProfile.Sometimes;
+using ModalHostState = BitUiNavigation.Client.Pages.ModalHost.State.ModalHostState;
 
 namespace BitUiNavigation.Client.Pages.UserProfile.Provider;
 public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset//, ISupportsAutoSave

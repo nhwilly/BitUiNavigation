@@ -1,4 +1,6 @@
-﻿namespace BitUiNavigation.Client.Pages.UserProfile.Memberships;
+﻿using BitUiNavigation.Client.Pages.ModalHost.Abstract;
+
+namespace BitUiNavigation.Client.Pages.UserProfile.Memberships;
 
 /// <summary>
 /// View model used by the "Memberships" panel inside the User Modal.

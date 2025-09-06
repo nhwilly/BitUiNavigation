@@ -1,0 +1,41 @@
+﻿@using BitUiNavigation.Client.Pages.ModalHost
+@using BitUiNavigation.Client.Services
+@using ModalHostState = BitUiNavigation.Client.Pages.ModalHost.State.ModalHostState
+@inherits TimeWarpStateComponent
+<BitMediaQuery Query="screen and (max-width: 640px)" OnChange="@SetDisplaySize" />
+@foreach (var section in NavSectionDetails)
+{
+@*     <div style="margin: 1rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+        <BitText Typography="@BitTypography.Subtitle1">@(section.Title.ToUpper())</BitText>
+    </div> *@
+    <BitNav Style="margin-top: 1.5rem;" IconOnly="@IsSmallDisplay"
+            Mode="BitNavMode.Automatic"
+            Items="@(section.CustomNavItems)"
+            Match="BitNavMatch.Wildcard"
+            NameSelectors="@(new BitNavNameSelectors<CustomNavItem>
+            {
+                Text = { Name = nameof(CustomNavItem.Text) },
+                Url = { Name = nameof(CustomNavItem.Url) },
+                IconName = { Name = nameof(CustomNavItem.IconName) },
+
+            })">
+    <ItemTemplate Context="item">
+        <NavItem Item="item" IsSmallDisplay="IsSmallDisplay" />
+    </ItemTemplate>
+</BitNav>
+}
+
+@code {
+    [Parameter, EditorRequired] public List<NavSectionDetail> NavSectionDetails { get; set; }
+    private ModalHostState ModalHostState => GetState<ModalHostState>();
+    bool IsSmallDisplay { get; set; }
+    private void SetDisplaySize(bool isSmall) => IsSmallDisplay = isSmall;
+
+    static BitNavClassStyles NavStyles => new()
+    {
+        SelectedItemContainer = "nav-selected-item-container",
+        ItemContainer = "nav-item-container",
+        Item = "nav-item",
+        SelectedItem = "nav-selected-item",
+    };
+}

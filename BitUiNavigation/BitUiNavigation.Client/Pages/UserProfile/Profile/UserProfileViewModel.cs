@@ -1,4 +1,6 @@
-﻿namespace BitUiNavigation.Client.Pages.UserProfile.Profile;
+﻿using BitUiNavigation.Client.Pages.ModalHost.Abstract;
+
+namespace BitUiNavigation.Client.Pages.UserProfile.Profile;
 public record UserProfileViewModel : BaseRecord
 {
     public string FirstName { get; set; } = string.Empty;
