@@ -34,7 +34,7 @@ public sealed partial class UserModalState
                 // Map VMs → Entity, then save
                 State.MapViewModelToDto();
 
-                var saved = await _userService.SaveUserAsync(State.User);
+                var saved = await _userService.SaveUserAsync(State.User, cancellationToken);
 
                 // Update state (Entity + Original + VM)
                 // State.Commit(saved);
