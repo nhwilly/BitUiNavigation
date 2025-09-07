@@ -1,0 +1,18 @@
+﻿@if (Messages.Any())
+{
+    <BitText Style="padding:0 1rem; font-weight:600;" Color="@BitColor.Info">
+        Please resolve these issues:
+    </BitText>
+    <BitMessage Multiline Style="width: auto; margin: 0rem 1rem;" Color="@BitColor.Error">
+        <ul style="margin:0; padding-left:1rem;">
+            @foreach (var msg in Messages)
+            {
+                <li>@msg</li>
+            }
+        </ul>
+    </BitMessage>
+}
+@code {
+    [Parameter, EditorRequired] public List<string> Messages { get; set; } = [];
+    [Parameter] public string Title { get; set; } = "Validation Summary";
+}

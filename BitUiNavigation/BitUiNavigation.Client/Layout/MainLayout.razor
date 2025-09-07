@@ -1,8 +1,4 @@
-﻿@using BitUiNavigation.Client.Pages
-@using BitUiNavigation.Client.Pages.Modals
-@using BitUiNavigation.Client.Pages.UserProfile
-
-@inherits LayoutComponentBase
+﻿@inherits LayoutComponentBase
 @inject NavigationManager Nav
 <BitMediaQuery ScreenQuery="BitScreenQuery.Xs" OnChange="v => { IsSmall = v; }" />
 @if (!ready)
@@ -90,15 +86,19 @@ else
                 ["locationId"]=Guid.NewGuid(),
             });
     }
-    private void OpenSettings(string key, string section, Dictionary<string, object?>? additionalParams = null)
+    private void OpenSettings(string modal, string panel, Dictionary<string, object?>? additionalParams = null)
     {
+        // get the current location
         var uri = Nav.Uri;
 
+        // prepare all parameters
         var allParams = new Dictionary<string, object?>
         {
-            [key] = section
+            ["modal"] = modal,
+            ["panel"] = panel
         };
 
+        // additional parameters include workspaceId, locationId, etc.
         if (additionalParams is not null)
         {
             foreach (var kvp in additionalParams)
@@ -107,7 +107,7 @@ else
             }
         }
 
-        var newUri = QueryStringHelper.AddQueryParameters(uri, allParams);
+        var newUri = AddQueryParameters(uri, allParams);
         Console.WriteLine($"url: {newUri.ToString()}");
         Nav.NavigateTo(newUri);
     }
@@ -150,6 +150,7 @@ else
     private string AccountHeaderIcon => AccountIconsOnly ? BitIconName.SidePanel : BitIconName.SidePanelMirrored;
     private string UserHeaderIcon => UserIconsOnly ? BitIconName.SidePanelMirrored : BitIconName.SidePanel;
     static Guid SampleId = Guid.Parse("34a82bdb-6fdb-11f0-9b6b-74a6c421483f");
+    static Guid SampleId2 = Guid.Parse("59d57b7d-8680-11f0-bdbb-f3472c6b2550");
 
 
 
@@ -161,7 +162,7 @@ else
 
     private List<BitNavItem> UserNavItems = new()
     {
-        new BitNavItem { Text = "Settings", Url = $"/settings/{SampleId}", Key = "settings", IconName = "Settings"},
+        new BitNavItem { Text = "Settings", Url = $"/settings/{SampleId}?Sort={SampleId2}", Key = "settings", IconName = "Settings" },
         new BitNavItem { Text = "Profile", Url = "/profile", Key = "profile", IconName = "Contact"  },
     };
 
