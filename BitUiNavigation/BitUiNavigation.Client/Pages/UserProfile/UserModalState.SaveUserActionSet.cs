@@ -30,14 +30,8 @@ public sealed partial class UserModalState
                 }
 
                 _logger.LogDebug("Saving user {LastName}", State.User.LastName);
-
-                // Map VMs → Entity, then save
                 State.MapViewModelToDto();
-
                 var saved = await _userService.SaveUserAsync(State.User, cancellationToken);
-
-                // Update state (Entity + Original + VM)
-                // State.Commit(saved);
                 State.MapDtoToViewModel();
             }
         }
