@@ -11,8 +11,7 @@ namespace BitUiNavigation.Client.Pages.ModalHost.Panels;
 
 public abstract class ModalPanelBase<TModel> :
     TimeWarpStateComponent,
-    IModalPanel,
-    ISupportsSaveOnNavigate
+    IModalPanel
     where TModel : BaseRecord
 {
     [Inject] public ILogger<TModel>? Logger { get; set; }

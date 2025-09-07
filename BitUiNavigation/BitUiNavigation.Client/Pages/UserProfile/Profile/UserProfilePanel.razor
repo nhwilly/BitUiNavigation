@@ -1,7 +1,5 @@
 ﻿@inherits ModalPanelBase<UserProfileViewModel>
-@using UserModalState = UserModalState
-
-<SkeletonWhileBusy IsBusy="@(UserModalState.IsLoading)">
+<SkeletonWhileBusy IsBusy="@(UserModalState.IsInitializing)">
     <EditForm @ref="editForm" Model="@Model">
         <FluentValidationValidator />
         <BitGrid Columns="2" HorizontalSpacing="1rem" VerticalSpacing="0.5rem" Style="grid-template-columns:150px 1fr;">
