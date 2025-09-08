@@ -1,4 +1,6 @@
-﻿namespace BitUiNavigation.Client.Pages.UserProfile.Provider;
+﻿using ModalHostState = BitUiNavigation.Client.Pages.ModalHost.State.ModalHostState;
+
+namespace BitUiNavigation.Client.Pages.UserProfile.Provider;
 public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset//, ISupportsAutoSave
 {
     private readonly IValidator<UserProviderAggregate> _providerValidator;
@@ -11,12 +13,6 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     private UserModalState UserModalState => Store.GetState<UserModalState>();
     private ModalHostState ModalHostState => Store.GetState<ModalHostState>();
 
-    /// <summary>
-    /// If the provider does not support auto-save change this method to reflect that.
-    /// This supersedes (overwrites) the entity modal state auto-save support result.
-    /// If the provider does not support auto-save, return a result indicating that.
-    /// Suggested text: "Auto save is not supported for {ProviderName}."
-    /// </summary>
     public override AutoSaveSupportResult AutoSaveSupportResult => UserModalState.AutoSaveSupportResult;
 
     public bool CanSave => UserModalState.CanSave;
@@ -75,37 +71,57 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         {
             DecorateCustomNavItemsWithValidationIndicators(section.CustomNavItems);
         }
-        await HostState.SetNavSections(sections, ct);
+        try
+        {
+            await HostState.SetNavSections(sections, ct);
+        }
+        catch (OperationCanceledException) { _logger.LogDebug("SetNavSections cancelled."); }
+        catch (ObjectDisposedException) { _logger.LogDebug("SetNavSections CTS disposed."); }
     }
 
     public override async Task OnModalOpeningAsync(CancellationToken ct)
     {
-        await UserModalState.SetInitializingBusy(true, ct);
-        UserModalState.Initialize();
-        await Task.CompletedTask;
+        try
+        {
+            await UserModalState.SetInitializingBusy(true, ct);
+            UserModalState.Initialize();
+            await Task.CompletedTask;
+        }
+        catch (OperationCanceledException) { _logger.LogDebug("OnModalOpeningAsync cancelled."); }
+        catch (ObjectDisposedException) { _logger.LogDebug("OnModalOpeningAsync CTS disposed."); }
     }
     public override async Task OnModalOpenedAsync(CancellationToken ct)
     {
-        await UserModalState.SetInitializingBusy(true, ct);
-        await UserModalState.InitializeData(AccountId, LocationId, ct);
-        await ModalHostState.SetTitle(UserModalState.InstanceName, ct);
-        await UserModalState.SetInitializingBusy(false, ct);
+        try
+        {
+            await UserModalState.SetInitializingBusy(true, ct);
+            await UserModalState.InitializeData(AccountId, LocationId, ct);
+            await ModalHostState.SetTitle(UserModalState.InstanceName, ct);
+            await UserModalState.SetInitializingBusy(false, ct);
+        }
+        catch (OperationCanceledException) { _logger.LogDebug("OnModalOpenedAsync cancelled."); }
+        catch (ObjectDisposedException) { _logger.LogDebug("OnModalOpenedAsync CTS disposed."); }
     }
 
-    public async Task ResetAsync(CancellationToken ct) => await UserModalState.DiscardChanges();
+    public async Task ResetAsync(CancellationToken ct)
+    {
+        try
+        {
+            await UserModalState.DiscardChanges();
+        }
+        catch (OperationCanceledException) { _logger.LogDebug("DiscardChanges cancelled."); }
+        catch (ObjectDisposedException) { _logger.LogDebug("DiscardChanges CTS disposed."); }
+    }
 
     public override async Task<(bool, string, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
     {
-        // 1) Build the aggregate snapshot from your current state
         var agg = new UserProviderAggregate(
             AccountId: AccountId,
             LocationId: LocationId
         );
 
-        // 2) Run FluentValidation
         var result = await _providerValidator.ValidateAsync(agg, ct);
 
-        // 3) Return (bool, messages)
         if (result is null || result.IsValid) 
             return (true, string.Empty, Array.Empty<string>());
 
@@ -129,9 +145,35 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
 
     public async Task SaveAsync(CancellationToken ct)
     {
-        await UserModalState.SetIsSaving(true, ct);
-        await UserModalState.SaveUser(ct);
-        await UserModalState.SetIsSaving(false, ct);
+        if (ct.IsCancellationRequested) return;
+
+        try
+        {
+            await UserModalState.SetIsSaving(true, ct);
+            await UserModalState.SaveUser(ct);
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogDebug("SaveAsync cancelled.");
+            return;
+        }
+        catch (ObjectDisposedException)
+        {
+            _logger.LogDebug("SaveAsync CTS disposed.");
+            return;
+        }
+        finally
+        {
+            try
+            {
+                if (!ct.IsCancellationRequested)
+                {
+                    await UserModalState.SetIsSaving(false, ct);
+                }
+            }
+            catch (OperationCanceledException) { }
+            catch (ObjectDisposedException) { }
+        }
     }
 
     public async ValueTask DisposeAsync()
