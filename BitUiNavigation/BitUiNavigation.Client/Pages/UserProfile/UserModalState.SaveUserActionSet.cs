@@ -29,10 +29,46 @@ public sealed partial class UserModalState
                     return;
                 }
 
-                _logger.LogDebug("Saving user {LastName}", State.User.LastName);
-                State.MapViewModelToDto();
-                var saved = await _userService.SaveUserAsync(State.User, cancellationToken);
-                State.MapDtoToViewModel();
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    _logger.LogDebug("SaveUser canceled before start.");
+                    return;
+                }
+
+                try
+                {
+                    _logger.LogDebug("Saving user {LastName}", State.User.LastName);
+
+                    // Project current VM to DTO snapshot before save
+                    State.MapViewModelToDto();
+
+                    // Persist with the supplied token (linked to ModalHost navigation token)
+                    var saved = await _userService.SaveUserAsync(State.User, cancellationToken);
+
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        _logger.LogDebug("SaveUser canceled after service call.");
+                        return;
+                    }
+
+                    // Use returned DTO (server truth) then rehydrate the VMs
+                    State.User = saved;
+                    State.MapDtoToViewModel();
+                }
+                catch (OperationCanceledException)
+                {
+                    _logger.LogDebug("SaveUser canceled via token.");
+                }
+                catch (ObjectDisposedException)
+                {
+                    // Happens if an internal CTS was disposed by the framework while we were awaiting
+                    _logger.LogDebug("SaveUser aborted: CTS disposed.");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Unexpected error during SaveUser.");
+                    throw;
+                }
             }
         }
     }
