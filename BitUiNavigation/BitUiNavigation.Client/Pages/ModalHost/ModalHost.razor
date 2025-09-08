@@ -7,6 +7,7 @@
 @if (_modalProvider is not null)
 {
     <BitModal IsOpen="true"
+              Blocking="@IsSaving"
               OnOverlayClick="@TryCloseAsync"
               OnDismiss="@TryCloseAsync"
               Classes="@ClassStyles">
