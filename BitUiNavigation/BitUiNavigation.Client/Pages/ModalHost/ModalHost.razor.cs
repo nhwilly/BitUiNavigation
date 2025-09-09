@@ -36,6 +36,24 @@ namespace BitUiNavigation.Client.Pages.ModalHost
         private CancellationTokenSource? _navCts;
         private CancellationTokenSource? _linkedNavCts;
 
+        protected override async Task OnInitializedAsync()
+        {
+            // Cache the component lifetime token once to use for linking
+            _componentLifetimeToken = CancellationToken;
+
+            Logger.LogDebug("OnInitialized: Modal='{Modal}', Panel='{Panel}'", Modal, Panel);
+            NavManager.LocationChanged += HandleLocationChanged;
+            await ReadFromUri(NavManager.Uri, requestStateHasChanged: false);
+        }
+
+        private void HandleLocationChanged(object? sender, LocationChangedEventArgs e) => _ = OnLocationChanged(sender, e);
+
+        private async Task OnLocationChanged(object? sender, LocationChangedEventArgs e)
+        {
+            CancelNavigationToken(); // tear down prior linked/nav CTS
+            await ReadFromUri(e.Location, requestStateHasChanged: true);
+        }
+
         // Use this everywhere for provider/state calls
         private CancellationToken NavigationCancellationToken
         {
@@ -172,24 +190,6 @@ namespace BitUiNavigation.Client.Pages.ModalHost
                 catch (OperationCanceledException) { Logger.LogDebug("ResetAsync cancelled."); return; }
             }
             await ModalHostState.SetModalAlertType(ModalAlertType.None);
-        }
-
-        private void HandleLocationChanged(object? sender, LocationChangedEventArgs e) => _ = OnLocationChanged(sender, e);
-
-        protected override async Task OnInitializedAsync()
-        {
-            // Cache the component lifetime token once to use for linking
-            _componentLifetimeToken = CancellationToken;
-
-            Logger.LogDebug("OnInitialized: Modal='{Modal}', Panel='{Panel}'", Modal, Panel);
-            NavManager.LocationChanged += HandleLocationChanged;
-            await ReadFromUri(NavManager.Uri, requestStateHasChanged: false);
-        }
-
-        private async Task OnLocationChanged(object? sender, LocationChangedEventArgs e)
-        {
-            CancelNavigationToken(); // tear down prior linked/nav CTS
-            await ReadFromUri(e.Location, requestStateHasChanged: true);
         }
 
         private async Task<bool> ArePanelsValid()
