@@ -234,9 +234,9 @@
             }
         }
 
-        private async Task TrySaveAsync()
+        private async Task<bool> TrySaveAsync(bool closeModalInProgress=false)
         {
-            if (_modalProvider is null) { Logger.LogDebug("ModalProvider is null - nothing to save..."); return; }
+            if (_modalProvider is null) { Logger.LogDebug("ModalProvider is null - nothing to save..."); return true; }
 
             if (_modalProvider is IBeforeSaveHook hook)
             {
@@ -244,90 +244,44 @@
                 {
                     var canSave = await hook.OnBeforeSaveAsync(LinkedCancellationToken);
                     Logger.LogDebug("BeforeSaveHook returned {CanSave}", canSave);
-                    if (!canSave) return;
+                    if (!canSave) return false;
                 }
-                catch (OperationCanceledException) { Logger.LogDebug("OnBeforeSaveAsync cancelled."); return; }
+                catch (OperationCanceledException) { Logger.LogDebug("OnBeforeSaveAsync cancelled."); return false; }
             }
 
             var panelsAreValid = await ArePanelsValid();
-            if (!panelsAreValid) { Logger.LogDebug("Cannot save: PanelsValid={PanelsValid}", panelsAreValid); return; }
+            if (!panelsAreValid) { Logger.LogDebug("Cannot save: PanelsValid={PanelsValid}", panelsAreValid); return false; }
 
             var providerIsValid = await IsProviderValid();
-            if (!providerIsValid) { Logger.LogDebug("Cannot save: ProviderValid={ProviderValid}", providerIsValid); return; }
+            if (!providerIsValid) { Logger.LogDebug("Cannot save: ProviderValid={ProviderValid}", providerIsValid); return false;  }
 
-            if (!_modalProvider.HasUnsavedChanges) { Logger.LogDebug("No unsaved changes - not saving."); return; }
+            if (!_modalProvider.HasUnsavedChanges) { Logger.LogDebug("No unsaved changes - not saving."); return true; }
 
             if (_modalProvider is not IModalSave modalSave)
             {
                 Logger.LogError("ModalProvider '{Provider}' has unsaved changes but does not support saving.", _modalProvider.ProviderName);
                 await ModalHostState.SetModalAlertType(ModalAlertType.Error, $"{_modalProvider.ProviderName} has unsaved changes but does not support saving.");
-                return;
+                return false;
+            }
+
+            if (closeModalInProgress && !UserState.PrefersAutoSave)
+            {
+                Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes but does User not prefer auto save.", _modalProvider.ProviderName);
+                await ModalHostState.SetModalAlertType(ModalAlertType.UnsavedChanges, "Auto save not enabled.");
+                return false;
             }
 
             Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes and supports Save - saving.", _modalProvider.ProviderName);
             try { await modalSave.SaveAsync(LinkedCancellationToken); }
-            catch (OperationCanceledException) { Logger.LogDebug("SaveAsync cancelled."); return; }
+            catch (OperationCanceledException) { Logger.LogDebug("SaveAsync cancelled."); return false; }
+            return true;
         }
 
         private async Task TryCloseAsync()
         {
-            if (_modalProvider is null)
-            {
-                Logger.LogDebug("ModalProvider is null - closing.");
-                await CloseModalHost();
-                return;
-            }
-
-            if (_modalProvider is IBeforeCloseHook hook)
-            {
-                try
-                {
-                    var canClose = await hook.OnBeforeCloseAsync(LinkedCancellationToken);
-                    Logger.LogDebug("BeforeCloseHook returned {CanClose}", canClose);
-                    if (!canClose) return;
-                }
-                catch (OperationCanceledException) { Logger.LogDebug("OnBeforeCloseAsync cancelled."); return; }
-            }
-
-            var panelsAreValid = await ArePanelsValid();
-            if (!panelsAreValid) { Logger.LogDebug("Cannot close: PanelsValid={PanelsValid}", panelsAreValid); return; }
-
-            var providerIsValid = await IsProviderValid();
-            if (!providerIsValid) { Logger.LogDebug("Cannot close: ProviderValid={ProviderValid}", providerIsValid); return; }
-
-            if (!_modalProvider.HasUnsavedChanges)
-            {
-                Logger.LogDebug("No unsaved changes - closing.");
-                await CloseModalHost();
-                return;
-            }
-
-            if (_modalProvider is not IModalSave modalSave)
-            {
-                Logger.LogError("ModalProvider '{Provider}' has unsaved changes but does not support saving.", _modalProvider.ProviderName);
-                await ModalHostState.SetModalAlertType(ModalAlertType.Error, $"{_modalProvider.ProviderName} has unsaved changes but does not support saving.");
-                return;
-            }
-
-            if (!_modalProvider.AutoSaveSupportResult.IsSupported)
-            {
-                Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes but does not support SaveOnClose.", _modalProvider.ProviderName);
-                await ModalHostState.SetModalAlertType(ModalAlertType.UnsavedChanges, _modalProvider.AutoSaveSupportResult?.Message ?? "Auto save not available.");
-                return;
-            }
-
-            if (!UserState.PrefersAutoSave)
-            {
-                Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes but does User not prefer auto save.", _modalProvider.ProviderName);
-                await ModalHostState.SetModalAlertType(ModalAlertType.UnsavedChanges, "Auto save not enabled.");
-                return;
-            }
-
-            Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes and supports SaveOnClose - saving.", _modalProvider.ProviderName);
-            try { await modalSave.SaveAsync(LinkedCancellationToken); }
-            catch (OperationCanceledException) { Logger.LogDebug("SaveOnClose cancelled."); return; }
-
-            await CloseModalHost();
+            var readyToClose = await TrySaveAsync(closeModalInProgress: true);
+            if (!readyToClose) return;
+            await CloseModalHost(); 
         }
 
         private bool ShowEnableAutoSaveButton => _modalProvider?.AutoSaveSupportResult.IsSupported ?? false && !UserState.PrefersAutoSave;
