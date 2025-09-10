@@ -365,28 +365,5 @@
             GC.SuppressFinalize(this);
             base.Dispose();
         }
-
-        //private static readonly string _modalContainerClassName = "modal-container";
-
-        //private string CreateContainerCss()
-        //{
-        //    if (_modalProvider is null) return string.Empty;
-        //    return 
-        //        $@".{_modalContainerClassName} {{
-        //            width:  {_modalProvider.Width};
-        //            height: {_modalProvider.Height};
-        //            border-radius:20px;
-        //        }}";
-        //}
-
-        //readonly BitModalClassStyles _classStyles = new() { Content = _modalContainerClassName };
-        //readonly BitMessageClassStyles _enableAutoSaveStyle = new() { Actions = "padding: .5rem;" };
-        //static BitNavClassStyles NavStyles => new()
-        //{
-        //    SelectedItemContainer = "nav-selected-item-container",
-        //    ItemContainer = "nav-item-container",
-        //    Item = "nav-item",
-        //    SelectedItem = "nav-selected-item",
-        //};
     }
 }
