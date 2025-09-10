@@ -1,4 +1,5 @@
-﻿@inherits TimeWarpStateComponent
+﻿@using BitUiNavigation.Client.ModalHost.Navigation
+@inherits TimeWarpStateComponent
 @inject IServiceProvider ServiceProvider
 @inject NavigationManager NavManager
 @inject ILogger<ModalHost> Logger
@@ -10,7 +11,7 @@
               Blocking="@IsSaving"
               OnOverlayClick="@TryCloseAsync"
               OnDismiss="@TryCloseAsync"
-              Classes="@ClassStyles">
+              Classes="@_classStyles">
 
         @* The navigation section *@
         <BitStack Horizontal Gap="0rem" Style="height: 100%">
@@ -74,7 +75,7 @@
                         </BitMessage>
                         break;
                     case ModalAlertType.UnsavedChanges:
-                        <BitMessage OnDismiss="@ClearUnsavedChangesAlert" Styles="@EnableAutoSaveStyle" Color="BitColor.Info" Variant="BitVariant.Fill">
+                        <BitMessage OnDismiss="@ClearUnsavedChangesAlert" Styles="@_enableAutoSaveStyle" Color="BitColor.Info" Variant="BitVariant.Fill">
                             <Content>
                                 @ModalHostState.ModalAlertMessage
                             </Content>
@@ -129,6 +130,30 @@
 }
 @code {
     private BitButtonClassStyles _btnClasses => UserState.PrefersAutoSave ? new() : new BitButtonClassStyles { Root = "auto-save-fade" };
+
+    private static readonly string _modalContainerClassName = "modal-container";
+
+    private string CreateContainerCss()
+    {
+        if (_modalProvider is null) return string.Empty;
+        return
+            $@".{_modalContainerClassName} {{
+                    width:  {_modalProvider.Width};
+                    height: {_modalProvider.Height};
+                    border-radius:20px;
+                }}";
+    }
+
+    readonly BitModalClassStyles _classStyles = new() { Content = _modalContainerClassName };
+    readonly BitMessageClassStyles _enableAutoSaveStyle = new() { Actions = "padding: .5rem;" };
+    static BitNavClassStyles NavStyles => new()
+    {
+        SelectedItemContainer = "nav-selected-item-container",
+        ItemContainer = "nav-item-container",
+        Item = "nav-item",
+        SelectedItem = "nav-selected-item",
+    };
+
 }
 <style>
     @((MarkupString)CreateContainerCss())

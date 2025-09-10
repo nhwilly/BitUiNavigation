@@ -1,7 +1,4 @@
-﻿using BitUiNavigation.Client.ModalHost.Abstract;
-using BitUiNavigation.Client.ModalHost.Helpers;
-
-namespace BitUiNavigation.Client.ModalHost
+﻿namespace BitUiNavigation.Client.ModalHost
 {
     public partial class ModalHost
     {
@@ -56,7 +53,7 @@ namespace BitUiNavigation.Client.ModalHost
         }
 
         // Use this everywhere for provider/state calls
-        private CancellationToken NavigationCancellationToken
+        private CancellationToken LinkedCancellationToken
         {
             get
             {
@@ -113,9 +110,9 @@ namespace BitUiNavigation.Client.ModalHost
                 _preOpenUrl = RemoveModalQueryParameters(fullUri);
                 try
                 {
-                    _ = NavigationCancellationToken; // ensure linked CTS exists for this cycle
-                    await _modalProvider.OnModalOpeningAsync(NavigationCancellationToken);
-                    await _modalProvider.BuildNavSections(NavManager, NavigationCancellationToken);
+                    _ = LinkedCancellationToken; // ensure linked CTS exists for this cycle
+                    await _modalProvider.OnModalOpeningAsync(LinkedCancellationToken);
+                    await _modalProvider.BuildNavSections(NavManager, LinkedCancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -141,7 +138,7 @@ namespace BitUiNavigation.Client.ModalHost
                 _providerNeedsInit = false;
                 try
                 {
-                    await _modalProvider.OnModalOpenedAsync(NavigationCancellationToken);
+                    await _modalProvider.OnModalOpenedAsync(LinkedCancellationToken);
                 }
                 catch (OperationCanceledException)
                 {
@@ -154,15 +151,6 @@ namespace BitUiNavigation.Client.ModalHost
             await base.OnAfterRenderAsync(firstRender);
         }
 
-        private async Task OnUnsavedChangesOnSave()
-        {
-            if (_modalProvider is IModalSave modalSave)
-            {
-                try { await modalSave.SaveAsync(NavigationCancellationToken); }
-                catch (OperationCanceledException) { Logger.LogDebug("SaveAsync cancelled."); return; }
-            }
-            await ModalHostState.SetModalAlertType(ModalAlertType.None);
-        }
 
         private async Task OnValidationFailureDismiss()
         {
@@ -187,7 +175,7 @@ namespace BitUiNavigation.Client.ModalHost
         {
             if (_modalProvider is IModalReset modalReset)
             {
-                try { await modalReset.ResetAsync(NavigationCancellationToken); }
+                try { await modalReset.ResetAsync(LinkedCancellationToken); }
                 catch (OperationCanceledException) { Logger.LogDebug("ResetAsync cancelled."); return; }
             }
             await ModalHostState.SetModalAlertType(ModalAlertType.None);
@@ -226,7 +214,7 @@ namespace BitUiNavigation.Client.ModalHost
 
             try
             {
-                var (isValid, generalMessage, messages) = await _modalProvider.ValidateProviderAsync(NavigationCancellationToken);
+                var (isValid, generalMessage, messages) = await _modalProvider.ValidateProviderAsync(LinkedCancellationToken);
                 if (!isValid)
                 {
                     _providerValidationMessages = messages?.ToList() ?? [];
@@ -254,7 +242,7 @@ namespace BitUiNavigation.Client.ModalHost
             {
                 try
                 {
-                    var canSave = await hook.OnBeforeSaveAsync(NavigationCancellationToken);
+                    var canSave = await hook.OnBeforeSaveAsync(LinkedCancellationToken);
                     Logger.LogDebug("BeforeSaveHook returned {CanSave}", canSave);
                     if (!canSave) return;
                 }
@@ -262,10 +250,10 @@ namespace BitUiNavigation.Client.ModalHost
             }
 
             var panelsAreValid = await ArePanelsValid();
-            if (!panelsAreValid) { Logger.LogDebug("Cannot close: PanelsValid={PanelsValid}", panelsAreValid); return; }
+            if (!panelsAreValid) { Logger.LogDebug("Cannot save: PanelsValid={PanelsValid}", panelsAreValid); return; }
 
             var providerIsValid = await IsProviderValid();
-            if (!providerIsValid) { Logger.LogDebug("Cannot close: ProviderValid={ProviderValid}", providerIsValid); return; }
+            if (!providerIsValid) { Logger.LogDebug("Cannot save: ProviderValid={ProviderValid}", providerIsValid); return; }
 
             if (!_modalProvider.HasUnsavedChanges) { Logger.LogDebug("No unsaved changes - not saving."); return; }
 
@@ -277,7 +265,7 @@ namespace BitUiNavigation.Client.ModalHost
             }
 
             Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes and supports Save - saving.", _modalProvider.ProviderName);
-            try { await modalSave.SaveAsync(NavigationCancellationToken); }
+            try { await modalSave.SaveAsync(LinkedCancellationToken); }
             catch (OperationCanceledException) { Logger.LogDebug("SaveAsync cancelled."); return; }
         }
 
@@ -294,7 +282,7 @@ namespace BitUiNavigation.Client.ModalHost
             {
                 try
                 {
-                    var canClose = await hook.OnBeforeCloseAsync(NavigationCancellationToken);
+                    var canClose = await hook.OnBeforeCloseAsync(LinkedCancellationToken);
                     Logger.LogDebug("BeforeCloseHook returned {CanClose}", canClose);
                     if (!canClose) return;
                 }
@@ -336,7 +324,7 @@ namespace BitUiNavigation.Client.ModalHost
             }
 
             Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes and supports SaveOnClose - saving.", _modalProvider.ProviderName);
-            try { await modalSave.SaveAsync(NavigationCancellationToken); }
+            try { await modalSave.SaveAsync(LinkedCancellationToken); }
             catch (OperationCanceledException) { Logger.LogDebug("SaveOnClose cancelled."); return; }
 
             await CloseModalHost();
@@ -378,27 +366,27 @@ namespace BitUiNavigation.Client.ModalHost
             base.Dispose();
         }
 
-        private static readonly string ModalContainerClass = "modal-container";
+        //private static readonly string _modalContainerClassName = "modal-container";
 
-        private string CreateContainerCss()
-        {
-            if (_modalProvider is null) return string.Empty;
-            return $@"
-        .{ModalContainerClass} {{
-            width:  {_modalProvider.Width};
-            height: {_modalProvider.Height};
-            border-radius:20px;
-        }}";
-        }
+        //private string CreateContainerCss()
+        //{
+        //    if (_modalProvider is null) return string.Empty;
+        //    return 
+        //        $@".{_modalContainerClassName} {{
+        //            width:  {_modalProvider.Width};
+        //            height: {_modalProvider.Height};
+        //            border-radius:20px;
+        //        }}";
+        //}
 
-        readonly BitModalClassStyles ClassStyles = new() { Content = ModalContainerClass };
-        readonly BitMessageClassStyles EnableAutoSaveStyle = new() { Actions = "padding: .5rem;" };
-        static BitNavClassStyles NavStyles => new()
-        {
-            SelectedItemContainer = "nav-selected-item-container",
-            ItemContainer = "nav-item-container",
-            Item = "nav-item",
-            SelectedItem = "nav-selected-item",
-        };
+        //readonly BitModalClassStyles _classStyles = new() { Content = _modalContainerClassName };
+        //readonly BitMessageClassStyles _enableAutoSaveStyle = new() { Actions = "padding: .5rem;" };
+        //static BitNavClassStyles NavStyles => new()
+        //{
+        //    SelectedItemContainer = "nav-selected-item-container",
+        //    ItemContainer = "nav-item-container",
+        //    Item = "nav-item",
+        //    SelectedItem = "nav-selected-item",
+        //};
     }
 }
