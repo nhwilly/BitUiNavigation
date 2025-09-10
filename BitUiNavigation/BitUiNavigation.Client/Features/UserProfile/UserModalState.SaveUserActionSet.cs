@@ -31,7 +31,7 @@ public sealed partial class UserModalState
 
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    _logger.LogDebug("SaveUser canceled before start.");
+                    _logger.LogWarning("SaveUser canceled before start.");
                     return;
                 }
 
@@ -47,7 +47,7 @@ public sealed partial class UserModalState
 
                     if (cancellationToken.IsCancellationRequested)
                     {
-                        _logger.LogDebug("SaveUser canceled after service call.");
+                        _logger.LogWarning("SaveUser canceled after service call.");
                         return;
                     }
 
@@ -57,12 +57,12 @@ public sealed partial class UserModalState
                 }
                 catch (OperationCanceledException)
                 {
-                    _logger.LogDebug("SaveUser canceled via token.");
+                    _logger.LogWarning("SaveUser canceled via token.");
                 }
                 catch (ObjectDisposedException)
                 {
                     // Happens if an internal CTS was disposed by the framework while we were awaiting
-                    _logger.LogDebug("SaveUser aborted: CTS disposed.");
+                    _logger.LogWarning("SaveUser aborted: CTS disposed.");
                 }
                 catch (Exception ex)
                 {

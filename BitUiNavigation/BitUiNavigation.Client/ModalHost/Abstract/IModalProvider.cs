@@ -1,5 +1,4 @@
-﻿using BitUiNavigation.Client.ModalHost.Helpers;
-using BitUiNavigation.Client.ModalHost.Navigation;
+﻿using FluentValidation.Results;
 
 namespace BitUiNavigation.Client.ModalHost.Abstract;
 
@@ -28,7 +27,9 @@ public interface IModalProvider
 
     Task<bool> CanCloseAsync(CancellationToken ct);
 
-    Task<(bool IsValid, string generalMessage, IReadOnlyList<string> Messages)> ValidateProviderAsync(CancellationToken ct);
+    //Task<(bool IsValid, string generalMessage, IReadOnlyList<string> Messages)> ValidateProviderAsync(CancellationToken ct);
+    public virtual Task<ValidationResult> ValidateProvider(CancellationToken ct)
+    => Task.FromResult<ValidationResult>(new ValidationResult());
 
     void AddValidationIndicators(List<CustomNavItem> items);
 

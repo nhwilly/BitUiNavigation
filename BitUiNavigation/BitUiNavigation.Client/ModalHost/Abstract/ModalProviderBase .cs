@@ -1,5 +1,6 @@
 ﻿using BitUiNavigation.Client.ModalHost.Components;
 using BitUiNavigation.Client.ModalHost.Helpers;
+using FluentValidation.Results;
 
 namespace BitUiNavigation.Client.ModalHost.Abstract;
 
@@ -98,8 +99,8 @@ public abstract class ModalProviderBase : IModalProvider
         }
     }
 
-    public virtual Task<(bool, string, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
-        => Task.FromResult<(bool, string, IReadOnlyList<string>)>((true, string.Empty, Array.Empty<string>()));
+    public virtual Task<ValidationResult> ValidateProvider(CancellationToken ct)
+        => Task.FromResult<ValidationResult>(new ValidationResult());
 
     public abstract bool HasUnsavedChanges { get; }
 

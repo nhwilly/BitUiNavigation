@@ -1,4 +1,6 @@
-﻿namespace BitUiNavigation.Client.Features.UserProfile.Provider;
+﻿using FluentValidation.Results;
+
+namespace BitUiNavigation.Client.Features.UserProfile.Provider;
 public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset//, ISupportsAutoSave
 {
     private readonly IValidator<UserProviderAggregate> _providerValidator;
@@ -17,7 +19,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     public bool CanReset => UserModalState.CanReset;
     public bool IsResetting => UserModalState.IsResetting;
     public bool IsInitializing => UserModalState.IsInitializing;
-    public bool IsSaving =>  UserModalState.IsSaving;
+    public bool IsSaving => UserModalState.IsSaving;
 
     public bool HasChanged => UserModalState.HasChanged;
     public override string InstanceName => string.IsNullOrWhiteSpace(UserModalState?.InstanceName)
@@ -113,7 +115,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         catch (ObjectDisposedException) { _logger.LogDebug("DiscardChanges CTS disposed."); }
     }
 
-    public override async Task<(bool, string, IReadOnlyList<string>)> ValidateProviderAsync(CancellationToken ct)
+    public override async Task<ValidationResult> ValidateProvider(CancellationToken ct)
     {
         var agg = new UserProviderAggregate(
             AccountId: AccountId,
@@ -121,26 +123,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         );
 
         var result = await _providerValidator.ValidateAsync(agg, ct);
-
-        if (result is null || result.IsValid) 
-            return (true, string.Empty, Array.Empty<string>());
-
-        var generalMessages = result.Errors
-            .Where(f => f.PropertyName == string.Empty)
-            .Select(f => f.ErrorMessage)
-            .ToList();
-
-        var generalMessage = generalMessages.Any()
-            ? string.Join(" ", generalMessages)
-            : "There are validation errors.";
-
-        var messages = result.Errors
-           .Where(e => e.PropertyName != string.Empty)
-           .Select(e => e.ErrorMessage)
-           .Where(m => !string.IsNullOrWhiteSpace(m))
-           .ToArray();
-
-        return (false, generalMessage, messages ?? []);
+        return result;
     }
 
     public async Task SaveAsync(CancellationToken ct)
@@ -165,15 +148,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         }
         finally
         {
-            try
-            {
-                if (!ct.IsCancellationRequested)
-                {
-                    await UserModalState.SetIsSaving(false, ct);
-                }
-            }
-            catch (OperationCanceledException) { }
-            catch (ObjectDisposedException) { }
+            await UserModalState.SetIsSaving(false, CancellationToken.None);
         }
     }
 

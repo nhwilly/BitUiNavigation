@@ -214,22 +214,38 @@
 
             try
             {
-                var (isValid, generalMessage, messages) = await _modalProvider.ValidateProviderAsync(LinkedCancellationToken);
-                if (!isValid)
+                var result = await _modalProvider.ValidateProvider(LinkedCancellationToken);
+
+                if (!result.IsValid)
                 {
-                    _providerValidationMessages = messages?.ToList() ?? [];
-                    _providerValidationGeneralMessage = generalMessage;
+                    // validation errors not attached to a single property are given
+                    // empty property names.  This allows for general error messages.
+                    var generalMessages = result.Errors
+                    .Where(f => f.PropertyName == string.Empty)
+                    .Select(f => f.ErrorMessage)
+                    .ToList();
+
+                var _providerValidationGeneralMessage = generalMessages.Any()
+                    ? string.Join(" ", generalMessages)
+                    : "There are validation errors.";
+
+                var _providerValidationMessages = result.Errors
+                   .Where(e => e.PropertyName != string.Empty)
+                   .Select(e => e.ErrorMessage)
+                   .Where(m => !string.IsNullOrWhiteSpace(m))
+                   .ToArray();
+
                     await ModalHostState.SetModalAlertType(ModalAlertType.InvalidAggregate);
                 }
                 else
                 {
                     await ClearInvalidAggregateAlert();
                 }
-                return isValid;
+                return result.IsValid;
             }
             catch (OperationCanceledException)
             {
-                Logger.LogDebug("ValidateProviderAsync cancelled.");
+                Logger.LogDebug("IsProviderValid cancelled.");
                 return false;
             }
         }
