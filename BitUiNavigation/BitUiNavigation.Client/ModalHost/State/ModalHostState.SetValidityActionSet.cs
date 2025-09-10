@@ -57,7 +57,7 @@ public sealed partial class ModalHostState
                         {
                             panelDict[action.PanelName] = new PanelValidity(action.IsValid, action.ErrorCount);
                             provider = _serviceProvider.GetRequiredKeyedService<IModalProvider>(action.ProviderKey);
-                            provider.DecorateCustomNavItemsWithValidationIndicators([.. ModalHostState.NavSections.SelectMany(s => s.CustomNavItems)]);
+                            provider.AddValidationIndicators([.. ModalHostState.NavSections.SelectMany(s => s.CustomNavItems)]);
                             return;
                         }
                     }

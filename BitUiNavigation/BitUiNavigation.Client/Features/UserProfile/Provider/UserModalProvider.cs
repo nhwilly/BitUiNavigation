@@ -41,17 +41,19 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
 
     public override async Task BuildNavSections(NavigationManager nav, CancellationToken ct)
     {
-        var sections = new List<NavSectionDetail>();
-        sections.Add(new NavSectionDetail()
+        var sections = new List<NavSectionDetail>
         {
-            Title = "Settings",
-            IconName = BitIconName.Settings,
-            CustomNavItems =
+            new()
+            {
+                Title = "Settings",
+                IconName = BitIconName.Settings,
+                CustomNavItems =
                 [
                     new() { Key = nameof(UserMembershipsPanel), Text = "Memberships", IconName = BitIconName.UserEvent, Url = BuildPanelRelativeUrl(nav,  nameof(UserMembershipsPanel)) },
                     new() { Key = nameof(UserProfilePanel), Text = "Profile", IconName = BitIconName.Contact, Url = BuildPanelRelativeUrl(nav,  nameof(UserProfilePanel)) }
                 ]
-        });
+            }
+        };
 
         if (UserModalState.IsToggled)
         {
@@ -67,7 +69,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         }
         foreach (var section in sections)
         {
-            DecorateCustomNavItemsWithValidationIndicators(section.CustomNavItems);
+            AddValidationIndicators(section.CustomNavItems);
         }
         try
         {
@@ -149,6 +151,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         {
             await UserModalState.SetIsSaving(true, ct);
             await UserModalState.SaveUser(ct);
+            await UserModalState.SetIsSaving(false, ct);
         }
         catch (OperationCanceledException)
         {

@@ -30,7 +30,7 @@ public interface IModalProvider
 
     Task<(bool IsValid, string generalMessage, IReadOnlyList<string> Messages)> ValidateProviderAsync(CancellationToken ct);
 
-    void DecorateCustomNavItemsWithValidationIndicators(List<CustomNavItem> items);
+    void AddValidationIndicators(List<CustomNavItem> items);
 
     bool HasUnsavedChanges { get; }
 
