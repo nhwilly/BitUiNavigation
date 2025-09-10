@@ -11,7 +11,7 @@
 		<NoWarn>$(NoWarn);IDE0290</NoWarn>
 	</PropertyGroup>
 	<ItemGroup>
-	  <Compile Remove="Pages\ModalHost\WorkspaceModalProvider.cs" />
+	  <Compile Remove="ModalHost\WorkspaceModalProvider.cs" />
 	</ItemGroup>
   <ItemGroup>
     <Content Remove="C:\Users\whnoe\.nuget\packages\timewarp.state\11.0.3\contentFiles\any\net8.0\wwwroot\types\Constants.d.ts" />

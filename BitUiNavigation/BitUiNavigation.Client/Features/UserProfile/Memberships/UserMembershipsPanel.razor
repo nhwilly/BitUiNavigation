@@ -1,0 +1,67 @@
+﻿@using BitUiNavigation.Client.ModalHost.Abstract
+@inherits ModalPanelBase<UserMembershipsViewModel>
+
+<SkeletonWhileBusy IsBusy="@(UserModalState.IsInitializing)">
+    <EditForm @ref="editForm" Model="@Model">
+        <FluentValidationValidator />
+        <BitTextField @bind-Value="Model.Name"
+                      Label="Name"
+                      Placeholder="Enter a name..."
+                      IconName="@BitIconName.UserClapper" />
+        <ValidationMessage For="() => Model.Name" />
+    </EditForm>
+    <BitButton OnClick="AddMenuItem">Add menu</BitButton>
+</SkeletonWhileBusy>
+<h3>UserMemberships</h3>
+<h1>Pivot #1: Samples</h1>
+<div>
+    Once upon a time, stories wove connections between people, a symphony of voices crafting shared dreams.
+    Each word carried meaning, each pause brought understanding. Placeholder text reminds us of that moment
+    when possibilities are limitless, waiting for content to emerge. The spaces here are open for growth,
+    for ideas that change minds and spark emotions. This is where the journey begins—your words will lead
+    the way.
+</div>
+<div>
+    Once upon a time, stories wove connections between people, a symphony of voices crafting shared dreams.
+    Each word carried meaning, each pause brought understanding. Placeholder text reminds us of that moment
+    when possibilities are limitless, waiting for content to emerge. The spaces here are open for growth,
+    for ideas that change minds and spark emotions. This is where the journey begins—your words will lead
+    the way.
+</div>
+<div>
+    Once upon a time, stories wove connections between people, a symphony of voices crafting shared dreams.
+    Each word carried meaning, each pause brought understanding. Placeholder text reminds us of that moment
+    when possibilities are limitless, waiting for content to emerge. The spaces here are open for growth,
+    for ideas that change minds and spark emotions. This is where the journey begins—your words will lead
+    the way.
+</div>
+<div>
+    Once upon a time, stories wove connections between people, a symphony of voices crafting shared dreams.
+    Each word carried meaning, each pause brought understanding. Placeholder text reminds us of that moment
+    when possibilities are limitless, waiting for content to emerge. The spaces here are open for growth,
+    for ideas that change minds and spark emotions. This is where the journey begins—your words will lead
+    the way.
+</div>
+<div>
+    Once upon a time, stories wove connections between people, a symphony of voices crafting shared dreams.
+    Each word carried meaning, each pause brought understanding. Placeholder text reminds us of that moment
+    when possibilities are limitless, waiting for content to emerge. The spaces here are open for growth,
+    for ideas that change minds and spark emotions. This is where the journey begins—your words will lead
+    the way.
+</div>
+<div>
+    Once upon a time, stories wove connections between people, a symphony of voices crafting shared dreams.
+    Each word carried meaning, each pause brought understanding. Placeholder text reminds us of that moment
+    when possibilities are limitless, waiting for content to emerge. The spaces here are open for growth,
+    for ideas that change minds and spark emotions. This is where the journey begins—your words will lead
+    the way.
+</div>
+
+@code {
+    private UserModalState UserModalState => GetState<UserModalState>();
+    protected override UserMembershipsViewModel Model => UserModalState.MembershipsVm;
+    private async Task AddMenuItem(bool args)
+    {
+        await UserModalState.SetNavItemToggle(true, CancellationToken);
+    }
+}

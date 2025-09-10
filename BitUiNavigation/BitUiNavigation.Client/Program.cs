@@ -1,7 +1,7 @@
-using BitUiNavigation.Client.Pages.ModalHost.Abstract;
-using BitUiNavigation.Client.Pages.UserProfile;
-using BitUiNavigation.Client.Pages.UserProfile.Profile;
-using BitUiNavigation.Client.Pages.UserProfile.Provider;
+using BitUiNavigation.Client.Features.UserProfile;
+using BitUiNavigation.Client.Features.UserProfile.Profile;
+using BitUiNavigation.Client.Features.UserProfile.Provider;
+using BitUiNavigation.Client.ModalHost.Abstract;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 namespace BitUiNavigation.Client;
 
