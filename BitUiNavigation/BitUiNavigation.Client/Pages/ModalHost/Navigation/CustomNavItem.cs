@@ -1,4 +1,4 @@
-﻿namespace BitUiNavigation.Client.Pages.ModalHost;
+﻿namespace BitUiNavigation.Client.Pages.ModalHost.Navigation;
 
 public class CustomNavItem
 {

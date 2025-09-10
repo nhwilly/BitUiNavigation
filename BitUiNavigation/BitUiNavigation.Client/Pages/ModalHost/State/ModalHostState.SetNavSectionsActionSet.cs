@@ -1,4 +1,4 @@
-﻿using BitUiNavigation.Client.Pages.ModalHost.Providers;
+﻿using BitUiNavigation.Client.Pages.ModalHost.Navigation;
 
 namespace BitUiNavigation.Client.Pages.ModalHost.State;
 

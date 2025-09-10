@@ -1,4 +1,4 @@
-﻿namespace BitUiNavigation.Client.Pages.ModalHost.Providers;
+﻿namespace BitUiNavigation.Client.Pages.ModalHost.Navigation;
 
 public class NavSectionDetail
 {

@@ -1,5 +1,6 @@
 ﻿using BitUiNavigation.Client.Pages.ModalHost.Components;
 using BitUiNavigation.Client.Pages.ModalHost.Helpers;
+using BitUiNavigation.Client.Pages.ModalHost.Navigation;
 using ModalHostState = BitUiNavigation.Client.Pages.ModalHost.State.ModalHostState;
 
 namespace BitUiNavigation.Client.Pages.ModalHost.Providers;

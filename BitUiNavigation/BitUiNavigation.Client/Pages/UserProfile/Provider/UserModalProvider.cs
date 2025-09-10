@@ -1,4 +1,5 @@
-﻿using ModalHostState = BitUiNavigation.Client.Pages.ModalHost.State.ModalHostState;
+﻿using BitUiNavigation.Client.Pages.ModalHost.Navigation;
+using ModalHostState = BitUiNavigation.Client.Pages.ModalHost.State.ModalHostState;
 
 namespace BitUiNavigation.Client.Pages.UserProfile.Provider;
 public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset//, ISupportsAutoSave

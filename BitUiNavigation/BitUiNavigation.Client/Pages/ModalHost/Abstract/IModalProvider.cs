@@ -1,4 +1,5 @@
 ﻿using BitUiNavigation.Client.Pages.ModalHost.Helpers;
+using BitUiNavigation.Client.Pages.ModalHost.Navigation;
 
 namespace BitUiNavigation.Client.Pages.ModalHost.Abstract;
 
