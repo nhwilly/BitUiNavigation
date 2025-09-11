@@ -38,7 +38,7 @@
 
 
 @code {
-    [Parameter, EditorRequired] public List<NavSectionDetail> NavSectionDetails { get; set; }
+    [Parameter, EditorRequired] public List<NavSection> NavSectionDetails { get; set; }
     private ModalHostState ModalHostState => GetState<ModalHostState>();
 
     bool IsSmallDisplay { get; set; }

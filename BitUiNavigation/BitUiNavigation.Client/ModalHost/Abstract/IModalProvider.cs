@@ -11,6 +11,7 @@ public interface IModalProvider
     string MinWidth { get; }
     string MaxWidth { get; }
     string ProviderTitle { get; }
+    public List<NavSection> NavSections { get; }
 
     AutoSaveSupportResult AutoSaveSupportResult { get; }
 
@@ -32,7 +33,7 @@ public interface IModalProvider
     => Task.FromResult<ValidationResult>(new ValidationResult());
 
     void AddValidationIndicators(List<CustomNavItem> items);
-
+    void AddValidationToSections();
     bool HasUnsavedChanges { get; }
 
     Task ClearState(CancellationToken ct);

@@ -42,9 +42,9 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         [nameof(SometimesPanel)] = typeof(SometimesPanel),
     };
 
-    private NavSectionDetail AddSettingsSection(NavigationManager nav)
+    private void AddSettingsSection(NavigationManager nav)
     {
-        NavSectionDetail settingsSection = new()
+        NavSection section = new()
         {
             Title = "Settings",
             IconName = BitIconName.Settings,
@@ -54,12 +54,12 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
                     new() { Key = nameof(UserProfilePanel), Text = "Profile", IconName = BitIconName.Contact, Url = BuildPanelRelativeUrl(nav,  nameof(UserProfilePanel)) }
                 ]
         };
-        return settingsSection;
+        NavSections.Add(section);
     }
 
-    private NavSectionDetail AddShouldShowSomeSpecialSection(NavigationManager nav)
+    private void AddShouldShowSomeSpecialSection(NavigationManager nav)
     {
-        return new NavSectionDetail()
+        NavSection section = new NavSection()
         {
             Title = "Sometimes",
             IconName = BitIconName.Calendar,
@@ -68,25 +68,21 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
                 new() { Key = nameof(SometimesPanel), Text = "Sometimes", IconName = BitIconName.Calendar, Url = BuildPanelRelativeUrl(nav,  nameof(SometimesPanel)) }
             ]
         };
+        if (UserModalState.ShouldShowSomeSpecialPanel)
+        {
+            NavSections.Add(section);
+        }
     }
 
     public override async Task BuildNavSections(NavigationManager nav, CancellationToken ct)
     {
-        NavSectionDetail= new()
-        {
-            Adds
-        }
-        if (UserModalState.ShouldShowSomeSpecialPanel)
-        {
-        }
-
-        foreach (var section in sections)
-        {
-            AddValidationIndicators(section.CustomNavItems);
-        }
+        NavSections.Clear();
+        AddSettingsSection(nav);
+        AddShouldShowSomeSpecialSection(nav);
+        AddValidationToSections();
         try
         {
-            await HostState.SetNavSections(sections, ct);
+            await HostState.SetNavSections(NavSections, ct);
         }
         catch (OperationCanceledException) { _logger.LogDebug("SetNavSections cancelled."); }
         catch (ObjectDisposedException) { _logger.LogDebug("SetNavSections CTS disposed."); }

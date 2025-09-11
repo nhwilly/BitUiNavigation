@@ -42,7 +42,7 @@ public abstract class ModalProviderBase : IModalProvider
     public virtual Task OnModalOpeningAsync(CancellationToken ct) => Task.CompletedTask;
 
     public abstract Task BuildNavSections(NavigationManager nav, CancellationToken ct);
-    protected NavSectionDetail NavSectionDetail { get; set; } = new();
+    public List<NavSection> NavSections { get; private set; } = [];
 
     protected static string BuildPanelRelativeUrl(NavigationManager nav, string panelName)
     {
@@ -61,6 +61,14 @@ public abstract class ModalProviderBase : IModalProvider
 
     public virtual Task<bool> CanCloseAsync(CancellationToken ct) => Task.FromResult(true);
 
+    public void AddValidationToSections()
+    {
+        foreach (var section in NavSections.ToList())
+        {
+            AddValidationIndicators(section.CustomNavItems);
+        }
+
+    }
     public void AddValidationIndicators(List<CustomNavItem> navItems)
     {
         // Snapshot to avoid repeated state reads

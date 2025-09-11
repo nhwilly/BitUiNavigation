@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Components.Forms;
-using ModalHostState = BitUiNavigation.Client.Pages.ModalHost.State.ModalHostState;
 
 namespace BitUiNavigation.Client.ModalHost.Abstract;
 
@@ -23,7 +22,7 @@ public abstract class ModalPanelBase<TModel> :
     // If the form lives in the derived .razor, set @ref="editForm" there.
     protected EditForm? editForm;
 
-    private EditContext? _ctx; // the subscribed context
+    private EditContext? _editContext; // the subscribed context
     private ModalHostState ModalHostState => GetState<ModalHostState>();
 
     // ---------------- lifecycle ----------------
@@ -33,7 +32,7 @@ public abstract class ModalPanelBase<TModel> :
         // Prefer cascaded EditContext; else fall back to @ref’d form
         var discovered = CurrentEditContext ?? editForm?.EditContext;
 
-        if (!ReferenceEquals(_ctx, discovered))
+        if (!ReferenceEquals(_editContext, discovered))
         {
             Unsubscribe();
             SubscribeIfPresent(discovered);
@@ -56,22 +55,22 @@ public abstract class ModalPanelBase<TModel> :
     {
         if (ctx is null) return;
 
-        _ctx = ctx;
+        _editContext = ctx;
         //_ctx.OnFieldChanged += OnFieldChanged;
-        _ctx.OnValidationStateChanged += OnValidationStateChanged;
+        _editContext.OnValidationStateChanged += OnValidationStateChanged;
 
-        RehydrateIfPreviouslyInvalid(_ctx);
+        RehydrateIfPreviouslyInvalid(_editContext);
         Logger?.LogDebug("Subscribed to EditContext for {Panel}", GetType().Name);
     }
 
     private void Unsubscribe()
     {
-        if (_ctx is null) return;
+        if (_editContext is null) return;
 
         //_ctx.OnFieldChanged -= OnFieldChanged;
-        _ctx.OnValidationStateChanged -= OnValidationStateChanged;
+        _editContext.OnValidationStateChanged -= OnValidationStateChanged;
         Logger?.LogDebug("Unsubscribed from EditContext for {Panel}", GetType().Name);
-        _ctx = null;
+        _editContext = null;
     }
 
     private void OnFieldChanged(object? sender, FieldChangedEventArgs e)
@@ -90,7 +89,7 @@ public abstract class ModalPanelBase<TModel> :
 
     private async Task PublishFromEditContextAsync()
     {
-        var ctx = _ctx ?? CurrentEditContext ?? editForm?.EditContext;
+        var ctx = _editContext ?? CurrentEditContext ?? editForm?.EditContext;
         if (ctx is null || Ctx is null)
         {
             Logger?.LogTrace("Publish skipped: ctx or Ctx null for {Panel}", GetType().Name);
@@ -117,7 +116,7 @@ public abstract class ModalPanelBase<TModel> :
     /// </summary>
     protected async Task<bool> ForceValidateAndPublishAsync()
     {
-        var ctx = _ctx ?? CurrentEditContext ?? editForm?.EditContext;
+        var ctx = _editContext ?? CurrentEditContext ?? editForm?.EditContext;
         if (ctx is null)
         {
             Logger?.LogWarning("ForceValidateAndPublishAsync: EditContext is null for {Panel}", GetType().Name);

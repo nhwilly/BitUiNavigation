@@ -6,8 +6,8 @@ public sealed partial class ModalHostState
     {
         public sealed class Action : IAction
         {
-            public List<NavSectionDetail> NavSections { get; }
-            public Action(List<NavSectionDetail> navSections)
+            public List<NavSection> NavSections { get; }
+            public Action(List<NavSection> navSections)
             {
                 NavSections = navSections ?? [];
             }

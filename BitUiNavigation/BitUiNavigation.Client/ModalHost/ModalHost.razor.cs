@@ -177,8 +177,11 @@
         {
             if (_modalProvider is IModalReset modalReset)
             {
-                try { await modalReset.ResetAsync(LinkedCancellationToken);
-                await _modalProvider.AddValidationIndicators}
+                try
+                {
+                    await modalReset.ResetAsync(LinkedCancellationToken);
+                    _modalProvider.AddValidationToSections();
+                }
                 catch (OperationCanceledException) { Logger.LogDebug("ResetAsync cancelled."); return; }
             }
             await ModalHostState.SetModalAlertType(ModalAlertType.None);
