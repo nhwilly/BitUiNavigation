@@ -23,4 +23,7 @@
 @code {
     [Parameter, EditorRequired] public CustomNavItem NavItem { get; set; } = default!;
     [Parameter, EditorRequired] public bool ShowItemText { get; set; } = false;
+
+// NOTES: We are using a Dot for the badge here because the menu doesn't leave enough room
+// for a badge with a counter or an icon at the end.  Space is too tight.
 }
