@@ -10,7 +10,7 @@ public interface IModalProvider
     string Height { get; }
     string MinWidth { get; }
     string MaxWidth { get; }
-    string InstanceName { get; }
+    string ProviderTitle { get; }
 
     AutoSaveSupportResult AutoSaveSupportResult { get; }
 

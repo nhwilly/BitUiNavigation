@@ -1,4 +1,5 @@
 ﻿using FluentValidation.Results;
+using Humanizer;
 
 namespace BitUiNavigation.Client.ModalHost.Abstract;
 
@@ -6,12 +7,13 @@ public abstract class ModalProviderBase : IModalProvider
 {
     public abstract string ProviderName { get; }
     public abstract string DefaultPanel { get; }
+    public virtual string Height => "640px";
     public virtual string Width => "900px";
     public virtual string MinWidth => "350px";
     public virtual string MaxWidth => "1200px";
-    public virtual string Height => "640px";
+    public abstract bool HasUnsavedChanges { get; }
 
-    public abstract string InstanceName { get; }
+    public abstract string ProviderTitle { get; }
 
     /// <summary>
     /// Presumes auto-save is supported unless overridden.  Note: In order to report a modal entity
@@ -58,41 +60,34 @@ public abstract class ModalProviderBase : IModalProvider
 
     public virtual Task<bool> CanCloseAsync(CancellationToken ct) => Task.FromResult(true);
 
-    public void AddValidationIndicators(List<CustomNavItem> items)
+    public void AddValidationIndicators(List<CustomNavItem> navItems)
     {
         // Snapshot to avoid repeated state reads
         var host = Store.GetState<ModalHostState>();
 
         // Get this provider's panel-validity map, if any
-        host.Validity.TryGetValue(ProviderName, out var perPanel);
+        host.Validity.TryGetValue(ProviderName, out var providerValidity);
 
-        foreach (var item in items)
+        foreach (var navItem in navItems)
         {
-            if (item is null || string.IsNullOrWhiteSpace(item.Key)) continue;
+            if (navItem is null || string.IsNullOrWhiteSpace(navItem.Key)) continue;
 
-            var panelKey = Normalize(item.Key, DefaultPanel);
+            var panelName = Normalize(navItem.Key, DefaultPanel);
 
-            // Safe: only enters when perPanel is not null AND the key exists.
-            if (perPanel?.TryGetValue(panelKey, out var pv) == true && pv is { IsValid: false })
+            // Safe: only enters when providerValidity is not null AND the panelName exists.
+            if (providerValidity?.TryGetValue(panelName, out var panelValidity) == true && panelValidity is { IsValid: false })
             {
-                item.ValidationIconName = BitIconName.CriticalErrorSolid;
-
-                var msg = pv.ErrorCount == 1
-                    ? "a validation error"
-                    : $"{pv.ErrorCount} validation errors";
-
-                // Optional a11y/tooltip text
-                item.Title = string.IsNullOrWhiteSpace(item.Title)
-                    ? $"Has {msg}"
-                    : $"{item.Title} has {msg}";
-
-                item.AriaLabel = $"{item.Text} has {msg}";
+                var validationText = "validation error".ToQuantity(panelValidity.ErrorCount, ShowQuantityAs.Words);
+                var text = $"{navItem.Text} has {validationText}";
+                navItem.InvalidCount = panelValidity.ErrorCount;
+                navItem.Title = text;
+                navItem.AriaLabel = text;
             }
             else
             {
-                // leave as-is for valid/unknown
-                // If you want to clear or set an "ok" icon, do it here.
-                item.ValidationIconName = null;
+                navItem.Title = navItem.Text;
+                navItem.AriaLabel = navItem.AriaLabel;
+                navItem.InvalidCount = 0;
             }
         }
     }
@@ -100,7 +95,6 @@ public abstract class ModalProviderBase : IModalProvider
     public virtual Task<ValidationResult> ValidateProvider(CancellationToken ct)
         => Task.FromResult<ValidationResult>(new ValidationResult());
 
-    public abstract bool HasUnsavedChanges { get; }
 
 }
 

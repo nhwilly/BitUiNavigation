@@ -19,9 +19,9 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     public bool IsResetting => UserModalState.IsResetting;
     public bool IsInitializing => UserModalState.IsLoading;
     public bool IsSaving => UserModalState.IsSaving;
-
+    public bool IsBusy => IsInitializing || IsSaving || IsResetting;
     public bool HasChanged => UserModalState.HasChanged;
-    public override string InstanceName => string.IsNullOrWhiteSpace(UserModalState?.InstanceName)
+    public override string ProviderTitle => string.IsNullOrWhiteSpace(UserModalState?.InstanceName)
         ? ProviderName
         : $"{ProviderName}: {UserModalState.InstanceName}";
 

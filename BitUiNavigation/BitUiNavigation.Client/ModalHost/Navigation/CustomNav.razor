@@ -5,23 +5,22 @@
           Gap=".5rem"
           FitHeight
           FitWidth>
-    <BitBadge Hidden="@(!HasValidationIndicator)"
+    <BitBadge Hidden="@(NavItem.InvalidCount == 0)"
               Dot
               Size="BitSize.Small"
               Position="BitPosition.CenterEnd"
               Color="BitColor.Error">
-        <BitIcon Size="BitSize.Medium"
-                 IconName="@Item.IconName" />
+        <BitIcon AriaLabel="@NavItem.AriaLabel" Size="BitSize.Medium"
+                 IconName="@NavItem.IconName" />
     </BitBadge>
     @if (ShowItemText)
     {
         <BitText Style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-            @Item.Text
+            @NavItem.Text
         </BitText>
     }
 </BitStack>
 @code {
-    [Parameter, EditorRequired] public CustomNavItem Item { get; set; } = default!;
+    [Parameter, EditorRequired] public CustomNavItem NavItem { get; set; } = default!;
     [Parameter, EditorRequired] public bool ShowItemText { get; set; } = false;
-    bool HasValidationIndicator => !string.IsNullOrEmpty(Item?.ValidationIconName);
 }
