@@ -1,4 +1,6 @@
 ﻿using FluentValidation.Results;
+using Microsoft.Extensions.Logging.Abstractions;
+using static System.Collections.Specialized.BitVector32;
 
 namespace BitUiNavigation.Client.Features.UserProfile.Provider;
 public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset, ISupportsAutoSave
@@ -40,34 +42,44 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         [nameof(SometimesPanel)] = typeof(SometimesPanel),
     };
 
-    public override async Task BuildNavSections(NavigationManager nav, CancellationToken ct)
+    private NavSectionDetail AddSettingsSection(NavigationManager nav)
     {
-        var sections = new List<NavSectionDetail>
+        NavSectionDetail settingsSection = new()
         {
-            new()
-            {
-                Title = "Settings",
-                IconName = BitIconName.Settings,
-                CustomNavItems =
+            Title = "Settings",
+            IconName = BitIconName.Settings,
+            CustomNavItems =
                 [
                     new() { Key = nameof(UserMembershipsPanel), Text = "Memberships", IconName = BitIconName.UserEvent, Url = BuildPanelRelativeUrl(nav,  nameof(UserMembershipsPanel)) },
                     new() { Key = nameof(UserProfilePanel), Text = "Profile", IconName = BitIconName.Contact, Url = BuildPanelRelativeUrl(nav,  nameof(UserProfilePanel)) }
                 ]
-            }
         };
+        return settingsSection;
+    }
 
+    private NavSectionDetail AddShouldShowSomeSpecialSection(NavigationManager nav)
+    {
+        return new NavSectionDetail()
+        {
+            Title = "Sometimes",
+            IconName = BitIconName.Calendar,
+            CustomNavItems =
+            [
+                new() { Key = nameof(SometimesPanel), Text = "Sometimes", IconName = BitIconName.Calendar, Url = BuildPanelRelativeUrl(nav,  nameof(SometimesPanel)) }
+            ]
+        };
+    }
+
+    public override async Task BuildNavSections(NavigationManager nav, CancellationToken ct)
+    {
+        NavSectionDetail= new()
+        {
+            Adds
+        }
         if (UserModalState.ShouldShowSomeSpecialPanel)
         {
-            sections.Add(new NavSectionDetail()
-            {
-                Title = "Sometimes",
-                IconName = BitIconName.Calendar,
-                CustomNavItems =
-                [
-                    new() { Key = nameof(SometimesPanel), Text = "Sometimes", IconName = BitIconName.Calendar, Url = BuildPanelRelativeUrl(nav,  nameof(SometimesPanel)) }
-                ]
-            });
         }
+
         foreach (var section in sections)
         {
             AddValidationIndicators(section.CustomNavItems);

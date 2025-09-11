@@ -8,7 +8,7 @@ public class CustomNavItem
     public string? AriaLabel { get; set; } = string.Empty;
 
     public string? IconName { get; set; } = string.Empty;
-    public int InvalidCount { get; set; }
+    public int InvalidErrorCount { get; set; }
     public string? Url { get; set; } = string.Empty;
     public bool IsExpanded { get; set; }
     public List<CustomNavItem> Children { get; set; } = [];

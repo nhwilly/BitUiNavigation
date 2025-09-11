@@ -42,6 +42,7 @@ public abstract class ModalProviderBase : IModalProvider
     public virtual Task OnModalOpeningAsync(CancellationToken ct) => Task.CompletedTask;
 
     public abstract Task BuildNavSections(NavigationManager nav, CancellationToken ct);
+    protected NavSectionDetail NavSectionDetail { get; set; } = new();
 
     protected static string BuildPanelRelativeUrl(NavigationManager nav, string panelName)
     {
@@ -79,7 +80,7 @@ public abstract class ModalProviderBase : IModalProvider
             {
                 var validationText = "validation error".ToQuantity(panelValidity.ErrorCount, ShowQuantityAs.Words);
                 var text = $"{navItem.Text} has {validationText}";
-                navItem.InvalidCount = panelValidity.ErrorCount;
+                navItem.InvalidErrorCount = panelValidity.ErrorCount;
                 navItem.Title = text;
                 navItem.AriaLabel = text;
             }
@@ -87,7 +88,7 @@ public abstract class ModalProviderBase : IModalProvider
             {
                 navItem.Title = navItem.Text;
                 navItem.AriaLabel = navItem.AriaLabel;
-                navItem.InvalidCount = 0;
+                navItem.InvalidErrorCount = 0;
             }
         }
     }

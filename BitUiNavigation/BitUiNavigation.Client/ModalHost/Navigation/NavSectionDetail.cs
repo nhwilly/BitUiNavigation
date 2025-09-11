@@ -1,5 +1,8 @@
 ﻿namespace BitUiNavigation.Client.ModalHost.Navigation;
 
+/// <summary>
+/// Contains the title of the section and all the nav items within it.
+/// </summary>
 public class NavSectionDetail
 {
     public string IconName { get; set; } = string.Empty;
