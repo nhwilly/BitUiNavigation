@@ -1,5 +1,4 @@
-﻿@using BitUiNavigation.Client.ModalHost.Abstract
-@inherits ModalPanelBase<UserProfileViewModel>
+﻿@inherits ModalPanelBase<UserProfileViewModel>
 <SkeletonWhileBusy IsBusy="@(UserModalState.IsInitializing)">
     <EditForm @ref="editForm" Model="@Model">
         <FluentValidationValidator />
@@ -8,7 +7,7 @@
                 <BitText>First name</BitText>
             </BitGridItem>
             <BitGridItem>
-                <BitTextField @bind-Value="Model.FirstName" Trim />
+                <BitTextField @bind-Value="Model.FirstName" IsEnabled="@IsEnabled" />
                 <ValidationMessage For="() => Model.FirstName" />
             </BitGridItem>
 
@@ -16,7 +15,7 @@
                 <BitText>Last name</BitText>
             </BitGridItem>
             <BitGridItem>
-                <BitTextField @bind-Value="Model.LastName" Trim />
+                <BitTextField @bind-Value="Model.LastName" Trim IsEnabled="@IsEnabled" />
                 <ValidationMessage For="() => Model.LastName" />
             </BitGridItem>
         </BitGrid>
@@ -25,4 +24,6 @@
 @code {
     private UserModalState UserModalState => GetState<UserModalState>();
     protected override UserProfileViewModel Model => UserModalState.ProfileVm;
+    private bool IsDisabled => UserModalState.IsSaving;
+    private bool IsEnabled => !IsDisabled;
 }

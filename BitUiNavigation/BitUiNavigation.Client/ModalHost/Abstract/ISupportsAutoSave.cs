@@ -1,6 +1,4 @@
-﻿using BitUiNavigation.Client.ModalHost.Helpers;
-
-namespace BitUiNavigation.Client.ModalHost.Abstract;
+﻿namespace BitUiNavigation.Client.ModalHost.Abstract;
 
 public interface ISupportsAutoSave
 {

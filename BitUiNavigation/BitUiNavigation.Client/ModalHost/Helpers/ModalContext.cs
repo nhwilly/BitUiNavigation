@@ -6,6 +6,6 @@
 /// </summary>
 public sealed class ModalContext
 {
-    public required string ProviderKey { get; init; } 
-    public required string PanelName { get; init; } 
+    public required string ProviderKey { get; init; }
+    public required string PanelName { get; init; }
 }

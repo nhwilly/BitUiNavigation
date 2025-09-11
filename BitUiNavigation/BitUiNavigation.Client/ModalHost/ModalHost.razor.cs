@@ -220,20 +220,21 @@
                 {
                     // validation errors not attached to a single property are given
                     // empty property names.  This allows for general error messages.
+                    // These empty names are set in the FluentValidation abstract Validator<T>
                     var generalMessages = result.Errors
                     .Where(f => f.PropertyName == string.Empty)
                     .Select(f => f.ErrorMessage)
                     .ToList();
 
-                var _providerValidationGeneralMessage = generalMessages.Any()
-                    ? string.Join(" ", generalMessages)
-                    : "There are validation errors.";
+                    var _providerValidationGeneralMessage = generalMessages.Any()
+                        ? string.Join(" ", generalMessages)
+                        : "There are validation errors.";
 
-                var _providerValidationMessages = result.Errors
-                   .Where(e => e.PropertyName != string.Empty)
-                   .Select(e => e.ErrorMessage)
-                   .Where(m => !string.IsNullOrWhiteSpace(m))
-                   .ToArray();
+                    var _providerValidationMessages = result.Errors
+                       .Where(e => e.PropertyName != string.Empty)
+                       .Select(e => e.ErrorMessage)
+                       .Where(m => !string.IsNullOrWhiteSpace(m))
+                       .ToArray();
 
                     await ModalHostState.SetModalAlertType(ModalAlertType.InvalidAggregate);
                 }
@@ -250,7 +251,7 @@
             }
         }
 
-        private async Task<bool> TrySaveAsync(bool closeModalInProgress=false)
+        private async Task<bool> TrySaveAsync(bool closeModalInProgress = false)
         {
             if (_modalProvider is null) { Logger.LogDebug("ModalProvider is null - nothing to save..."); return true; }
 
@@ -269,7 +270,7 @@
             if (!panelsAreValid) { Logger.LogDebug("Cannot save: PanelsValid={PanelsValid}", panelsAreValid); return false; }
 
             var providerIsValid = await IsProviderValid();
-            if (!providerIsValid) { Logger.LogDebug("Cannot save: ProviderValid={ProviderValid}", providerIsValid); return false;  }
+            if (!providerIsValid) { Logger.LogDebug("Cannot save: ProviderValid={ProviderValid}", providerIsValid); return false; }
 
             if (!_modalProvider.HasUnsavedChanges) { Logger.LogDebug("No unsaved changes - not saving."); return true; }
 
@@ -297,7 +298,7 @@
         {
             var readyToClose = await TrySaveAsync(closeModalInProgress: true);
             if (!readyToClose) return;
-            await CloseModalHost(); 
+            await CloseModalHost();
         }
 
         private bool ShowEnableAutoSaveButton => _modalProvider?.AutoSaveSupportResult.IsSupported ?? false && !UserState.PrefersAutoSave;

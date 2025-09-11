@@ -1,6 +1,4 @@
-﻿using TimeWarp.State;
-
-namespace BitUiNavigation.Client.Layout;
+﻿namespace BitUiNavigation.Client.Layout;
 
 public sealed partial class UserDialogState : State<UserDialogState>
 {
