@@ -21,21 +21,21 @@ public sealed partial class ModalHostState : State<ModalHostState>
     /// True if every expected panel for the provider is valid.
     /// If a panel hasn't published yet, it's treated as valid unless missingBlocks==true.
     /// </summary>
-    public bool ArePanelsValid(string providerKey,
-                               IEnumerable<string> expectedPanelKeys,
-                               bool missingBlocks = false)
+    public bool ArePanelsValid(string providerName,
+                               IEnumerable<string> panelNames,
+                               bool validateMissingPanels = false)
     {
-        if (!Validity.TryGetValue(providerKey, out var perPanel))
-            return !missingBlocks; // nothing published yet
+        if (!Validity.TryGetValue(providerName, out var providerValidity))
+            return !validateMissingPanels; // nothing published yet
 
-        foreach (var key in expectedPanelKeys)
+        foreach (var panelName in panelNames)
         {
-            if (!perPanel.TryGetValue(key, out var pv))
+            if (!providerValidity.TryGetValue(panelName, out var panelValidity))
             {
-                if (missingBlocks) return false;
+                if (validateMissingPanels) return false;
                 continue;
             }
-            if (!pv.IsValid) return false;
+            if (!panelValidity.IsValid) return false;
         }
         return true;
     }
