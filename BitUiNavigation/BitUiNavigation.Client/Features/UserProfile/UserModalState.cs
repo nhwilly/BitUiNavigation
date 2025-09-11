@@ -28,11 +28,10 @@ public sealed partial class UserModalState : State<UserModalState>, ISupportsAut
     public override void Initialize() { }
 
     /// <summary>
-    /// Default behavior is to track if any of the view models have changed.  Additional
-    /// logic can be included to also link permissions, etc.
+    /// This optionally allows this state to prevent saving if some condition is not met.  This is particularly useful for security.
     /// </summary>
-    public bool CanSave => HasChanged;
-    public bool CanReset => HasChanged;
+    public bool CanSave => true;
+    public bool CanReset => true;
 
     /// <summary>
     /// Indicates that the entire state is being loaded.  Used by the UI to show work in progress.  Additional IsLoading properties can be created to track specific panels or view models which may be lazily loaded.

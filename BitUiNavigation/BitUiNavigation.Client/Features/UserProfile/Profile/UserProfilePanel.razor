@@ -7,7 +7,7 @@
                 <BitText>First name</BitText>
             </BitGridItem>
             <BitGridItem>
-                <BitTextField @bind-Value="Model.FirstName" IsEnabled="@IsEnabled" />
+                <BitTextField @bind-Value="Model.FirstName" ReadOnly="@IsDisabled" />
                 <ValidationMessage For="() => Model.FirstName" />
             </BitGridItem>
 
@@ -15,7 +15,7 @@
                 <BitText>Last name</BitText>
             </BitGridItem>
             <BitGridItem>
-                <BitTextField @bind-Value="Model.LastName" Trim IsEnabled="@IsEnabled" />
+                <BitTextField @bind-Value="Model.LastName" Trim ReadOnly="@IsDisabled" />
                 <ValidationMessage For="() => Model.LastName" />
             </BitGridItem>
         </BitGrid>
@@ -25,5 +25,4 @@
     private UserModalState UserModalState => GetState<UserModalState>();
     protected override UserProfileViewModel Model => UserModalState.ProfileVm;
     private bool IsDisabled => UserModalState.IsSaving;
-    private bool IsEnabled => !IsDisabled;
 }

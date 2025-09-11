@@ -3,7 +3,7 @@
 @if (IsSmallDisplay)
 {
     <div style="margin: .5rem 0rem 0rem 1rem;">
-        <BitButton Size="@BitSize.Small" IconName="@(ShowNavItemText? @BitIconName.ChromeClose: @BitIconName.SidePanel)" Variant="@BitVariant.Text" OnClick="@ToggleOpenNavPanel" />
+        <BitButton Size="@BitSize.Small" IconName="@(ShowNavItemText? @BitIconName.ClosePaneMirrored: @BitIconName.ClosePane)" Variant="@BitVariant.Text" OnClick="@ToggleOpenNavPanel" />
     </div>
 }
 @foreach (var section in NavSectionDetails)
@@ -22,7 +22,7 @@
             Mode="BitNavMode.Automatic"
             Items="@(section.CustomNavItems)"
             Match="BitNavMatch.Wildcard"
-            OnItemClick="(CustomNavItem i) => HandleNavItemClick(i)"
+            OnItemClick="(CustomNavItem item) => HandleNavItemClick(item)"
             NameSelectors="@(new BitNavNameSelectors<CustomNavItem>
             {
                 Text = { Name = nameof(CustomNavItem.Text) },

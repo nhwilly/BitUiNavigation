@@ -30,13 +30,15 @@
                             <BitButton Variant="@BitVariant.Text"
                                        IconName="@BitIconName.Reset"
                                        IsEnabled="@(_modalProvider.HasUnsavedChanges)"
-                                       OnClick="@OnResetClicked" />
+                                       OnClick="@OnResetClicked"
+                                       Visibility="@ResetVisible"/>
                             <BitButton IsLoading="@(IsSaving)"
                                        IsEnabled="@(_modalProvider.HasUnsavedChanges)"
                                        LoadingLabel="Saving"
                                        Variant="@BitVariant.Text"
                                        IconName="@BitIconName.Save"
-                                       OnClick="@TrySaveAsync" />
+                                       OnClick="@TrySaveAsync"
+                                       Visibility="@SaveVisible"/>
                             <BitButton Color="BitColor.Tertiary"
                                        OnClick="@TryCloseAsync"
                                        IconOnly

@@ -15,11 +15,10 @@ public sealed partial class ModalHostState : State<ModalHostState>
     public ModalAlertType ModalAlertType { get; private set; } = ModalAlertType.None;
     public string ModalAlertMessage { get; private set; } = string.Empty;
     public List<NavSectionDetail> NavSections { get; private set; } = [];
-    //public string Title { get; private set; } = string.Empty;
 
     /// <summary>
     /// True if every expected panel for the provider is valid.
-    /// If a panel hasn't published yet, it's treated as valid unless missingBlocks==true.
+    /// If a panel hasn't published yet, it's treated as valid unless validateMissingPanels==true.
     /// </summary>
     public bool ArePanelsValid(string providerName,
                                IEnumerable<string> panelNames,

@@ -10,7 +10,7 @@
         private string? _preOpenUrl;
         private IModalPanel? _panel;
         private bool _providerNeedsInit = false;
-        private bool MissingPanelValidityBlocksClose => false;
+        private bool ValidateMissingPanels => false;
         private List<string>? _providerValidationMessages = [];
         private string _providerValidationGeneralMessage = string.Empty;
         private ModalHostState ModalHostState => GetState<ModalHostState>();
@@ -23,9 +23,11 @@
         private async Task SetAutoSave() => await UserState.SetPrefersAutoSave(true);
 
         public bool IsSaving => (_modalProvider as IModalSave)?.IsSaving ?? false;
+        private BitVisibility ResetVisible => (_modalProvider as IModalReset)?.CanReset ?? false ? BitVisibility.Visible : BitVisibility.Collapsed;
+        private BitVisibility SaveVisible => (_modalProvider as IModalSave)?.CanSave ?? false ? BitVisibility.Visible : BitVisibility.Collapsed;
 
-        private bool _modalHostIsInitializing = true;
-        private bool _modalBusy { get; set; } = false;
+        //private bool _modalHostIsInitializing = true;
+        //private bool _modalBusy { get; set; } = false;
 
         // Component lifetime token (from TimeWarpStateComponent) cached once
         private CancellationToken _componentLifetimeToken;
@@ -133,7 +135,7 @@
 
             if (_providerNeedsInit && _modalProvider is not null)
             {
-                _modalHostIsInitializing = false;
+                //_modalHostIsInitializing = false;
                 await ReadFromUri(NavManager.Uri, requestStateHasChanged: true);
                 _providerNeedsInit = false;
                 try
@@ -187,7 +189,7 @@
 
             var providerKey = _modalProvider.ProviderName;
             var expectedPanelKeys = _modalProvider.ExpectedPanelKeys;
-            var areValid = ModalHostState.ArePanelsValid(providerKey, expectedPanelKeys, MissingPanelValidityBlocksClose);
+            var areValid = ModalHostState.ArePanelsValid(providerKey, expectedPanelKeys, ValidateMissingPanels);
             if (areValid) await ClearValidationAlert();
             else await ModalHostState.SetModalAlertType(ModalAlertType.Validation);
 
@@ -253,45 +255,57 @@
 
         private async Task<bool> TrySaveAsync(bool closeModalInProgress = false)
         {
-            if (_modalProvider is null) { Logger.LogDebug("ModalProvider is null - nothing to save..."); return true; }
-
-            if (_modalProvider is IBeforeSaveHook hook)
+            try
             {
-                try
+                await ModalHostState.SetIsSaving(true, LinkedCancellationToken);
+                if (_modalProvider is null) { Logger.LogDebug("ModalProvider is null - nothing to save..."); return true; }
+
+                if (_modalProvider is IBeforeSaveHook hook)
                 {
-                    var canSave = await hook.OnBeforeSaveAsync(LinkedCancellationToken);
-                    Logger.LogDebug("BeforeSaveHook returned {CanSave}", canSave);
-                    if (!canSave) return false;
+                    try
+                    {
+                        var canSave = await hook.OnBeforeSaveAsync(LinkedCancellationToken);
+                        Logger.LogDebug("BeforeSaveHook returned {CanSave}", canSave);
+                        if (!canSave) return false;
+                    }
+                    catch (OperationCanceledException) { Logger.LogDebug("OnBeforeSaveAsync cancelled."); return false; }
                 }
-                catch (OperationCanceledException) { Logger.LogDebug("OnBeforeSaveAsync cancelled."); return false; }
+
+                var panelsAreValid = await ArePanelsValid();
+                if (!panelsAreValid) { Logger.LogDebug("Cannot save: PanelsValid={PanelsValid}", panelsAreValid); return false; }
+
+                var providerIsValid = await IsProviderValid();
+                if (!providerIsValid) { Logger.LogDebug("Cannot save: ProviderValid={ProviderValid}", providerIsValid); return false; }
+
+                if (!_modalProvider.HasUnsavedChanges) { Logger.LogDebug("No unsaved changes - not saving."); return true; }
+
+                if (_modalProvider is not IModalSave modalSave)
+                {
+                    Logger.LogError("ModalProvider '{Provider}' has unsaved changes but does not support saving.", _modalProvider.ProviderName);
+                    await ModalHostState.SetModalAlertType(ModalAlertType.Error, $"{_modalProvider.ProviderName} has unsaved changes but does not support saving.");
+                    return false;
+                }
+
+                if (closeModalInProgress && !UserState.PrefersAutoSave)
+                {
+                    Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes but does User not prefer auto save.", _modalProvider.ProviderName);
+                    await ModalHostState.SetModalAlertType(ModalAlertType.UnsavedChanges, "Auto save not enabled.");
+                    return false;
+                }
+
+                Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes and supports Save - saving.", _modalProvider.ProviderName);
+                try { await modalSave.SaveAsync(LinkedCancellationToken); }
+                catch (OperationCanceledException) { Logger.LogDebug("SaveAsync cancelled."); return false; }
+                return true;
             }
-
-            var panelsAreValid = await ArePanelsValid();
-            if (!panelsAreValid) { Logger.LogDebug("Cannot save: PanelsValid={PanelsValid}", panelsAreValid); return false; }
-
-            var providerIsValid = await IsProviderValid();
-            if (!providerIsValid) { Logger.LogDebug("Cannot save: ProviderValid={ProviderValid}", providerIsValid); return false; }
-
-            if (!_modalProvider.HasUnsavedChanges) { Logger.LogDebug("No unsaved changes - not saving."); return true; }
-
-            if (_modalProvider is not IModalSave modalSave)
+            catch (Exception)
             {
-                Logger.LogError("ModalProvider '{Provider}' has unsaved changes but does not support saving.", _modalProvider.ProviderName);
-                await ModalHostState.SetModalAlertType(ModalAlertType.Error, $"{_modalProvider.ProviderName} has unsaved changes but does not support saving.");
-                return false;
             }
-
-            if (closeModalInProgress && !UserState.PrefersAutoSave)
+            finally
             {
-                Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes but does User not prefer auto save.", _modalProvider.ProviderName);
-                await ModalHostState.SetModalAlertType(ModalAlertType.UnsavedChanges, "Auto save not enabled.");
-                return false;
+                await ModalHostState.SetIsSaving(false, LinkedCancellationToken);
             }
-
-            Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes and supports Save - saving.", _modalProvider.ProviderName);
-            try { await modalSave.SaveAsync(LinkedCancellationToken); }
-            catch (OperationCanceledException) { Logger.LogDebug("SaveAsync cancelled."); return false; }
-            return true;
+            return false;
         }
 
         private async Task TryCloseAsync()
