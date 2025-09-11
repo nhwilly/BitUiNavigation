@@ -2,7 +2,7 @@
 
 public interface ISupportsAutoSave
 {
-    //AutoSaveSupportedType AutoSaveSupported { get; }
     AutoSaveSupportResult AutoSaveSupportResult { get; }
+   
 
 }

@@ -15,7 +15,7 @@ public sealed partial class ModalHostState : State<ModalHostState>
     public ModalAlertType ModalAlertType { get; private set; } = ModalAlertType.None;
     public string ModalAlertMessage { get; private set; } = string.Empty;
     public List<NavSectionDetail> NavSections { get; private set; } = [];
-    public string Title { get; private set; } = string.Empty;
+    //public string Title { get; private set; } = string.Empty;
 
     /// <summary>
     /// True if every expected panel for the provider is valid.

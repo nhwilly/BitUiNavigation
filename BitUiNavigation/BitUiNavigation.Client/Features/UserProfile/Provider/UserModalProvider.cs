@@ -1,7 +1,7 @@
 ﻿using FluentValidation.Results;
 
 namespace BitUiNavigation.Client.Features.UserProfile.Provider;
-public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset//, ISupportsAutoSave
+public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset, ISupportsAutoSave
 {
     private readonly IValidator<UserProviderAggregate> _providerValidator;
 
@@ -11,7 +11,6 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     public override string ProviderName => "User";
     public override string DefaultPanel => nameof(UserMembershipsPanel);
     private UserModalState UserModalState => Store.GetState<UserModalState>();
-    private ModalHostState ModalHostState => Store.GetState<ModalHostState>();
 
     public override AutoSaveSupportResult AutoSaveSupportResult => UserModalState.AutoSaveSupportResult;
 
@@ -24,7 +23,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     public bool HasChanged => UserModalState.HasChanged;
     public override string InstanceName => string.IsNullOrWhiteSpace(UserModalState?.InstanceName)
         ? ProviderName
-        : $"{UserModalState.InstanceName}";
+        : $"{ProviderName}: {UserModalState.InstanceName}";
 
     public UserModalProvider(
         IStore store,
@@ -98,7 +97,6 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         {
             await UserModalState.SetInitializingBusy(true, ct);
             await UserModalState.InitializeData(AccountId, LocationId, ct);
-            await ModalHostState.SetTitle(UserModalState.InstanceName, ct);
             await UserModalState.SetInitializingBusy(false, ct);
         }
         catch (OperationCanceledException) { _logger.LogDebug("OnModalOpenedAsync cancelled."); }
