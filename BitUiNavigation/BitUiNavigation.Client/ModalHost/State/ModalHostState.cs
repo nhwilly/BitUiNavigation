@@ -7,11 +7,11 @@ public sealed partial class ModalHostState : State<ModalHostState>
         _validity?.Clear();
         ModalAlertType = ModalAlertType.None;
         NavSections = [];
-        Saving = false;
+        IsBusy = false;
     }
     private readonly Dictionary<string, Dictionary<string, PanelValidity>> _validity = [];
     public IReadOnlyDictionary<string, Dictionary<string, PanelValidity>> Validity => _validity;
-    public bool Saving { get; private set; } = false;
+    public bool IsBusy { get; private set; } = false;
     public ModalAlertType ModalAlertType { get; private set; } = ModalAlertType.None;
     public string ModalAlertMessage { get; private set; } = string.Empty;
     public List<NavSectionDetail> NavSections { get; private set; } = [];

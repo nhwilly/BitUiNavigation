@@ -27,7 +27,7 @@ public sealed partial class UserModalState
 
             public override async Task Handle(Action action, CancellationToken cancellationToken)
             {
-                State.IsInitializing = action.IsInitializing;
+                State.IsLoading = action.IsInitializing;
                 _logger.LogDebug("Set IsInitializing to {IsInitializing}", action.IsInitializing);
                 await Task.CompletedTask;
             }

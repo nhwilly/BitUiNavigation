@@ -18,7 +18,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     public bool CanSave => UserModalState.CanSave;
     public bool CanReset => UserModalState.CanReset;
     public bool IsResetting => UserModalState.IsResetting;
-    public bool IsInitializing => UserModalState.IsInitializing;
+    public bool IsInitializing => UserModalState.IsLoading;
     public bool IsSaving => UserModalState.IsSaving;
 
     public bool HasChanged => UserModalState.HasChanged;
@@ -57,7 +57,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
             }
         };
 
-        if (UserModalState.IsToggled)
+        if (UserModalState.ShouldShowSomeSpecialPanel)
         {
             sections.Add(new NavSectionDetail()
             {

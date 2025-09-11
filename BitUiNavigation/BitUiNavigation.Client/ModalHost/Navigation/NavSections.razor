@@ -16,7 +16,7 @@
             </BitText>
         </div>
     }
-    <BitNav IsEnabled="@(!ModalHostState.Saving)" TItem="CustomNavItem"
+    <BitNav IsEnabled="@(!ModalHostState.IsBusy)" TItem="CustomNavItem"
             Styles="@NavStyles"
             IconOnly="@ShowIconsOnly"
             Mode="BitNavMode.Automatic"

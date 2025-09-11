@@ -31,7 +31,7 @@ public sealed partial class UserModalState
             private UserModalState UserModalState => Store.GetState<UserModalState>();
             public override async Task Handle(Action action, CancellationToken cancellationToken)
             {
-                UserModalState.IsToggled = !UserModalState.IsToggled;
+                UserModalState.ShouldShowSomeSpecialPanel = !UserModalState.ShouldShowSomeSpecialPanel;
                 await _provider.BuildNavSections(_nav, cancellationToken);
             }
         }

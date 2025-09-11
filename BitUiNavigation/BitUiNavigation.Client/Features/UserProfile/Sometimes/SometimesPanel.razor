@@ -1,5 +1,5 @@
 ﻿@inherits ModalPanelBase<SometimesViewModel>
-<SkeletonWhileBusy IsBusy="@(UserModalState.IsInitializing)">
+<SkeletonWhileBusy IsBusy="@(UserModalState.IsLoading)">
     <EditForm @ref="editForm" Model="@Model">
         <FluentValidationValidator />
         <BitTextField @bind-Value="Model.Description"

@@ -23,7 +23,7 @@ public sealed partial class ModalHostState
             public override async Task Handle(Action action, CancellationToken cancellationToken)
             {
                 _logger.LogDebug("SetIsSaving IsSaving={IsSaving}", action.IsSaving);
-                State.Saving = action.IsSaving;
+                State.IsBusy = action.IsSaving;
                 await Task.CompletedTask;
             }
         }

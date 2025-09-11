@@ -40,7 +40,7 @@ public sealed partial class UserModalState
                     _logger.LogDebug("Saving user {LastName}", State.User.LastName);
 
                     // Project current VM to DTO snapshot before save
-                    State.MapViewModelToDto();
+                    State.MapViewModelsToDto();
 
                     // Persist with the supplied token (linked to ModalHost navigation token)
                     var saved = await _userService.SaveUserAsync(State.User, cancellationToken);
@@ -53,7 +53,7 @@ public sealed partial class UserModalState
 
                     // Use returned DTO (server truth) then rehydrate the VMs
                     State.User = saved;
-                    State.MapDtoToViewModel();
+                    State.MapDtoToViewModels();
                 }
                 catch (OperationCanceledException)
                 {

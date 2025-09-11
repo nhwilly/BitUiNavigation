@@ -33,7 +33,7 @@ public sealed partial class UserModalState
                     _logger.LogDebug("Initializing UserEditSession for AccountId={AccountId}, LocationId={LocationId}",
                         action.AccountId, action.LocationId);
                     UserState.User = await _userService.GetUserAsync(action.AccountId.ToString(), cancellationToken);
-                    UserState.MapDtoToViewModel();
+                    UserState.MapDtoToViewModels();
                 }
                 catch (Exception ex)
                 {

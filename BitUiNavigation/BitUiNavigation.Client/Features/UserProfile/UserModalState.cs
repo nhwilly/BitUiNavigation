@@ -29,10 +29,9 @@ public sealed partial class UserModalState : State<UserModalState>, ISupportsAut
     public bool CanSave => HasChanged;
     public bool CanReset => HasChanged;
     public bool IsSaving { get; private set; }
-    public bool IsResetting => true;
-    public bool SaveOnCloseEnabled => true;
-    public bool IsToggled { get; private set; }
-    public bool IsInitializing { get; private set; }
+    public bool IsResetting  { get; private set; }
+    public bool ShouldShowSomeSpecialPanel { get; private set; }
+    public bool IsLoading { get; private set; }
 
     public bool HasChanged
     {
@@ -45,7 +44,7 @@ public sealed partial class UserModalState : State<UserModalState>, ISupportsAut
         }
     }
 
-    private void MapDtoToViewModel()
+    private void MapDtoToViewModels()
     {
         if (User is null) return;
 
@@ -64,7 +63,7 @@ public sealed partial class UserModalState : State<UserModalState>, ISupportsAut
         SometimesViewModelOriginal = SometimesViewModel with { };
     }
 
-    private void MapViewModelToDto()
+    private void MapViewModelsToDto()
     {
         if (User is null) return;
 
@@ -74,8 +73,6 @@ public sealed partial class UserModalState : State<UserModalState>, ISupportsAut
             LastName = ProfileVm.LastName,
             Name = MembershipsVm.Name,
         };
-
-        // TODO: include additional view model → entity mappings
     }
 
 }
