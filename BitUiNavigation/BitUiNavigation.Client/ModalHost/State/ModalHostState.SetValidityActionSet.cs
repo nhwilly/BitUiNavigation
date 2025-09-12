@@ -55,7 +55,7 @@ public sealed partial class ModalHostState
                         {
                             panelDict[action.PanelName] = new PanelValidity(action.IsValid, action.ErrorCount);
                             provider = _serviceProvider.GetRequiredKeyedService<IModalProvider>(action.ProviderName);
-                            await provider.AddValidationToSections(cancellationToken);
+                            await provider.AddValidationToSections(ModalHostState.NavSections,  cancellationToken);
                             return;
                         }
                     }

@@ -46,10 +46,6 @@ public abstract class ModalProviderBase : IModalProvider
         return "/" + nav.ToBaseRelativePath(absolute);
     }
 
-    private readonly List<NavSection> _navSections = [];
-
-    public List<NavSection> NavSections => _navSections;
-
     public virtual RouteData BuildRouteData(string panelName)
     {
         var key = Normalize(panelName, DefaultPanel);
@@ -61,14 +57,14 @@ public abstract class ModalProviderBase : IModalProvider
 
     public virtual Task<bool> CanCloseAsync(CancellationToken ct) => Task.FromResult(true);
 
-    public async Task AddValidationToSections(CancellationToken ct)
+    public async Task AddValidationToSections(List<NavSection> navSections, CancellationToken ct)
     {
 
-        foreach (var section in _navSections)
+        foreach (var section in navSections)
         {
             AddValidationIndicators(section.CustomNavItems);
         }
-        await ModalHostState.SetNavSections(_navSections, ct);
+        await ModalHostState.SetNavSections(navSections, ct);
 
     }
     private void AddValidationIndicators(List<CustomNavItem> navItems)

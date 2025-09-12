@@ -1,6 +1,4 @@
-﻿using BitUiNavigation.Client.ModalHost.Navigation;
-
-namespace BitUiNavigation.Client.Features.UserProfile.Provider;
+﻿namespace BitUiNavigation.Client.Features.UserProfile.Provider;
 public sealed partial class UserModalProvider : ModalProviderBase, IModalSave, IModalReset, ISupportsAutoSave
 {
     private readonly IValidator<UserProviderAggregate> _providerValidator;
@@ -81,7 +79,7 @@ public sealed partial class UserModalProvider : ModalProviderBase, IModalSave, I
         var sections = new List<NavSection>();
         sections.AddSectionIfItemsExist(SettingsSection(nav));
         sections.AddSectionIfItemsExist(ShouldShowSomeSpecialSection(nav));
-        await ModalHostState.SetNavSections(NavSections, ct);
+        await ModalHostState.SetNavSections(sections, ct);
     }
 
     public override async Task OnModalOpeningAsync(CancellationToken ct)
