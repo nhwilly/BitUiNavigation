@@ -30,14 +30,14 @@
                                        IconName="@BitIconName.Reset"
                                        IsEnabled="@(_modalProvider.HasUnsavedChanges)"
                                        OnClick="@OnResetClicked"
-                                       Visibility="@ResetVisible"/>
+                                       Visibility="@ResetVisible" />
                             <BitButton IsLoading="@(IsSaving)"
                                        IsEnabled="@(_modalProvider.HasUnsavedChanges)"
                                        LoadingLabel="Saving"
                                        Variant="@BitVariant.Text"
                                        IconName="@BitIconName.Save"
                                        OnClick="@TrySaveAsync"
-                                       Visibility="@SaveVisible"/>
+                                       Visibility="@SaveVisible" />
                             <BitButton Color="BitColor.Tertiary"
                                        OnClick="@TryCloseAsync"
                                        IconOnly
@@ -111,6 +111,15 @@
                                    Message="@ModalHostState.ModalAlertMessage">
                         </BitDialog>
                         break;
+                    case ModalAlertType.Error:
+                        <BitMessage OnDismiss="@ClearErrorAlert" Color="BitColor.Error">
+                            <Content>
+                                Your work was lost.
+                            </Content>
+                        </BitMessage>
+
+                        break;
+
                 }
                 @* The body section *@
                 <div style="flex:1;overflow:hidden;border-bottom-right-radius:1rem;position:relative;">

@@ -177,7 +177,7 @@
                 try
                 {
                     await modalReset.ResetAsync(LinkedCancellationToken);
-                    await ArePanelsValid();
+                    await ModalHostState.ClearValidity();
                     await _modalProvider.AddValidationToSections(ModalHostState.NavSections, LinkedCancellationToken);
                 }
                 catch (OperationCanceledException) { Logger.LogDebug("ResetAsync cancelled."); return; }
@@ -210,6 +210,11 @@
         private async Task ClearInvalidAggregateAlert()
         {
             if (ModalHostState.ModalAlertType == ModalAlertType.InvalidAggregate)
+                await ModalHostState.SetModalAlertType(ModalAlertType.None);
+        }
+        private async Task ClearErrorAlert()
+        {
+            if (ModalHostState.ModalAlertType == ModalAlertType.Error)
                 await ModalHostState.SetModalAlertType(ModalAlertType.None);
         }
         private async Task<bool> IsProviderValid()
@@ -296,7 +301,11 @@
                 }
 
                 Logger.LogDebug("ModalProvider '{Provider}' has unsaved changes and supports Save - saving.", _modalProvider.ProviderName);
-                try { await modalSave.SaveAsync(LinkedCancellationToken); }
+                try
+                {
+                    await modalSave.SaveAsync(LinkedCancellationToken);
+                    //if (ModalHostState.ModalAlertType is not ModalAlertType.None) StateHasChanged();
+                }
                 catch (OperationCanceledException) { Logger.LogDebug("SaveAsync cancelled."); return false; }
                 return true;
             }

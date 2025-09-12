@@ -9,8 +9,8 @@ public sealed partial class UserModalState
         {
             private readonly UserService _userService;
             private readonly ILogger<UserModalState> _logger;
-            private UserModalState State => Store.GetState<UserModalState>();
-
+            private UserModalState UserModalState => Store.GetState<UserModalState>();
+            private ModalHostState ModalHostState => Store.GetState<ModalHostState>();
             public Handler(
                 IStore store,
                 ILogger<UserModalState> logger,
@@ -23,7 +23,7 @@ public sealed partial class UserModalState
 
             public override async Task Handle(Action action, CancellationToken cancellationToken)
             {
-                if (State.User is null)
+                if (UserModalState.User is null)
                 {
                     _logger.LogWarning("Entity is null – save aborted.");
                     return;
@@ -37,14 +37,14 @@ public sealed partial class UserModalState
 
                 try
                 {
-                    _logger.LogDebug("Saving user {LastName}", State.User.LastName);
+                    _logger.LogDebug("Saving user {LastName}", UserModalState.User.LastName);
 
                     // Project current VM to DTO snapshot before save
-                    State.MapViewModelsToDto();
+                    UserModalState.MapViewModelsToDto();
 
                     // Persist with the supplied token (linked to ModalHost navigation token)
-                    var saved = await _userService.SaveUserAsync(State.User, cancellationToken);
-
+                    var saved = await _userService.SaveUserAsync(UserModalState.User, cancellationToken);
+                    await ModalHostState.SetModalAlertType(ModalAlertType.Error,"Something went wrong");
                     if (cancellationToken.IsCancellationRequested)
                     {
                         _logger.LogWarning("SaveUser canceled after service call.");
@@ -52,8 +52,8 @@ public sealed partial class UserModalState
                     }
 
                     // Use returned DTO (server truth) then rehydrate the VMs
-                    State.User = saved;
-                    State.MapDtoToViewModels();
+                    UserModalState.User = saved;
+                    UserModalState.MapDtoToViewModels();
                 }
                 catch (OperationCanceledException)
                 {
