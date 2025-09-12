@@ -126,6 +126,13 @@ public sealed partial class UserModalProvider : ModalProviderBase, IModalSave, I
         return result;
     }
 
+    public async Task ValidateAllPanels(CancellationToken ct)
+    {
+        foreach (var panel in ExpectedPanelKeys)
+        {
+
+        }
+    }
     public async Task SaveAsync(CancellationToken ct)
     {
         if (ct.IsCancellationRequested) return;

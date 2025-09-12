@@ -177,6 +177,7 @@
                 try
                 {
                     await modalReset.ResetAsync(LinkedCancellationToken);
+                    await ArePanelsValid();
                     await _modalProvider.AddValidationToSections(ModalHostState.NavSections, LinkedCancellationToken);
                 }
                 catch (OperationCanceledException) { Logger.LogDebug("ResetAsync cancelled."); return; }
