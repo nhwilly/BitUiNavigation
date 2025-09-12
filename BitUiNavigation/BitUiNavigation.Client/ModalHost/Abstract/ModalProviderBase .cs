@@ -1,7 +1,4 @@
-﻿using FluentValidation.Results;
-using Humanizer;
-
-namespace BitUiNavigation.Client.ModalHost.Abstract;
+﻿namespace BitUiNavigation.Client.ModalHost.Abstract;
 
 public abstract class ModalProviderBase : IModalProvider
 {
@@ -30,7 +27,7 @@ public abstract class ModalProviderBase : IModalProvider
         _logger = logger;
     }
 
-    protected ModalHostState HostState => Store.GetState<ModalHostState>();
+    protected ModalHostState ModalHostState => Store.GetState<ModalHostState>();
 
     protected abstract Dictionary<string, Type> PanelMap { get; }
 
@@ -42,13 +39,16 @@ public abstract class ModalProviderBase : IModalProvider
     public virtual Task OnModalOpeningAsync(CancellationToken ct) => Task.CompletedTask;
 
     public abstract Task BuildNavSections(NavigationManager nav, CancellationToken ct);
-    public List<NavSection> NavSections { get; private set; } = [];
 
     protected static string BuildPanelRelativeUrl(NavigationManager nav, string panelName)
     {
         var absolute = nav.GetUriWithQueryParameter("panel", panelName);
         return "/" + nav.ToBaseRelativePath(absolute);
     }
+
+    private readonly List<NavSection> _navSections = [];
+
+    public List<NavSection> NavSections => _navSections;
 
     public virtual RouteData BuildRouteData(string panelName)
     {
@@ -61,15 +61,17 @@ public abstract class ModalProviderBase : IModalProvider
 
     public virtual Task<bool> CanCloseAsync(CancellationToken ct) => Task.FromResult(true);
 
-    public void AddValidationToSections()
+    public async Task AddValidationToSections(CancellationToken ct)
     {
-        foreach (var section in NavSections.ToList())
+
+        foreach (var section in _navSections)
         {
             AddValidationIndicators(section.CustomNavItems);
         }
+        await ModalHostState.SetNavSections(_navSections, ct);
 
     }
-    public void AddValidationIndicators(List<CustomNavItem> navItems)
+    private void AddValidationIndicators(List<CustomNavItem> navItems)
     {
         // Snapshot to avoid repeated state reads
         var host = Store.GetState<ModalHostState>();

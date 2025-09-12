@@ -9,33 +9,25 @@ public abstract class ModalPanelBase<TModel> :
 {
     [Inject] public ILogger<TModel>? Logger { get; set; }
 
-    // Optional: present if you also place <FluentValidationValidator /> in the form.
-    // We don't call it directly for counting; EditContext already aggregates messages.
-    //[Inject] private IValidator<TModel>? Validator { get; set; } = default!;
+    [CascadingParameter] protected ModalContext? ModalContext { get; set; }
 
-    // Provided by ModalHost (which panel/provider this is)
-    [CascadingParameter] protected ModalContext? Ctx { get; set; }
-
-    // Non-null only if this component is inside the EditForm (rare).
     [CascadingParameter] protected EditContext? CurrentEditContext { get; set; }
 
-    // If the form lives in the derived .razor, set @ref="editForm" there.
     protected EditForm? editForm;
 
-    private EditContext? _editContext; // the subscribed context
+    private EditContext? _editContext;
     private ModalHostState ModalHostState => GetState<ModalHostState>();
 
     // ---------------- lifecycle ----------------
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // Prefer cascaded EditContext; else fall back to @ref’d form
-        var discovered = CurrentEditContext ?? editForm?.EditContext;
+        var context = CurrentEditContext ?? editForm?.EditContext;
 
-        if (!ReferenceEquals(_editContext, discovered))
+        if (!ReferenceEquals(_editContext, context))
         {
             Unsubscribe();
-            SubscribeIfPresent(discovered);
+            SubscribeIfPresent(context);
             // Publish once so nav badges reflect current validity
             await PublishFromEditContextAsync();
         }
@@ -51,12 +43,12 @@ public abstract class ModalPanelBase<TModel> :
 
     // --------------- subscription ---------------
 
-    private void SubscribeIfPresent(EditContext? ctx)
+    private void SubscribeIfPresent(EditContext? editContext)
     {
-        if (ctx is null) return;
+        if (editContext is null) return;
 
-        _editContext = ctx;
-        //_ctx.OnFieldChanged += OnFieldChanged;
+        _editContext = editContext;
+        //_editContext.OnFieldChanged += OnFieldChanged;
         _editContext.OnValidationStateChanged += OnValidationStateChanged;
 
         RehydrateIfPreviouslyInvalid(_editContext);
@@ -67,7 +59,7 @@ public abstract class ModalPanelBase<TModel> :
     {
         if (_editContext is null) return;
 
-        //_ctx.OnFieldChanged -= OnFieldChanged;
+        //_editContext.OnFieldChanged -= OnFieldChanged;
         _editContext.OnValidationStateChanged -= OnValidationStateChanged;
         Logger?.LogDebug("Unsubscribed from EditContext for {Panel}", GetType().Name);
         _editContext = null;
@@ -90,7 +82,7 @@ public abstract class ModalPanelBase<TModel> :
     private async Task PublishFromEditContextAsync()
     {
         var ctx = _editContext ?? CurrentEditContext ?? editForm?.EditContext;
-        if (ctx is null || Ctx is null)
+        if (ctx is null || ModalContext is null)
         {
             Logger?.LogTrace("Publish skipped: ctx or Ctx null for {Panel}", GetType().Name);
             return;
@@ -101,8 +93,8 @@ public abstract class ModalPanelBase<TModel> :
 
         // TODO can we check and not invoke an update if exists and unchanged?
         await ModalHostState.SetValidity(
-            Ctx.ProviderKey,
-            Ctx.PanelName,
+            ModalContext.ProviderName,
+            ModalContext.PanelName,
             isValid,
             errorCount,
             CancellationToken);
@@ -116,32 +108,32 @@ public abstract class ModalPanelBase<TModel> :
     /// </summary>
     protected async Task<bool> ForceValidateAndPublishAsync()
     {
-        var ctx = _editContext ?? CurrentEditContext ?? editForm?.EditContext;
-        if (ctx is null)
+        var editContext = _editContext ?? CurrentEditContext ?? editForm?.EditContext;
+        if (editContext is null)
         {
             Logger?.LogWarning("ForceValidateAndPublishAsync: EditContext is null for {Panel}", GetType().Name);
             return true; // treat as valid if no form
         }
 
-        MarkAllFieldsAsModified(ctx); // make visuals show immediately
-        var ok = ctx.Validate();      // triggers DA and FV validator components
+        MarkAllFieldsAsModified(editContext); // make visuals show immediately
+        var isValid = editContext.Validate();      // triggers DA and FV validator components
         await PublishFromEditContextAsync();
-        return ok;
+        return isValid;
     }
 
-    private void RehydrateIfPreviouslyInvalid(EditContext ctx)
+    private void RehydrateIfPreviouslyInvalid(EditContext editContext)
     {
         try
         {
-            if (Ctx is null) return;
+            if (ModalContext is null) return;
 
             // Reads central state: Provider → Panel → PanelValidity
-            if (ModalHostState.Validity.TryGetValue(Ctx.ProviderKey, out var perPanel) &&
-                perPanel.TryGetValue(Ctx.PanelName, out var pv) &&
-                pv.IsValid == false)
+            if (ModalHostState.Validity.TryGetValue(ModalContext.ProviderName, out var panelName) &&
+                panelName.TryGetValue(ModalContext.PanelName, out var panelValidity) &&
+                panelValidity.IsValid == false)
             {
                 // Show messages immediately to match last-known state
-                MarkAllFieldsAsModified(ctx);
+                MarkAllFieldsAsModified(editContext);
             }
         }
         catch (Exception ex)
@@ -167,21 +159,10 @@ public abstract class ModalPanelBase<TModel> :
     /// <summary>The model used by the derived panel.</summary>
     protected abstract TModel Model { get; }
 
-    // ------------- IModalPanel / ISupportsSaveOnNavigate -------------
-
-    public virtual Task<bool> CanNavigateToAnotherSectionAsync() => Task.FromResult(true);
-
     public virtual async Task<bool> CanCloseModalAsync()
     {
-        var ok = await ForceValidateAndPublishAsync();
-        Logger?.LogDebug("CanCloseModalAsync → {Valid} for {Panel}", ok, GetType().Name);
-        return ok;
-    }
-
-    public virtual async Task SaveOnNavigateAsync()
-    {
-        var ok = await ForceValidateAndPublishAsync();
-        Logger?.LogDebug("SaveOnNavigateAsync → {Valid} for {Panel}", ok, GetType().Name);
-        // map VM → entity & dispatch save here if desired
+        var canClose = await ForceValidateAndPublishAsync();
+        Logger?.LogDebug("CanCloseModalAsync → {Valid} for {Panel}", canClose, GetType().Name);
+        return canClose;
     }
 }

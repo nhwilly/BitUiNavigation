@@ -11,7 +11,8 @@ public interface IModalProvider
     string MinWidth { get; }
     string MaxWidth { get; }
     string ProviderTitle { get; }
-    public List<NavSection> NavSections { get; }
+    
+    List<NavSection> NavSections { get; }
 
     AutoSaveSupportResult AutoSaveSupportResult { get; }
 
@@ -28,12 +29,11 @@ public interface IModalProvider
 
     Task<bool> CanCloseAsync(CancellationToken ct);
 
-    //Task<(bool IsValid, string generalMessage, IReadOnlyList<string> Messages)> ValidateProviderAsync(CancellationToken ct);
     public virtual Task<ValidationResult> ValidateProvider(CancellationToken ct)
     => Task.FromResult<ValidationResult>(new ValidationResult());
 
-    void AddValidationIndicators(List<CustomNavItem> items);
-    void AddValidationToSections();
+    //void AddValidationIndicators(List<CustomNavItem> items);
+    Task AddValidationToSections(CancellationToken ct);
     bool HasUnsavedChanges { get; }
 
     Task ClearState(CancellationToken ct);

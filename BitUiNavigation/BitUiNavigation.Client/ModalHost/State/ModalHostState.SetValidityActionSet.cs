@@ -1,4 +1,4 @@
-﻿namespace BitUiNavigation.Client.Pages.ModalHost.State;
+﻿namespace BitUiNavigation.Client.ModalHost.State;
 
 public sealed partial class ModalHostState
 {
@@ -6,13 +6,13 @@ public sealed partial class ModalHostState
     {
         public sealed class Action : IAction
         {
-            public string ProviderKey { get; }
+            public string ProviderName { get; }
             public string PanelName { get; }
             public bool IsValid { get; }
             public int ErrorCount { get; }
-            public Action(string providerKey, string panelName, bool isValid, int errorCount)
+            public Action(string providerName, string panelName, bool isValid, int errorCount)
             {
-                ProviderKey = providerKey ?? throw new ArgumentNullException(nameof(providerKey));
+                ProviderName = providerName ?? throw new ArgumentNullException(nameof(providerName));
                 PanelName = panelName ?? throw new ArgumentNullException(nameof(panelName));
                 IsValid = isValid;
                 ErrorCount = errorCount;
@@ -31,14 +31,14 @@ public sealed partial class ModalHostState
             public override async Task Handle(Action action, CancellationToken cancellationToken)
             {
                 _logger.LogDebug("SetValidity Provider={ProviderKey} Panel={PanelName} IsValid={IsValid} ErrorCount={ErrorCount}",
-                    action.ProviderKey, action.PanelName, action.IsValid, action.ErrorCount);
+                    action.ProviderName, action.PanelName, action.IsValid, action.ErrorCount);
 
                 IModalProvider? provider;
                 // if providerKey not found, add it
-                if (!ModalHostState._validity.TryGetValue(action.ProviderKey, out var panelDict))
+                if (!ModalHostState._validity.TryGetValue(action.ProviderName, out var panelDict))
                 {
                     panelDict = new Dictionary<string, PanelValidity>(StringComparer.OrdinalIgnoreCase);
-                    ModalHostState._validity[action.ProviderKey] = panelDict;
+                    ModalHostState._validity[action.ProviderName] = panelDict;
                     panelDict[action.PanelName] = new PanelValidity(action.IsValid, action.ErrorCount);
                 }
                 // we have a providerKey, see if panel exists
@@ -54,14 +54,14 @@ public sealed partial class ModalHostState
                         else // panel is already in the list, and doesn't match, update it and redecorate
                         {
                             panelDict[action.PanelName] = new PanelValidity(action.IsValid, action.ErrorCount);
-                            provider = _serviceProvider.GetRequiredKeyedService<IModalProvider>(action.ProviderKey);
-                            provider.AddValidationIndicators([.. ModalHostState.NavSections.SelectMany(s => s.CustomNavItems)]);
+                            provider = _serviceProvider.GetRequiredKeyedService<IModalProvider>(action.ProviderName);
+                            await provider.AddValidationToSections(cancellationToken);
                             return;
                         }
                     }
                     // panel not found, add it
                     panelDict[action.PanelName] = new PanelValidity(action.IsValid, action.ErrorCount);
-                    provider = _serviceProvider.GetRequiredKeyedService<IModalProvider>(action.ProviderKey);
+                    provider = _serviceProvider.GetRequiredKeyedService<IModalProvider>(action.ProviderName);
                 }
                 await Task.CompletedTask;
             }

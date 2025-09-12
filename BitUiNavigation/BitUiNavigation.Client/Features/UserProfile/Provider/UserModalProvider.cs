@@ -1,6 +1,4 @@
-﻿using FluentValidation.Results;
-using Microsoft.Extensions.Logging.Abstractions;
-using static System.Collections.Specialized.BitVector32;
+﻿using BitUiNavigation.Client.ModalHost.Navigation;
 
 namespace BitUiNavigation.Client.Features.UserProfile.Provider;
 public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset, ISupportsAutoSave
@@ -13,7 +11,6 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
     public override string ProviderName => "User";
     public override string DefaultPanel => nameof(UserMembershipsPanel);
     private UserModalState UserModalState => Store.GetState<UserModalState>();
-
     public override AutoSaveSupportResult AutoSaveSupportResult => UserModalState.AutoSaveSupportResult;
 
     public bool CanSave => UserModalState.CanSave;
@@ -59,33 +56,30 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
 
     private void AddShouldShowSomeSpecialSection(NavigationManager nav)
     {
-        NavSection section = new NavSection()
-        {
-            Title = "Sometimes",
-            IconName = BitIconName.Calendar,
-            CustomNavItems =
-            [
-                new() { Key = nameof(SometimesPanel), Text = "Sometimes", IconName = BitIconName.Calendar, Url = BuildPanelRelativeUrl(nav,  nameof(SometimesPanel)) }
-            ]
-        };
         if (UserModalState.ShouldShowSomeSpecialPanel)
         {
+            NavSection section = new()
+            {
+                Title = "Sometimes",
+                IconName = BitIconName.Calendar,
+                CustomNavItems =
+                [
+                    new() { Key = nameof(SometimesPanel), Text = "Sometimes", IconName = BitIconName.Calendar, Url = BuildPanelRelativeUrl(nav,  nameof(SometimesPanel)) }
+                ]
+            };
             NavSections.Add(section);
         }
     }
 
     public override async Task BuildNavSections(NavigationManager nav, CancellationToken ct)
     {
-        NavSections.Clear();
+        var sections = new List<NavSection>();
+        // return section from methods - which is never null, then only add the section if there are items.
         AddSettingsSection(nav);
         AddShouldShowSomeSpecialSection(nav);
-        AddValidationToSections();
-        try
-        {
-            await HostState.SetNavSections(NavSections, ct);
-        }
-        catch (OperationCanceledException) { _logger.LogDebug("SetNavSections cancelled."); }
-        catch (ObjectDisposedException) { _logger.LogDebug("SetNavSections CTS disposed."); }
+        await AddValidationToSections(ct);
+        await ModalHostState.SetNavSections(NavSections, ct);
+
     }
 
     public override async Task OnModalOpeningAsync(CancellationToken ct)

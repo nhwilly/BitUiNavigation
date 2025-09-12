@@ -1,4 +1,4 @@
-﻿namespace BitUiNavigation.Client.Pages.ModalHost.State;
+﻿namespace BitUiNavigation.Client.ModalHost.State;
 
 public sealed partial class ModalHostState : State<ModalHostState>
 {

@@ -17,7 +17,7 @@
         private UserState UserState => GetState<UserState>();
         private ModalContext ModalContext => new()
         {
-            ProviderKey = _modalProvider?.ProviderName ?? "UnknownProvider",
+            ProviderName = _modalProvider?.ProviderName ?? "UnknownProvider",
             PanelName = _panelName
         };
         private async Task SetAutoSave() => await UserState.SetPrefersAutoSave(true);
@@ -25,9 +25,6 @@
         public bool IsSaving => (_modalProvider as IModalSave)?.IsSaving ?? false;
         private BitVisibility ResetVisible => (_modalProvider as IModalReset)?.CanReset ?? false ? BitVisibility.Visible : BitVisibility.Collapsed;
         private BitVisibility SaveVisible => (_modalProvider as IModalSave)?.CanSave ?? false ? BitVisibility.Visible : BitVisibility.Collapsed;
-
-        //private bool _modalHostIsInitializing = true;
-        //private bool _modalBusy { get; set; } = false;
 
         // Component lifetime token (from TimeWarpStateComponent) cached once
         private CancellationToken _componentLifetimeToken;
@@ -180,7 +177,7 @@
                 try
                 {
                     await modalReset.ResetAsync(LinkedCancellationToken);
-                    _modalProvider.AddValidationToSections();
+                    await _modalProvider.AddValidationToSections(LinkedCancellationToken);
                 }
                 catch (OperationCanceledException) { Logger.LogDebug("ResetAsync cancelled."); return; }
             }

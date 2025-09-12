@@ -1,7 +1,4 @@
-﻿namespace BitUiNavigation.Client.Pages.ModalHost.State;
+﻿namespace BitUiNavigation.Client.ModalHost.Helpers;
 
-public sealed partial class ModalHostState
-{
-    public record PanelValidity(bool IsValid, int ErrorCount);
+public record PanelValidity(bool IsValid, int ErrorCount);
 
-}
