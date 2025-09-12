@@ -11,7 +11,7 @@ public abstract class ModalPanelBase<TModel> :
 
     // Optional: present if you also place <FluentValidationValidator /> in the form.
     // We don't call it directly for counting; EditContext already aggregates messages.
-    [Inject] private IValidator<TModel>? Validator { get; set; } = default!;
+    //[Inject] private IValidator<TModel>? Validator { get; set; } = default!;
 
     // Provided by ModalHost (which panel/provider this is)
     [CascadingParameter] protected ModalContext? Ctx { get; set; }
