@@ -1,7 +1,7 @@
 ﻿using BitUiNavigation.Client.ModalHost.Navigation;
 
 namespace BitUiNavigation.Client.Features.UserProfile.Provider;
-public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalReset, ISupportsAutoSave
+public sealed partial class UserModalProvider : ModalProviderBase, IModalSave, IModalReset, ISupportsAutoSave
 {
     private readonly IValidator<UserProviderAggregate> _providerValidator;
 
@@ -39,7 +39,7 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
         [nameof(SometimesPanel)] = typeof(SometimesPanel),
     };
 
-    private void AddSettingsSection(NavigationManager nav)
+    private NavSection SettingsSection(NavigationManager nav)
     {
         NavSection section = new()
         {
@@ -51,35 +51,37 @@ public sealed class UserModalProvider : ModalProviderBase, IModalSave, IModalRes
                     new() { Key = nameof(UserProfilePanel), Text = "Profile", IconName = BitIconName.Contact, Url = BuildPanelRelativeUrl(nav,  nameof(UserProfilePanel)) }
                 ]
         };
-        NavSections.Add(section);
+        return section;
     }
 
-    private void AddShouldShowSomeSpecialSection(NavigationManager nav)
+    private NavSection ShouldShowSomeSpecialSection(NavigationManager nav)
     {
+        NavSection section = new()
+        {
+            Title = "Sometimes",
+            IconName = BitIconName.Calendar,
+            CustomNavItems =
+            [
+                new() { Key = nameof(SometimesPanel), Text = "Sometimes", IconName = BitIconName.Calendar, Url = BuildPanelRelativeUrl(nav,  nameof(SometimesPanel)) }
+            ]
+        };
+
         if (UserModalState.ShouldShowSomeSpecialPanel)
         {
-            NavSection section = new()
-            {
-                Title = "Sometimes",
-                IconName = BitIconName.Calendar,
-                CustomNavItems =
-                [
-                    new() { Key = nameof(SometimesPanel), Text = "Sometimes", IconName = BitIconName.Calendar, Url = BuildPanelRelativeUrl(nav,  nameof(SometimesPanel)) }
-                ]
-            };
-            NavSections.Add(section);
+            CustomNavItem navItem = new() { Key = nameof(SometimesPanel), Text = "Sometimes", IconName = BitIconName.Calendar, Url = BuildPanelRelativeUrl(nav, nameof(SometimesPanel)) };
+
+            section.CustomNavItems.Add(navItem);
         }
+
+        return section;
     }
 
     public override async Task BuildNavSections(NavigationManager nav, CancellationToken ct)
     {
         var sections = new List<NavSection>();
-        // return section from methods - which is never null, then only add the section if there are items.
-        AddSettingsSection(nav);
-        AddShouldShowSomeSpecialSection(nav);
-        await AddValidationToSections(ct);
+        sections.AddSectionIfItemsExist(SettingsSection(nav));
+        sections.AddSectionIfItemsExist(ShouldShowSomeSpecialSection(nav));
         await ModalHostState.SetNavSections(NavSections, ct);
-
     }
 
     public override async Task OnModalOpeningAsync(CancellationToken ct)

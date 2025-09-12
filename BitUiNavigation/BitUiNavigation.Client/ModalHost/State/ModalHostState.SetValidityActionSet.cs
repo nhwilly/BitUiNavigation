@@ -61,7 +61,7 @@ public sealed partial class ModalHostState
                     }
                     // panel not found, add it
                     panelDict[action.PanelName] = new PanelValidity(action.IsValid, action.ErrorCount);
-                    provider = _serviceProvider.GetRequiredKeyedService<IModalProvider>(action.ProviderName);
+                    //provider = _serviceProvider.GetRequiredKeyedService<IModalProvider>(action.ProviderName);
                 }
                 await Task.CompletedTask;
             }
